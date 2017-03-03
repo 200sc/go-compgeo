@@ -9,9 +9,15 @@ const (
 	TangoTreeType
 )
 
+type Node interface {
+	Key() float64
+	Val() interface{}
+}
+
 type BST interface {
-	Insert(float64, interface{})
-	Delete(float64, interface{})
+	Size() int
+	Insert(Node) error
+	Delete(Node) error
 	Search(float64) (bool, interface{})
 	Traverse() []interface{}
 	ToPersistent() PersistentBST
