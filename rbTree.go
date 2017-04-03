@@ -1,5 +1,10 @@
 package compgeo
 
+const (
+	RED   = false
+	BLACK = true
+)
+
 func NewRBTree() *BST {
 	t := NewBST()
 	t.typ = RBTreeType

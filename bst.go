@@ -2,20 +2,6 @@ package compgeo
 
 import "errors"
 
-// BST Type enumerator
-const (
-	AVLTreeType = iota
-	RBTreeType
-	TTreeType
-	SplayTreeType
-	TangoTreeType
-)
-
-const (
-	RED   = false
-	BLACK = true
-)
-
 type Node struct {
 	// eventually key should be a comparable interface
 	// but that would probably poorly effect performance
@@ -33,29 +19,9 @@ func (n Node) IsNil() bool {
 	return n.val == nil
 }
 
-func ancestor(i, tiersUp int) int {
-	return i / (tiersUp * 2)
-}
-
-func parent(i int) int {
-	return i / 2
-}
-
-func left(i int) int {
-	return 2 * i
-}
-
-func right(i int) int {
-	return (2 * i) + 1
-}
-
-func isLeftChild(i int) bool {
-	return i%2 == 0
-}
-
 type BST struct {
 	tree []Node
-	typ  int
+	typ  TreeType
 	size int
 }
 
@@ -185,20 +151,20 @@ func (bst *BST) minKey(i int) int {
 // Other traversal methods can be added as needed.
 func (bst *BST) InOrderTraverse() []Node {
 	out := make([]Node, len(bst.tree))
-	out_i := 0
-	bst.inOrderTraverse(out, 0, &out_i)
+	i := 0
+	bst.inOrderTraverse(out, 0, &i)
 	return out
 }
 
-func (bst *BST) inOrderTraverse(out []Node, i int, next_index *int) {
+func (bst *BST) inOrderTraverse(out []Node, i int, nextIndex *int) {
 	if i < len(bst.tree) {
 		v := bst.tree[i]
 		// If a node is nil, it cannot have children
 		if !v.IsNil() {
-			bst.inOrderTraverse(out, left(i), next_index)
-			out[*next_index] = v
-			*next_index++
-			bst.inOrderTraverse(out, right(i), next_index)
+			bst.inOrderTraverse(out, left(i), nextIndex)
+			out[*nextIndex] = v
+			*nextIndex++
+			bst.inOrderTraverse(out, right(i), nextIndex)
 		}
 	}
 }

@@ -1,34 +1,47 @@
 package compgeo
 
-// Hypothetical: All a PersistentBST does
-// is return a pointer to a BST at a given instant
-type PersistentBST interface {
-	Size() int
+type Node interface {
+	Key() float64
+	Val() interface{}
+}
+
+type Searchable interface {
+	Search(float64) (bool, interface{})
+}
+
+type Traverseable interface {
+	InOrderTraverse() []Node
+}
+
+type StaticSearchTree interface {
+	Searchable
+	Traverseable
+	IsNil(int) bool
+}
+
+type SearchTree interface {
+	StaticSearchTree
 	Insert(Node) error
 	Delete(Node) error
-	Search(float64) (bool, interface{})
-	Traverse() []interface{}
 	ToPersistent() PersistentBST
-	AtInstant(float64) BST
+	ToStatic() StaticSearchTree
+	Size() int
+}
+
+type PersistentBST interface {
+	SearchTree
+	AtInstant(float64) SearchTree
 	MinInstant() float64
 	MaxInstant() float64
 	SetInstant(float64)
 }
 
-func NewPersistentRBTree(bstType int) (t PersistentBST) {
-	switch bstType {
-	case RBTreeType:
-		t = NewRBTree().ToPersistent()
-	case TTreeType:
-		t = NewTTree().ToPersistent()
-	case SplayTreeType:
-		t = NewSplayTree().ToPersistent()
-	case TangoTreeType:
-		t = NewTangoTree().ToPersistent()
-	default:
-		fallthrough
-	case AVLTreeType:
-		t = NewAVLTree().ToPersistent()
-	}
-	return
-}
+type TreeType int
+
+const (
+	AVLTreeType TreeType = iota
+	RBTreeType
+	TTreeType
+	SplayTreeType
+	TangoTreeType
+)
