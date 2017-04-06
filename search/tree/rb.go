@@ -8,6 +8,9 @@ const (
 )
 
 func (n *node) isBlack() bool {
+	if n == nil {
+		return true
+	}
 	return (n.payload.(color) == black)
 }
 
@@ -82,13 +85,14 @@ func rbInsert(n *node) {
 	}
 }
 func rbDelete(n *node) {
+
 	// If this node has two children
 	if n.right != nil && n.left != nil {
 		// Find the maximum value of the left subtree
 		// or the minimum value of the right subtree.
 		// Presumably defaulting to one over the other will
 		// cause the tree to lean in one direction over the
-		// other. Needs to be tested.
+		// other.
 
 		// if rand.Float64() < 0.5 {
 		n2 := n.right.minKey()
@@ -96,7 +100,77 @@ func rbDelete(n *node) {
 		// n2 := n.left.maxKey()
 		//}
 
-		n2.deleteSwap(n)
+		n2.swap(n)
 	}
-	//Todo: the difficult cases
+	var child *node
+	if n.right == nil {
+		child = n.left
+	} else {
+		child = n.right
+	}
+	n.parentReplace(child)
+	if n.isBlack() {
+		if !child.isBlack() {
+			child.payload = black
+		} else {
+			n = child
+			for {
+				//The bad stuff
+				p := n.parent
+				if p == nil {
+					return
+				}
+				s := n.sibling()
+				if !s.isBlack() {
+					p.payload = red
+					s.payload = black
+					if p.left == n {
+						p.leftRotate()
+					} else {
+						p.rightRotate()
+					}
+					// Update after the rotation
+					s = n.sibling()
+					p = n.parent
+				}
+				if s.isBlack() && s.left.isBlack() && s.right.isBlack() {
+					s.payload = red
+					if p.isBlack() {
+						n = p
+						// Recurse
+					} else {
+						p.payload = black
+						return
+					}
+				} else {
+					if n.parent.left == n && s.right.isBlack() &&
+						!s.left.isBlack() {
+						s.payload = red
+						s.left.payload = black
+						s.rightRotate()
+						// Update after the rotation
+						s = n.sibling()
+						p = n.parent
+					} else if n.parent.right == n && s.left.isBlack() &&
+						!s.right.isBlack() {
+						s.payload = red
+						s.right.payload = black
+						s.leftRotate()
+						// Update after the rotation
+						s = n.sibling()
+						p = n.parent
+					}
+					s.payload = p.payload
+					p.payload = black
+					if p.left == n {
+						s.right.payload = black
+						p.leftRotate()
+					} else {
+						s.left.payload = black
+						p.rightRotate()
+					}
+				}
+			}
+		}
+	}
 }

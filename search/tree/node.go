@@ -34,6 +34,29 @@ func (n *node) maxKey() *node {
 	return n.right.maxKey()
 }
 
+func (n *node) sibling() *node {
+	if n.parent == nil {
+		return nil
+	}
+	if n.parent.left == n {
+		return n.parent.right
+	}
+	return n.parent.left
+}
+
+// Replace n.parent's pointer to n
+// with a pointer to n2
+func (n *node) parentReplace(n2 *node) {
+	n2.parent = n.parent
+	if n.parent != nil {
+		if n.parent.left == n {
+			n.parent.left = n2
+		} else {
+			n.parent.right = n2
+		}
+	}
+}
+
 func (n *node) leftRotate() {
 	newRight := n.right.left
 	n.right.parent = n.parent
@@ -64,25 +87,48 @@ func (n *node) rightRotate() {
 	n.left = newLeft
 }
 
-func (n *node) deleteSwap(n2 *node) {
-	// Delete the lower node's parent reference
-	if n2.parent.left == n2 {
-		n2.parent.left = nil
-	} else {
-		n2.parent.right = nil
+func (n *node) swap(n2 *node) {
+	// Reset the second node's parent reference
+	if n2.parent != nil {
+		if n2.parent.left == n2 {
+			n2.parent.left = n
+		} else {
+			n2.parent.right = n
+		}
 	}
+	n2parent := n2.parent
+	n2left := n2.left
+	n2right := n2.right
+
 	// Point deleted node's children to the lifted node,
 	// and vice versa.
 	n2.left = n.left
-	n2.left.parent = n2
 	n2.right = n.right
-	n2.right.parent = n2
+	if n2.left != nil {
+		n2.left.parent = n2
+	}
+	if n2.right != nil {
+		n2.right.parent = n2
+	}
 
 	n2.parent = n.parent
-	// Update deleted node's parent
-	if n2.parent.left == n {
-		n2.parent.left = n2
-	} else {
-		n2.parent.right = n2
+	// Repeat for the first node
+	if n2.parent != nil {
+		if n2.parent.left == n {
+			n2.parent.left = n2
+		} else {
+			n2.parent.right = n2
+		}
 	}
+
+	n.left = n2left
+	n.right = n2right
+	if n.left != nil {
+		n.left.parent = n
+	}
+	if n.right != nil {
+		n.right.parent = n
+	}
+
+	n.parent = n2parent
 }

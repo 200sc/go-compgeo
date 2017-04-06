@@ -24,5 +24,13 @@ const (
 func New(typ Type) search.Tree {
 	bst := new(BST)
 	bst.typ = typ
+	switch typ {
+	default:
+		fallthrough
+	case RedBlack:
+		bst.insertFn = rbInsert
+		bst.deleteFn = rbDelete
+		bst.searchFn = rbInsert
+	}
 	return bst
 }
