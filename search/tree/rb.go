@@ -1,17 +1,25 @@
 package tree
 
-type color bool
+import "errors"
 
 const (
-	red   color = false
-	black       = true
+	red   = false
+	black = true
+)
+
+var (
+	rbFnSet = &fnSet{
+		insertFn: rbInsert,
+		deleteFn: rbDelete,
+		searchFn: rbSearch,
+	}
 )
 
 func (n *node) isBlack() bool {
 	if n == nil {
 		return true
 	}
-	return (n.payload.(color) == black)
+	return (n.payload.(bool) == black)
 }
 
 func (n *node) ancestor(i int) *node {
@@ -24,9 +32,66 @@ func (n *node) ancestor(i int) *node {
 	return n
 }
 
-func rbSearch(n *node) {
-	//Todo
+// RBValid returns whether the given BST is a valid Red Black tree
+func RBValid(bst *BST) (bool, error) {
+	n := bst.root
+	if n == nil {
+		return true, nil
+	}
+	// We satisfy case 3, that the leaves must be black,
+	// implicitly as we evalaute nil to be black.
+	// Case 2: the root must be black
+	switch n.payload.(type) {
+	case bool:
+		if n.payload == red {
+			return false, errors.New("The root is not black")
+		}
+	}
+	b, _, err := n.RBValid(true)
+	return b, err
 }
+
+// RBValid returns whether the given node is a valid Red Black Subtree.
+// It returns boolean validity, a potential error (if b = false, err = nil)
+// and the number of black nodes on any path starting from it.
+func (n *node) RBValid(mustBeBlack bool) (bool, int, error) {
+	if n != nil {
+		switch n.payload.(type) {
+		case bool:
+			mustBeBlack = false
+			increaseCt := 0
+			if n.payload == red {
+				if mustBeBlack {
+					return false, 0, errors.New("A red node's child was red")
+				}
+				mustBeBlack = true
+			} else {
+				increaseCt = 1
+			}
+			b, ct1, err := n.left.RBValid(mustBeBlack)
+			if !b {
+				return b, 0, err
+			}
+			b, ct2, err := n.right.RBValid(mustBeBlack)
+			if !b {
+				return b, 0, err
+			}
+			if ct1 != ct2 {
+				return false, 0, errors.New("The count of black nodes at either side of a subtree was not the same")
+			}
+			return true, ct1 + increaseCt, nil
+		// Case 1: Each node is red or black
+		default:
+			return false, 0, errors.New("A node was neither red nor black")
+		}
+	}
+	return true, 1, nil
+}
+
+func rbSearch(n *node) {
+	// NOP
+}
+
 func rbInsert(n *node) {
 	// If i is the root
 	for {
@@ -46,39 +111,32 @@ func rbInsert(n *node) {
 		// be the root and would be black.
 		// If i's parent is red and i's uncle is red
 
-		redUncle := false
 		gp := p.parent
-		if gp.left == p {
-			if !gp.right.isBlack() {
-				redUncle = true
-			}
-		} else if !gp.left.isBlack() {
-			redUncle = true
-		}
-		// Would this be faster?
-		// if bst.color(right(gp)) == RED && bst.color(left(gp)) == RED {...}
-		if redUncle {
-			n = gp
+		uncle := n.uncle()
+		if !uncle.isBlack() {
 			gp.left.payload = black
 			gp.right.payload = black
 			gp.payload = red
-			// recurse on i's grandparent
-
+			n = gp
+			// Recurse
 		} else {
+			if p.right == n && p == gp.left {
+				p.leftRotate()
+				n = n.left
+			} else if p.left == n && p == gp.right {
+				p.rightRotate()
+				n = n.right
+			}
+			p = n.parent
+			gp = p.parent
+
+			p.payload = black
 			gp.payload = red
-			if gp.left == p {
-				// if i is a right child
-				if n.parent.left == n {
-					n.parent.leftRotate()
-				}
-				n.parent.payload = black
-				n.ancestor(2).rightRotate()
+
+			if p.left == n {
+				gp.rightRotate()
 			} else {
-				if n.parent.left == n {
-					n.parent.rightRotate()
-				}
-				n.parent.payload = black
-				n.ancestor(2).leftRotate()
+				gp.leftRotate()
 			}
 			return
 		}
@@ -86,8 +144,16 @@ func rbInsert(n *node) {
 }
 func rbDelete(n *node) {
 
-	// If this node has two children
-	if n.right != nil && n.left != nil {
+	c := n.payload
+	var r *node
+	var newRoot *node
+	if n.right == nil {
+		r = n.left
+		n.parentReplace(n.left)
+	} else if n.left == nil {
+		r = n.right
+		n.parentReplace(n.right)
+	} else {
 		// Find the maximum value of the left subtree
 		// or the minimum value of the right subtree.
 		// Presumably defaulting to one over the other will
@@ -99,78 +165,97 @@ func rbDelete(n *node) {
 		//} else {
 		// n2 := n.left.maxKey()
 		//}
-
-		n2.swap(n)
-	}
-	var child *node
-	if n.right == nil {
-		child = n.left
-	} else {
-		child = n.right
-	}
-	n.parentReplace(child)
-	if n.isBlack() {
-		if !child.isBlack() {
-			child.payload = black
+		r := n2.right
+		if n2.parent == n {
+			if r != nil {
+				r.parent = n2
+			}
 		} else {
-			n = child
-			for {
-				//The bad stuff
-				p := n.parent
-				if p == nil {
-					return
-				}
-				s := n.sibling()
+			n2.parentReplace(r)
+			n2.right = n.right
+			n2.right.parent = n2
+		}
+		if n.parent == nil {
+			newRoot = n2
+		}
+		n.parentReplace(n2)
+		if newRoot == n2 {
+			n2.parent = nil
+		}
+		n2.left = n.left
+		n2.left.parent = n2
+		n2.payload = n.payload
+	}
+	if r == nil {
+		return
+	}
+	if c.(bool) == black {
+		n = r
+		p := n.parent
+		var s *node
+		for p != nil && n.isBlack() {
+			if n == p.left {
+				s = p.right
 				if !s.isBlack() {
 					p.payload = red
 					s.payload = black
-					if p.left == n {
-						p.leftRotate()
-					} else {
-						p.rightRotate()
-					}
-					// Update after the rotation
-					s = n.sibling()
-					p = n.parent
+					p.leftRotate()
+					s = parent_sibling(n, p)
 				}
-				if s.isBlack() && s.left.isBlack() && s.right.isBlack() {
-					s.payload = red
-					if p.isBlack() {
-						n = p
-						// Recurse
-					} else {
+				if s != nil {
+					if s.right.isBlack() {
+						if s.left.isBlack() {
+							s.payload = red
+							p = p.parent
+							n = p
+						} else {
+							s.left.payload = black
+							s.payload = red
+							s.leftRotate()
+							s = parent_sibling(n, p)
+						}
+					}
+					if !s.right.isBlack() {
+						s.payload = p.payload
 						p.payload = black
+						s.right.payload = black
+						p.leftRotate()
 						return
 					}
-				} else {
-					if n.parent.left == n && s.right.isBlack() &&
-						!s.left.isBlack() {
-						s.payload = red
-						s.left.payload = black
-						s.rightRotate()
-						// Update after the rotation
-						s = n.sibling()
-						p = n.parent
-					} else if n.parent.right == n && s.left.isBlack() &&
-						!s.right.isBlack() {
-						s.payload = red
-						s.right.payload = black
-						s.leftRotate()
-						// Update after the rotation
-						s = n.sibling()
-						p = n.parent
+				}
+			} else {
+				s = p.left
+				if !s.isBlack() {
+					p.payload = red
+					s.payload = black
+					p.rightRotate()
+					s = parent_sibling(n, p)
+				}
+				if s != nil {
+					if s.left.isBlack() {
+						if s.right.isBlack() {
+							s.payload = red
+							p = p.parent
+							n = p
+						} else {
+							s.right.payload = black
+							s.payload = red
+							s.leftRotate()
+							s = parent_sibling(n, p)
+						}
 					}
-					s.payload = p.payload
-					p.payload = black
-					if p.left == n {
-						s.right.payload = black
-						p.leftRotate()
-					} else {
+					if !s.left.isBlack() {
+						s.payload = p.payload
+						p.payload = black
 						s.left.payload = black
 						p.rightRotate()
+						return
 					}
 				}
 			}
 		}
+	}
+	if n != nil {
+		n.payload = black
 	}
 }

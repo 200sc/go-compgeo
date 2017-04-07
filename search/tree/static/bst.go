@@ -1,45 +1,12 @@
 package static
 
+import "github.com/200sc/go-compgeo/search"
+
 // Static is separated from the rest of tree
 // because otherwise most of its types and functions
 // would be preceded with "static"
 
-type node struct {
-	// eventually key should be a comparable interface
-	// but that would probably poorly effect performance
-	key float64
-	val interface{}
-}
-
-// This implicitly says that
-// a user cannot store nils in
-// this tree. This is probably
-// overly limiting.
-func (n node) isNil() bool {
-	return n.val == nil
-}
-
-func ancestor(i, tiersUp int) int {
-	return i / (tiersUp * 2)
-}
-
-func parent(i int) int {
-	return i / 2
-}
-
-func left(i int) int {
-	return 2 * i
-}
-
-func right(i int) int {
-	return (2 * i) + 1
-}
-
-func isLeftChild(i int) bool {
-	return i%2 == 0
-}
-
-type BST []node
+type BST []Node
 
 func (b BST) isNil(i int) bool {
 	if i < len(b) {
@@ -49,8 +16,8 @@ func (b BST) isNil(i int) bool {
 }
 
 func (b BST) minKey(i int) int {
-	for !b.isNil(left(i)) {
-		i = left(i)
+	for !b.isNil(Left(i)) {
+		i = Left(i)
 	}
 	return i
 }
@@ -69,8 +36,8 @@ func (b BST) Size() int {
 func (b BST) size(i int, sz *int) {
 	if !b.isNil(i) {
 		*sz++
-		b.size(left(i), sz)
-		b.size(right(i), sz)
+		b.size(Left(i), sz)
+		b.size(Right(i), sz)
 	}
 }
 
@@ -88,9 +55,9 @@ func (b BST) Search(key float64) (bool, interface{}) {
 		if k == key {
 			return true, n.val
 		} else if k < key {
-			i = left(i)
+			i = Left(i)
 		} else {
-			i = right(i)
+			i = Right(i)
 		}
 		if b.isNil(i) {
 			return false, nil
@@ -103,18 +70,18 @@ func (b BST) Search(key float64) (bool, interface{}) {
 // The most useful of these is the in-order traverse,
 // and that's what we provide here.
 // Other traversal methods can be added as needed.
-func (b BST) InOrderTraverse() []node {
-	out := make([]node, b.Size())
+func (b BST) InOrderTraverse() []search.Node {
+	out := make([]search.Node, b.Size())
 	i := 0
 	b.inOrderTraverse(out, 0, &i)
 	return out
 }
 
-func (b BST) inOrderTraverse(out []node, i int, nextIndex *int) {
+func (b BST) inOrderTraverse(out []search.Node, i int, nextIndex *int) {
 	if !b.isNil(i) {
-		b.inOrderTraverse(out, left(i), nextIndex)
+		b.inOrderTraverse(out, Left(i), nextIndex)
 		out[*nextIndex] = b[i]
 		*nextIndex++
-		b.inOrderTraverse(out, right(i), nextIndex)
+		b.inOrderTraverse(out, Right(i), nextIndex)
 	}
 }

@@ -21,16 +21,13 @@ const (
 
 // New returns a tree as defined by the input type.
 // Hypothetically, this is the only exported function in this package
-func New(typ Type) search.Tree {
+func New(typ Type) search.Persistable {
 	bst := new(BST)
-	bst.typ = typ
 	switch typ {
 	default:
 		fallthrough
 	case RedBlack:
-		bst.insertFn = rbInsert
-		bst.deleteFn = rbDelete
-		bst.searchFn = rbInsert
+		bst.fnSet = rbFnSet
 	}
 	return bst
 }

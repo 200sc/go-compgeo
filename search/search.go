@@ -25,7 +25,7 @@ type Sizable interface {
 
 // Static types can be searched and traversed,
 // but not modified. The benefit of using a static
-// type is that they should be faster to query than
+// type is that it should be faster to query than
 // a dynamic type.
 type Static interface {
 	Sizable
@@ -33,12 +33,19 @@ type Static interface {
 	Traversable
 }
 
-// Modifiable types implicitly are static types with
+// Dynamic types implicitly are static types with
 // additional functionality to change their contents,
-// and being static types, should be convertible back to static types.
-type Modifiable interface {
+// and being static types, should be convertible back to static.
+type Dynamic interface {
 	Static
 	Insert(Node) error
 	Delete(Node) error
 	ToStatic() Static
 }
+
+// Why isn't there a Static -> Dynamic function?
+// Because Static types don't store the information required to
+// make modifications to their structure, and don't have an idea of what
+// information they would add to do so-- that's the job of individual
+// Dynamic structures. So yes, functions like ToRBTree(Static)
+// might exist, but they won't be functions on the interface itself.
