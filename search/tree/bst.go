@@ -10,7 +10,7 @@ import (
 
 type fnSet struct {
 	insertFn func(*node)
-	deleteFn func(*node)
+	deleteFn func(*node) *node
 	searchFn func(*node)
 }
 
@@ -121,9 +121,17 @@ func (bst *BST) Delete(n search.Node) error {
 			return errors.New("Key not found")
 		}
 	}
+	fmt.Println("Out")
 	bst.size--
-	bst.deleteFn(curNode)
-	bst.updateRoot()
+	newRoot := bst.deleteFn(curNode)
+	fmt.Println("Delete over")
+	if newRoot != nil {
+		bst.root = newRoot
+	} else {
+		fmt.Println(curNode)
+		bst.updateRoot()
+	}
+	fmt.Println("Updated root")
 	return nil
 }
 

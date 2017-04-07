@@ -91,13 +91,14 @@ func (n *node) uncle() *node {
 
 // Replace n.parent's pointer to n
 // with a pointer to n2
-func (n *node) parentReplace(n2 *node) {
+func (n *node) parentReplace(n2 *node) *node {
 	// if n.parent is nil, that means this is the root!
 	// we're removing n from the tree, and our method of
 	// finding then new root when a root is removed is to
 	// follow the pointer of the old root. SO--
+	var toReturn *node
 	if n.parent == nil {
-		n.parent = n2
+		toReturn = n2
 	} else if n.parent.left == n {
 		n.parent.left = n2
 	} else {
@@ -106,6 +107,7 @@ func (n *node) parentReplace(n2 *node) {
 	if n2 != nil {
 		n2.parent = n.parent
 	}
+	return toReturn
 }
 
 func (n *node) leftRotate() {

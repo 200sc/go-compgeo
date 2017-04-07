@@ -46,7 +46,7 @@ var (
 		{10, 1},
 	}
 	notInInput1      = 12
-	randomInputCt    = 50
+	randomInputCt    = 59
 	randomInputRange = 1000
 )
 
@@ -104,13 +104,17 @@ func TestRBRandomInput(t *testing.T) {
 			t.FailNow()
 		}
 	}
+	fmt.Println("Insert Complete")
 	// These values might not be in the bst.
 	for i := 0; i < randomInputCt; i++ {
 		n := nilValNode{float64(rand.Intn(randomInputRange))}
+		fmt.Println("Deleting", n)
 		tree.Delete(n)
 		findCycle(tree.(*BST))
 		valid, err := RBValid(tree.(*BST))
 		assert.True(t, valid)
-		assert.Nil(t, err)
+		if !assert.Nil(t, err) {
+			t.FailNow()
+		}
 	}
 }

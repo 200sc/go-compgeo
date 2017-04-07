@@ -142,17 +142,20 @@ func rbInsert(n *node) {
 		}
 	}
 }
-func rbDelete(n *node) {
+func rbDelete(n *node) *node {
 
+	n.printRoot()
 	c := n.payload
 	var r *node
 	var newRoot *node
+	//var newRoot *node
+	p := n.parent
 	if n.right == nil {
 		r = n.left
-		n.parentReplace(n.left)
+		newRoot = n.parentReplace(n.left)
 	} else if n.left == nil {
 		r = n.right
-		n.parentReplace(n.right)
+		newRoot = n.parentReplace(n.right)
 	} else {
 		// Find the maximum value of the left subtree
 		// or the minimum value of the right subtree.
@@ -165,40 +168,49 @@ func rbDelete(n *node) {
 		//} else {
 		// n2 := n.left.maxKey()
 		//}
-		r := n2.right
+		r = n2.right
 		if n2.parent == n {
 			if r != nil {
 				r.parent = n2
+			} else {
+				p = n2
 			}
 		} else {
-			n2.parentReplace(r)
+			newRoot = n2.parentReplace(r)
 			n2.right = n.right
 			n2.right.parent = n2
 		}
-		if n.parent == nil {
-			newRoot = n2
-		}
-		n.parentReplace(n2)
-		if newRoot == n2 {
-			n2.parent = nil
+		newRootMaybe := n.parentReplace(n2)
+		if newRootMaybe != nil {
+			newRoot = newRootMaybe
 		}
 		n2.left = n.left
 		n2.left.parent = n2
 		n2.payload = n.payload
 	}
-	if r == nil {
-		return
-	}
+	//fmt.Println(p)
 	if c.(bool) == black {
 		n = r
-		p := n.parent
+		if n != nil {
+			p = n.parent
+		}
 		var s *node
 		for p != nil && n.isBlack() {
+			if r != nil {
+				p = r.parent
+			}
+			// What the fuck is this case
+			// It causes a damn infinite loop without this block
+			s = parent_sibling(n, p)
+			if p.isBlack() && !s.isBlack() && n == nil && s.left == nil &&
+				s.right == nil {
+				break
+			}
 			if n == p.left {
 				s = p.right
 				if !s.isBlack() {
-					p.payload = red
 					s.payload = black
+					p.payload = red
 					p.leftRotate()
 					s = parent_sibling(n, p)
 				}
@@ -220,7 +232,8 @@ func rbDelete(n *node) {
 						p.payload = black
 						s.right.payload = black
 						p.leftRotate()
-						return
+						newRoot = n
+						break
 					}
 				}
 			} else {
@@ -249,7 +262,8 @@ func rbDelete(n *node) {
 						p.payload = black
 						s.left.payload = black
 						p.rightRotate()
-						return
+						newRoot = n
+						break
 					}
 				}
 			}
@@ -258,4 +272,5 @@ func rbDelete(n *node) {
 	if n != nil {
 		n.payload = black
 	}
+	return newRoot
 }
