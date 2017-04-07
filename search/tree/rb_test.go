@@ -46,7 +46,7 @@ var (
 		{10, 1},
 	}
 	notInInput1      = 12
-	randomInputCt    = 59
+	randomInputCt    = 100
 	randomInputRange = 1000
 )
 

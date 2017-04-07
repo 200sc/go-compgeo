@@ -123,14 +123,15 @@ func (bst *BST) Delete(n search.Node) error {
 	}
 	fmt.Println("Out")
 	bst.size--
+	fmt.Println(curNode)
 	newRoot := bst.deleteFn(curNode)
 	fmt.Println("Delete over")
 	if newRoot != nil {
 		bst.root = newRoot
 	} else {
-		fmt.Println(curNode)
 		bst.updateRoot()
 	}
+	fmt.Println(bst.root)
 	fmt.Println("Updated root")
 	return nil
 }

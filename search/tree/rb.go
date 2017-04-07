@@ -1,6 +1,7 @@
 package tree
 
 import "errors"
+import "fmt"
 
 const (
 	red   = false
@@ -168,12 +169,11 @@ func rbDelete(n *node) *node {
 		//} else {
 		// n2 := n.left.maxKey()
 		//}
+		p = n2.parent
 		r = n2.right
 		if n2.parent == n {
 			if r != nil {
 				r.parent = n2
-			} else {
-				p = n2
 			}
 		} else {
 			newRoot = n2.parentReplace(r)
@@ -188,11 +188,15 @@ func rbDelete(n *node) *node {
 		n2.left.parent = n2
 		n2.payload = n.payload
 	}
-	//fmt.Println(p)
+	fmt.Println(n == nil, r == nil, p == nil)
 	if c.(bool) == black {
 		n = r
 		if n != nil {
 			p = n.parent
+		}
+		if p != nil {
+			p.printRoot()
+			fmt.Println(p)
 		}
 		var s *node
 		for p != nil && n.isBlack() {
@@ -204,6 +208,10 @@ func rbDelete(n *node) *node {
 			s = parent_sibling(n, p)
 			if p.isBlack() && !s.isBlack() && n == nil && s.left == nil &&
 				s.right == nil {
+				break
+			}
+			// Problem case: p is a parent of two black children
+			if p.isBlack() && s == nil && n == nil {
 				break
 			}
 			if n == p.left {
