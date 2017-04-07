@@ -146,52 +146,6 @@ func (n *node) rightRotate() {
 	n.parent = l
 }
 
-func (n *node) swap(n2 *node) {
-	// Reset the second node's parent reference
-	if n2.parent != nil {
-		if n2.parent.left == n2 {
-			n2.parent.left = n
-		} else {
-			n2.parent.right = n
-		}
-	}
-	n2parent := n2.parent
-	n2left := n2.left
-	n2right := n2.right
-
-	// Point deleted node's children to the lifted node,
-	// and vice versa.
-	n2.left = n.left
-	n2.right = n.right
-	if n2.left != nil {
-		n2.left.parent = n2
-	}
-	if n2.right != nil {
-		n2.right.parent = n2
-	}
-
-	n2.parent = n.parent
-	// Repeat for the first node
-	if n2.parent != nil {
-		if n2.parent.left == n {
-			n2.parent.left = n2
-		} else {
-			n2.parent.right = n2
-		}
-	}
-
-	n.left = n2left
-	n.right = n2right
-	if n.left != nil {
-		n.left.parent = n
-	}
-	if n.right != nil {
-		n.right.parent = n
-	}
-
-	n.parent = n2parent
-}
-
 func (n *node) staticTree(m map[int]static.Node, i int) (map[int]static.Node, int) {
 	if n == nil {
 		return m, 0

@@ -49,9 +49,11 @@ func (b BST) size(i int, sz *int) {
 // Todo: benchmark value versus pointer receiver
 func (b BST) Search(key float64) (bool, interface{}) {
 	i := 1
+	var n Node
+	var k float64
 	for {
-		n := b[i]
-		k := n.key
+		n = b[i]
+		k = n.key
 		if k == key {
 			return true, n.val
 		} else if k < key {
