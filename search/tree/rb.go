@@ -1,7 +1,6 @@
 package tree
 
 import "errors"
-import "fmt"
 
 const (
 	red   = false
@@ -15,6 +14,11 @@ var (
 		searchFn: rbSearch,
 	}
 )
+
+// For readability
+func (n *node) isRed() bool {
+	return !n.isBlack()
+}
 
 func (n *node) isBlack() bool {
 	if n == nil {
@@ -145,8 +149,8 @@ func rbInsert(n *node) {
 }
 func rbDelete(n *node) *node {
 
-	n.printRoot()
-	c := n.payload
+	var c bool
+	c = n.payload.(bool)
 	var r *node
 	var newRoot *node
 	//var newRoot *node
@@ -166,6 +170,7 @@ func rbDelete(n *node) *node {
 
 		// if rand.Float64() < 0.5 {
 		n2 := n.right.minKey()
+		c = n2.payload.(bool)
 		//} else {
 		// n2 := n.left.maxKey()
 		//}
@@ -187,95 +192,132 @@ func rbDelete(n *node) *node {
 		n2.left = n.left
 		n2.left.parent = n2
 		n2.payload = n.payload
+		if p == n {
+			p = n2
+		}
 	}
-	fmt.Println(n == nil, r == nil, p == nil)
-	if c.(bool) == black {
-		n = r
+	if c == black {
+		newRootMaybe := rbDeleteFixup(r, p)
+		if newRootMaybe != nil {
+			newRoot = newRootMaybe
+		}
+	}
+	return newRoot
+}
+
+// DeleteFixup takes n and p, as nil nodes do
+// not contain a reference to their parent.
+func rbDeleteFixup(n, p *node) *node {
+	var s, newRoot *node
+	for n.isBlack() {
 		if n != nil {
 			p = n.parent
 		}
-		if p != nil {
-			p.printRoot()
-			fmt.Println(p)
+		// Case 1: p = nil
+		// n is the root.
+		if p == nil {
+			newRoot = n
+			break
 		}
-		var s *node
-		for p != nil && n.isBlack() {
-			if r != nil {
-				p = r.parent
-			}
-			// What the fuck is this case
-			// It causes a damn infinite loop without this block
-			s = parent_sibling(n, p)
-			if p.isBlack() && !s.isBlack() && n == nil && s.left == nil &&
-				s.right == nil {
+		// The subtree P->N has one fewer black nodes than P->S.
+		s = parent_sibling(n, p)
+		if s.isRed() {
+			// Case 2
+			// S is red, so P is black.
+			// Case 2.1
+			// S is red.
+			// If either of S's children are nil,
+			// we are done. P->S has a black
+			// height of 2. P->N must have at
+			// least a black height of 2, as P
+			// is black and N is black, and our
+			// problem was that P-> had one fewer
+			// black nodes than P->S.
+			//
+			// Because we removed X from P->N
+			// in our original case, this case
+			// should never occur on a first
+			// iteration, unless X was red.
+			if s.left == nil || s.right == nil {
 				break
 			}
-			// Problem case: p is a parent of two black children
-			if p.isBlack() && s == nil && n == nil {
-				break
-			}
-			if n == p.left {
+			// Case 2.2
+			//
+			// Give N a Black Sibling and
+			// a Red parent.
+			//
+			p.payload = red
+			s.payload = black
+			if s == p.right {
+				p.leftRotate()
 				s = p.right
-				if !s.isBlack() {
-					s.payload = black
-					p.payload = red
-					p.leftRotate()
-					s = parent_sibling(n, p)
-				}
-				if s != nil {
-					if s.right.isBlack() {
-						if s.left.isBlack() {
-							s.payload = red
-							p = p.parent
-							n = p
-						} else {
-							s.left.payload = black
-							s.payload = red
-							s.leftRotate()
-							s = parent_sibling(n, p)
-						}
-					}
-					if !s.right.isBlack() {
-						s.payload = p.payload
-						p.payload = black
-						s.right.payload = black
-						p.leftRotate()
-						newRoot = n
-						break
-					}
-				}
 			} else {
+				p.rightRotate()
 				s = p.left
-				if !s.isBlack() {
-					p.payload = red
-					s.payload = black
-					p.rightRotate()
-					s = parent_sibling(n, p)
-				}
-				if s != nil {
-					if s.left.isBlack() {
-						if s.right.isBlack() {
-							s.payload = red
-							p = p.parent
-							n = p
-						} else {
-							s.right.payload = black
-							s.payload = red
-							s.leftRotate()
-							s = parent_sibling(n, p)
-						}
-					}
-					if !s.left.isBlack() {
-						s.payload = p.payload
-						p.payload = black
-						s.left.payload = black
-						p.rightRotate()
-						newRoot = n
-						break
-					}
-				}
 			}
+			// Now P->N = P->NewS - 1, still,
+			// and OldS->P = OldS-> p.sibling - 1
+			//
+			// R:P
+			// |-- B:N
+			// |-- B:S, not nil
 		}
+		//
+		// Case 2.3: S is nil
+		// We think this is either impossible
+		// or implies that we can stop
+		if s == nil {
+			break
+		}
+		// Case 3: Everything is black
+		// In this case, Because S's children are black we can turn it red.
+		// This means P->S = P->N, but GP->P = GP->P's sibling - 1,
+		// so we recurse with n = p, p = gp.
+		if p.isBlack() && s.isBlack() && s.left.isBlack() && s.right.isBlack() {
+			s.payload = red
+			n = p
+			p = n.parent
+			continue
+		}
+		// Case 4: Everything but P is black.
+		// We can turn S red here as well, if we also make P red.
+		// That will make P->N = P->S and they'll both be what they were
+		// before the deletion, so we're done.
+		if p.isRed() && s.isBlack() && s.left.isBlack() && s.right.isBlack() {
+			s.payload = red
+			p.payload = black
+			break
+		}
+		// Case 5.1:
+		// S has a left red child and a right black child,
+		// and n is P's left child. A rotation will convert this
+		// to case 6.
+		if n == p.left && s.right.isBlack() && s.left.isRed() {
+			s.payload = red
+			s.left.payload = black
+			s.rightRotate()
+			s = p.right
+			// Case 5.2:
+			// As 5.1, but flipped
+		} else if n == p.right && s.left.isBlack() && s.right.isRed() {
+			s.payload = red
+			s.right.payload = black
+			s.leftRotate()
+			s = p.left
+		}
+		// Case 6:
+		// ...
+
+		s.payload = p.payload
+		p.payload = black
+		if n == p.left {
+			s.right.payload = black
+			p.leftRotate()
+		} else {
+			s.left.payload = black
+			p.rightRotate()
+		}
+		break
 	}
 	if n != nil {
 		n.payload = black

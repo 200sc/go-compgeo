@@ -1,7 +1,6 @@
 package tree
 
 import (
-	"fmt"
 	"math/rand"
 	"testing"
 
@@ -46,7 +45,7 @@ var (
 		{10, 1},
 	}
 	notInInput1      = 12
-	randomInputCt    = 100
+	randomInputCt    = 10000
 	randomInputRange = 1000
 )
 
@@ -79,7 +78,7 @@ func TestRBDefinedInput1(t *testing.T) {
 		assert.False(t, b)
 		assert.Nil(t, found)
 		valid, err := RBValid(tree.(*BST))
-		fmt.Println(tree.(*BST).root)
+		t.Log(tree.(*BST).root)
 		assert.True(t, valid)
 		if !assert.Nil(t, err) {
 			t.FailNow()
@@ -89,32 +88,45 @@ func TestRBDefinedInput1(t *testing.T) {
 
 func TestRBRandomInput(t *testing.T) {
 	tree := New(RedBlack)
-	inserted := make(map[float64]bool)
+	for i := 0; i < randomInputCt; i++ {
+		n := testNode{
+			float64(rand.Intn(randomInputRange)),
+			float64(rand.Intn(randomInputRange)),
+		}
+		t.Log("Inserting", n)
+		tree.Insert(n)
+		valid, err := RBValid(tree.(*BST))
+		assert.True(t, valid)
+		if !assert.Nil(t, err) {
+			t.FailNow()
+		}
+	}
+	t.Log("Insert Complete")
+	// These values might not be in the bst.
+	for i := 0; i < randomInputCt; i++ {
+		n := nilValNode{float64(rand.Intn(randomInputRange))}
+
+		t.Log("Deleting", n)
+		tree.Delete(n)
+		valid, err := RBValid(tree.(*BST))
+		assert.True(t, valid)
+		if !assert.Nil(t, err) {
+			t.FailNow()
+		}
+	}
+}
+
+func TestRBToStatic(t *testing.T) {
+	tree := New(RedBlack)
 	for i := 0; i < randomInputCt; i++ {
 		n := testNode{
 			float64(rand.Intn(randomInputRange)),
 			float64(rand.Intn(randomInputRange)),
 		}
 		tree.Insert(n)
-		inserted[n.key] = true
-		findCycle(tree.(*BST))
-		valid, err := RBValid(tree.(*BST))
-		assert.True(t, valid)
-		if !assert.Nil(t, err) {
-			t.FailNow()
-		}
+		// We don't check that the tree is valid, that's
+		// another test's job.
 	}
-	fmt.Println("Insert Complete")
-	// These values might not be in the bst.
-	for i := 0; i < randomInputCt; i++ {
-		n := nilValNode{float64(rand.Intn(randomInputRange))}
-		fmt.Println("Deleting", n)
-		tree.Delete(n)
-		findCycle(tree.(*BST))
-		valid, err := RBValid(tree.(*BST))
-		assert.True(t, valid)
-		if !assert.Nil(t, err) {
-			t.FailNow()
-		}
-	}
+	tree.ToStatic()
+
 }
