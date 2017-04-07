@@ -45,7 +45,7 @@ var (
 		{10, 1},
 	}
 	notInInput1      = 12
-	randomInputCt    = 10000
+	randomInputCt    = 20000
 	randomInputRange = 1000
 )
 
@@ -88,6 +88,7 @@ func TestRBDefinedInput1(t *testing.T) {
 
 func TestRBRandomInput(t *testing.T) {
 	tree := New(RedBlack)
+	t.Log("Uh")
 	for i := 0; i < randomInputCt; i++ {
 		n := testNode{
 			float64(rand.Intn(randomInputRange)),
@@ -118,15 +119,75 @@ func TestRBRandomInput(t *testing.T) {
 
 func TestRBToStatic(t *testing.T) {
 	tree := New(RedBlack)
+	inserted := make(map[float64]bool)
 	for i := 0; i < randomInputCt; i++ {
 		n := testNode{
 			float64(rand.Intn(randomInputRange)),
 			float64(rand.Intn(randomInputRange)),
 		}
+		inserted[n.key] = true
 		tree.Insert(n)
 		// We don't check that the tree is valid, that's
 		// another test's job.
 	}
-	tree.ToStatic()
+	t2 := tree.ToStatic()
+	for i := 0; i < randomInputCt; i++ {
+		key := float64(rand.Intn(randomInputRange))
+		b, _ := t2.Search(key)
+		assert.Equal(t, b, inserted[key])
+	}
+}
 
+func BenchmarkRBDynamic(b *testing.B) {
+	tree := New(RedBlack)
+	for _, v := range test1Input {
+		tree.Insert(v)
+	}
+	j := 0
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		b, _ := tree.Search(float64(rand.Intn(notInInput1)))
+		// We do this to be fair to maps
+		if b {
+			j++
+		}
+	}
+}
+
+func BenchmarkRBStatic(b *testing.B) {
+	tree := New(RedBlack)
+	for _, v := range test1Input {
+		tree.Insert(v)
+	}
+	t2 := tree.ToStatic()
+	j := 0
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		b, _ := t2.Search(float64(rand.Intn(notInInput1)))
+		// We do this to be fair to maps
+		if b {
+			j++
+		}
+	}
+}
+
+func BenchmarkMap(b *testing.B) {
+	m := make(map[float64]map[float64]bool)
+	for _, v := range test1Input {
+		if _, ok := m[v.key]; !ok {
+			m[v.key] = make(map[float64]bool)
+		}
+		m[v.key][v.val] = true
+	}
+	j := 0
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		k := m[float64(rand.Intn(notInInput1))]
+		// The Go compiler won't let m[...] exist
+		// by itself, so we need to do something
+		// with its output
+		if k != nil {
+			j++
+		}
+	}
 }

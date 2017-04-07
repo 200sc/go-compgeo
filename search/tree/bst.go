@@ -29,7 +29,7 @@ func (bst *BST) ToPersistent() search.DynamicPersistent {
 // an array with a length of the maximum index found.
 func (bst *BST) ToStatic() search.Static {
 	m, maxIndex := bst.root.staticTree(make(map[int]static.Node), 1)
-	staticBst := make(static.BST, maxIndex)
+	staticBst := make(static.BST, maxIndex+1)
 	for k, v := range m {
 		staticBst[k] = v
 	}
@@ -134,11 +134,12 @@ func (bst *BST) Delete(n search.Node) error {
 // Search :
 func (bst *BST) Search(key float64) (bool, interface{}) {
 	curNode := bst.root
+	var k float64
 	for {
 		if curNode == nil {
 			break
 		}
-		k := curNode.key
+		k = curNode.key
 		if k == key {
 			break
 		} else if k < key {
@@ -196,6 +197,7 @@ func findCycle(bst *BST) {
 	bst.root.findCycle(seen)
 }
 
+// findCycle will mis-report duplicate input nodes as cycles.
 func (n *node) findCycle(seen map[float64]map[float64]bool) {
 	if n == nil {
 		return

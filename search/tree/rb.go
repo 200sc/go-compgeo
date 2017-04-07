@@ -224,24 +224,6 @@ func rbDeleteFixup(n, p *node) *node {
 		if s.isRed() {
 			// Case 2
 			// S is red, so P is black.
-			// Case 2.1
-			// S is red.
-			// If either of S's children are nil,
-			// we are done. P->S has a black
-			// height of 2. P->N must have at
-			// least a black height of 2, as P
-			// is black and N is black, and our
-			// problem was that P-> had one fewer
-			// black nodes than P->S.
-			//
-			// Because we removed X from P->N
-			// in our original case, this case
-			// should never occur on a first
-			// iteration, unless X was red.
-			if s.left == nil || s.right == nil {
-				break
-			}
-			// Case 2.2
 			//
 			// Give N a Black Sibling and
 			// a Red parent.
@@ -264,11 +246,10 @@ func rbDeleteFixup(n, p *node) *node {
 		}
 		//
 		// Case 2.3: S is nil
-		// We think this is either impossible
-		// or implies that we can stop
-		if s == nil {
-			break
-		}
+		// We think this is impossible
+		// if s == nil {
+		// 	break
+		// }
 		// Case 3: Everything is black
 		// In this case, Because S's children are black we can turn it red.
 		// This means P->S = P->N, but GP->P = GP->P's sibling - 1,
