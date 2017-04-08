@@ -15,7 +15,11 @@ const (
 	AVL      Type = iota
 	RedBlack      // RB would probably be okay.
 	Splay
-	//TTree         // T is too short of a variable name
+	// Consider:
+	// Treap?
+	// Scapegoat tree?
+	// TTree? <- more work than the other two
+	// AA?
 )
 
 // New returns a tree as defined by the input type.
