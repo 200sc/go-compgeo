@@ -23,6 +23,10 @@ const (
 func New(typ Type) search.Persistable {
 	bst := new(BST)
 	switch typ {
+	case AVL:
+		bst.fnSet = avlFnSet
+	case Splay:
+		bst.fnSet = splayFnSet
 	default:
 		fallthrough
 	case RedBlack:

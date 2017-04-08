@@ -1,7 +1,7 @@
 package tree
 
 var (
-	avlFnSet = fnSet{
+	avlFnSet = &fnSet{
 		insertFn: avlInsert,
 		deleteFn: avlDelete,
 		searchFn: nopNode,

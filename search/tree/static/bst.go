@@ -6,16 +6,20 @@ import "github.com/200sc/go-compgeo/search"
 // because otherwise most of its types and functions
 // would be preceded with "static"
 
-type BST []Node
+// BST in static is an array-based BST, as opposed
+// to a pointer-based BST.
+type BST []*Node
 
-func (b BST) isNil(i int) bool {
-	if i < len(b) {
-		return b[i].isNil()
+func (b *BST) isNil(i int) bool {
+	bst := *b
+	if i < len(bst) {
+		return bst[i] == nil
 	}
 	return true
 }
 
-func (b BST) minKey(i int) int {
+// could pseudo-binary search?
+func (b *BST) minKey(i int) int {
 	for !b.isNil(Left(i)) {
 		i = Left(i)
 	}
@@ -24,7 +28,7 @@ func (b BST) minKey(i int) int {
 
 // Size :
 // Return the number of elements in this static tree
-func (b BST) Size() int {
+func (b *BST) Size() int {
 	sz := 0
 	b.size(0, &sz)
 	return sz
@@ -33,7 +37,7 @@ func (b BST) Size() int {
 // This is a goofy way of doing this.
 // A better way would be to just keep track of size as we insert
 // and delete, but this way we use less memory I suppose.
-func (b BST) size(i int, sz *int) {
+func (b *BST) size(i int, sz *int) {
 	if !b.isNil(i) {
 		*sz++
 		b.size(Left(i), sz)
@@ -46,20 +50,22 @@ func (b BST) size(i int, sz *int) {
 // tree. No guarantee is made about what is returned if multiple
 // nodes share the input key.
 // If no key is found, returns (false, nil).
-// Todo: benchmark value versus pointer receiver
-func (b BST) Search(key float64) (bool, interface{}) {
+//
+// Value vs pointer reciever was benchmarked. Result: maybe pointer is better
+func (b *BST) Search(key float64) (bool, interface{}) {
 	i := 1
-	var n Node
+	bst := *b
+	var n *Node
 	var k float64
 	for {
-		n = b[i]
+		n = bst[i]
 		k = n.key
 		if k == key {
 			return true, n.val
-		} else if k < key {
-			i = Left(i)
-		} else {
-			i = Right(i)
+		}
+		i = Left(i)
+		if k > key {
+			i++
 		}
 		if b.isNil(i) {
 			return false, nil
@@ -72,17 +78,18 @@ func (b BST) Search(key float64) (bool, interface{}) {
 // The most useful of these is the in-order traverse,
 // and that's what we provide here.
 // Other traversal methods can be added as needed.
-func (b BST) InOrderTraverse() []search.Node {
+func (b *BST) InOrderTraverse() []search.Node {
 	out := make([]search.Node, b.Size())
 	i := 0
 	b.inOrderTraverse(out, 0, &i)
 	return out
 }
 
-func (b BST) inOrderTraverse(out []search.Node, i int, nextIndex *int) {
+func (b *BST) inOrderTraverse(out []search.Node, i int, nextIndex *int) {
+	bst := *b
 	if !b.isNil(i) {
 		b.inOrderTraverse(out, Right(i), nextIndex)
-		out[*nextIndex] = b[i]
+		out[*nextIndex] = bst[i]
 		*nextIndex++
 		b.inOrderTraverse(out, Left(i), nextIndex)
 	}

@@ -46,12 +46,12 @@ func (bst *BST) ToPersistent() search.DynamicPersistent {
 // tests need to exist outside of static, as it can't
 // create an instance of a staticBST by itself.
 func (bst *BST) ToStatic() search.Static {
-	m, maxIndex := bst.root.staticTree(make(map[int]static.Node), 1)
+	m, maxIndex := bst.root.staticTree(make(map[int]*static.Node), 1)
 	staticBst := make(static.BST, maxIndex+1)
 	for k, v := range m {
 		staticBst[k] = v
 	}
-	return staticBst
+	return &staticBst
 }
 
 // Size :
@@ -147,10 +147,7 @@ func (bst *BST) Delete(n search.Node) error {
 func (bst *BST) Search(key float64) (bool, interface{}) {
 	curNode := bst.root
 	var k float64
-	for {
-		if curNode == nil {
-			break
-		}
+	for curNode != nil {
 		k = curNode.key
 		if k == key {
 			break

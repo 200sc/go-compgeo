@@ -155,7 +155,7 @@ func (n *node) rightRotate() {
 	n.parent = l
 }
 
-func (n *node) staticTree(m map[int]static.Node, i int) (map[int]static.Node, int) {
+func (n *node) staticTree(m map[int]*static.Node, i int) (map[int]*static.Node, int) {
 	if n == nil {
 		return m, 0
 	}
