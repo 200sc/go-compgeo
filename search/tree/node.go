@@ -33,18 +33,17 @@ func (n *node) copy() *node {
 		return nil
 	}
 	cp := new(node)
-	left := n.left.copy()
-	right := n.right.copy()
+	cp.left = n.left.copy()
+	cp.right = n.right.copy()
 
-	cp.left = left
 	if cp.left != nil {
 		cp.left.parent = cp
 	}
-	cp.right = right
 	if cp.right != nil {
 		cp.right.parent = cp
 	}
 	cp.payload = n.payload
+	cp.parent = n.parent
 
 	return cp
 }
@@ -74,7 +73,7 @@ func (n *node) sibling() *node {
 	return p.left
 }
 
-func parent_sibling(n, p *node) *node {
+func pSibilng(n, p *node) *node {
 	if p.left == n {
 		return p.right
 	}
@@ -87,6 +86,16 @@ func (n *node) uncle() *node {
 		return nil
 	}
 	return p.sibling()
+}
+
+func (n *node) ancestor(i int) *node {
+	for j := 0; j < i; j++ {
+		if n == nil {
+			return n
+		}
+		n = n.parent
+	}
+	return n
 }
 
 // Replace n.parent's pointer to n
@@ -165,9 +174,9 @@ func (n *node) staticTree(m map[int]static.Node, i int) (map[int]static.Node, in
 
 func inOrderTraverse(n *node) []search.Node {
 	if n != nil {
-		lst := inOrderTraverse(n.left)
+		lst := inOrderTraverse(n.right)
 		lst = append(lst, n)
-		return append(lst, inOrderTraverse(n.right)...)
+		return append(lst, inOrderTraverse(n.left)...)
 	}
 	return []search.Node{}
 }

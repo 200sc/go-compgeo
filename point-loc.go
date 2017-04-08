@@ -27,7 +27,7 @@ func (sn shellNode) Val() interface{} {
 
 // The real difficulties in Slab Decomposition are all in the
 // persistent bst itself, so this is a fairly simple function.
-func (dc *DCEL) SlabDecompose(bstType tree.Type) (search.PersistentTree, error) {
+func (dc *DCEL) SlabDecompose(bstType tree.Type) (search.DynamicPersistent, error) {
 	t := tree.New(bstType).ToPersistent()
 	// Sort points in order of X value
 	pts := make([]int, len(dc.Vertices))

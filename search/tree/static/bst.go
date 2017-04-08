@@ -81,9 +81,9 @@ func (b BST) InOrderTraverse() []search.Node {
 
 func (b BST) inOrderTraverse(out []search.Node, i int, nextIndex *int) {
 	if !b.isNil(i) {
-		b.inOrderTraverse(out, Left(i), nextIndex)
+		b.inOrderTraverse(out, Right(i), nextIndex)
 		out[*nextIndex] = b[i]
 		*nextIndex++
-		b.inOrderTraverse(out, Right(i), nextIndex)
+		b.inOrderTraverse(out, Left(i), nextIndex)
 	}
 }

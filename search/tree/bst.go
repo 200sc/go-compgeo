@@ -9,17 +9,30 @@ import (
 )
 
 type fnSet struct {
-	insertFn func(*node)
+	insertFn func(*node) *node
 	deleteFn func(*node) *node
-	searchFn func(*node)
+	searchFn func(*node) *node
 }
 
+func nopNode(n *node) *node {
+	return nil
+}
+
+// BST is a generic binary search tree implementation.
+// BST relies on the idea that numberous BST types are
+// implicitly the same, but with unique functions to update
+// their balance after each insert, delete, or search (sometimes)
+// operation.
 type BST struct {
 	*fnSet
 	root *node
+	// Because the size of a bst is something someone might want
+	// to query quickly, we raise it to the top instead of making
+	// it a tree-wide count-up.
 	size int
 }
 
+// ToPersistent converts this BST into a Persistent BST.
 func (bst *BST) ToPersistent() search.DynamicPersistent {
 	return nil
 }
@@ -27,6 +40,11 @@ func (bst *BST) ToPersistent() search.DynamicPersistent {
 // ToStatic on a BST figures out where all nodes
 // would exist in an array structure, then constructs
 // an array with a length of the maximum index found.
+//
+// If static stays in its own package this presents
+// a potential import cycle-- or else all of static's
+// tests need to exist outside of static, as it can't
+// create an instance of a staticBST by itself.
 func (bst *BST) ToStatic() search.Static {
 	m, maxIndex := bst.root.staticTree(make(map[int]static.Node), 1)
 	staticBst := make(static.BST, maxIndex+1)
@@ -81,8 +99,7 @@ func (bst *BST) Insert(inNode search.Node) error {
 	}
 
 	bst.size++
-	bst.insertFn(n)
-	bst.updateRoot()
+	bst.updateRoot(bst.insertFn(n))
 	return nil
 }
 
@@ -122,12 +139,7 @@ func (bst *BST) Delete(n search.Node) error {
 		}
 	}
 	bst.size--
-	newRoot := bst.deleteFn(curNode)
-	if newRoot != nil {
-		bst.root = newRoot
-	} else {
-		bst.updateRoot()
-	}
+	bst.updateRoot(bst.deleteFn(curNode))
 	return nil
 }
 
@@ -149,14 +161,17 @@ func (bst *BST) Search(key float64) (bool, interface{}) {
 		}
 	}
 	if curNode != nil {
-		bst.searchFn(curNode)
-		bst.updateRoot()
+		bst.updateRoot(bst.searchFn(curNode))
 		return true, curNode.val
 	}
 	return false, nil
 }
 
-func (bst *BST) updateRoot() {
+func (bst *BST) updateRoot(n *node) {
+	if n != nil {
+		bst.root = n
+		return
+	}
 	if bst.size == 0 {
 		bst.root = nil
 	}
@@ -192,27 +207,29 @@ func (bst *BST) String() string {
 	return s
 }
 
-func findCycle(bst *BST) {
+func findCycle(bst *BST) error {
 	seen := make(map[float64]map[float64]bool)
-	bst.root.findCycle(seen)
+	return bst.root.findCycle(seen)
 }
 
 // findCycle will mis-report duplicate input nodes as cycles.
-func (n *node) findCycle(seen map[float64]map[float64]bool) {
+func (n *node) findCycle(seen map[float64]map[float64]bool) error {
 	if n == nil {
-		return
+		return nil
 	}
 	if v, ok := seen[n.key]; ok {
 		if _, ok = v[n.val.(float64)]; ok {
 			fmt.Println(n)
-			panic("Cycle found")
-		} else {
-			seen[n.key][n.val.(float64)] = true
+			return errors.New("Cycle found")
 		}
+		seen[n.key][n.val.(float64)] = true
 	} else {
 		seen[n.key] = make(map[float64]bool)
 		seen[n.key][n.val.(float64)] = true
 	}
-	n.left.findCycle(seen)
-	n.right.findCycle(seen)
+	err := n.left.findCycle(seen)
+	if err != nil {
+		return err
+	}
+	return n.right.findCycle(seen)
 }

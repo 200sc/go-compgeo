@@ -88,9 +88,23 @@ var (
 	}
 	notInInput1      = 12
 	notInInput2      = 2000
-	randomInputCt    = 20000
+	randomInputCt    = 10000
 	randomInputRange = 1000
 )
+
+func TestRBInOrder(t *testing.T) {
+	tree := New(RedBlack)
+	for _, v := range test1Input {
+		tree.Insert(v)
+	}
+	inOrder := tree.InOrderTraverse()
+	expected := [...]float64{
+		1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+	for i := range inOrder {
+		//fmt.Println(inOrder[i].Key(), inOrder[i].Val())
+		assert.Equal(t, expected[i], inOrder[i].Key())
+	}
+}
 
 func TestRBDefinedInput1(t *testing.T) {
 	tree := New(RedBlack)

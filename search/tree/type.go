@@ -14,9 +14,8 @@ type Type int
 const (
 	AVL      Type = iota
 	RedBlack      // RB would probably be okay.
-	TTree         // T is too short of a variable name
 	Splay
-	Tango
+	//TTree         // T is too short of a variable name
 )
 
 // New returns a tree as defined by the input type.

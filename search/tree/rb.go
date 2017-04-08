@@ -11,7 +11,7 @@ var (
 	rbFnSet = &fnSet{
 		insertFn: rbInsert,
 		deleteFn: rbDelete,
-		searchFn: rbSearch,
+		searchFn: nopNode,
 	}
 )
 
@@ -24,17 +24,7 @@ func (n *node) isBlack() bool {
 	if n == nil {
 		return true
 	}
-	return (n.payload.(bool) == black)
-}
-
-func (n *node) ancestor(i int) *node {
-	for j := 0; j < i; j++ {
-		if n == nil {
-			return n
-		}
-		n = n.parent
-	}
-	return n
+	return n.payload.(bool) == black
 }
 
 // RBValid returns whether the given BST is a valid Red Black tree
@@ -93,22 +83,17 @@ func (n *node) RBValid(mustBeBlack bool) (bool, int, error) {
 	return true, 1, nil
 }
 
-func rbSearch(n *node) {
-	// NOP
-}
-
-func rbInsert(n *node) {
-	// If i is the root
+func rbInsert(n *node) *node {
 	for {
 		p := n.parent
 		if p == nil {
 			n.payload = black
-			return
+			return nil
 		}
 		// i's parent must exist, as i is not the root ---
 		// If i's parent is black
 		if p.isBlack() {
-			return
+			return nil
 		}
 
 		// i's grandparent must exist, as i's parent is red. ---
@@ -143,7 +128,7 @@ func rbInsert(n *node) {
 			} else {
 				gp.leftRotate()
 			}
-			return
+			return nil
 		}
 	}
 }
@@ -207,6 +192,12 @@ func rbDelete(n *node) *node {
 
 // DeleteFixup takes n and p, as nil nodes do
 // not contain a reference to their parent.
+// Note on cyclomtic complexity: RB delete fixup
+// cases don't have intuitive names, they're generally
+// referred to as case_N or fixup_N for n = 1..6.
+// Instead of making a bunch of numbered functions,
+// this implementation prefers to keep everything together
+// (as is common).
 func rbDeleteFixup(n, p *node) *node {
 	var s, newRoot *node
 	for n.isBlack() {
@@ -220,7 +211,7 @@ func rbDeleteFixup(n, p *node) *node {
 			break
 		}
 		// The subtree P->N has one fewer black nodes than P->S.
-		s = parent_sibling(n, p)
+		s = pSibilng(n, p)
 		if s.isRed() {
 			// Case 2
 			// S is red, so P is black.
