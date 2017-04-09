@@ -61,6 +61,7 @@ func (n *node) copy() *node {
 	cp := new(node)
 	cp.left = n.left.copy()
 	cp.right = n.right.copy()
+	cp.val = n.val
 
 	if cp.left != nil {
 		cp.left.parent = cp
@@ -253,17 +254,17 @@ func (n *node) string(prefix string, isTail bool) string {
 		prefix += "│   "
 	}
 	// Add identifier here
-	if n.isBlack() {
-		s += "B:"
-	} else {
-		s += "R:"
-	}
-	if n.parent != nil {
-		s += n.parent.keyString() + "->"
-	}
+	// if n.isBlack() {
+	// 	s += "B:"
+	// } else {
+	// 	s += "R:"
+	// }
+	// if n.parent != nil {
+	// 	s += n.parent.keyString() + "->"
+	// }
 	s += n.keyString() + n.valString() + "\n"
-	s += n.left.string(prefix, false)
-	s += n.right.string(prefix, true)
+	s += n.right.string(prefix, false)
+	s += n.left.string(prefix, true)
 
 	return s
 }

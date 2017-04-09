@@ -26,12 +26,21 @@ package dcel
 // .--.
 //
 func Rect(x, y, w, h float64) *DCEL {
+	return FourPoint(
+		Point{x, y, 0},
+		Point{x + w, y, 0},
+		Point{x + w, y + h, 0},
+		Point{x, y + h, 0},
+	)
+}
+
+func FourPoint(p1, p2, p3, p4 Point) *DCEL {
 	dc := new(DCEL)
 	dc.Vertices = make([]Point, 4)
-	dc.Vertices[0] = Point{x, y, 0}
-	dc.Vertices[1] = Point{x + w, y, 0}
-	dc.Vertices[2] = Point{x + w, y + h, 0}
-	dc.Vertices[3] = Point{x, y + h, 0}
+	dc.Vertices[0] = p1
+	dc.Vertices[1] = p2
+	dc.Vertices[2] = p3
+	dc.Vertices[3] = p4
 	dc.OutEdges = make([]*Edge, 4)
 	dc.HalfEdges = make([]Edge, 8)
 	dc.Faces = make([]Face, 2)

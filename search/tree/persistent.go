@@ -60,6 +60,7 @@ func (pbst *PersistentBST) SetInstant(ins float64) {
 	bsti.BST = pbst.AtInstant(pbst.instant).(BSTInstant).copy()
 	bsti.instant = ins
 	pbst.instants = append(pbst.instants, bsti)
+	pbst.instant = ins
 	pbst.index++
 }
 

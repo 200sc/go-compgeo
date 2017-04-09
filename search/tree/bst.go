@@ -124,6 +124,9 @@ func (bst *BST) Delete(n search.Node) error {
 	v := n.Val()
 	k := n.Key()
 	for {
+		if curNode == nil {
+			return errors.New("Key not found")
+		}
 		k2 := curNode.key
 		if k2 == k {
 			if v == nil {
@@ -142,9 +145,6 @@ func (bst *BST) Delete(n search.Node) error {
 			curNode = curNode.left
 		} else {
 			curNode = curNode.right
-		}
-		if curNode == nil {
-			return errors.New("Key not found")
 		}
 	}
 	bst.size--

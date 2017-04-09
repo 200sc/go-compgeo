@@ -45,7 +45,7 @@ func (dc *DCEL) SlabDecompose(bstType tree.Type) (LocatesPoints, error) {
 	// the 0th dimension maps to X, but there's also no requirement that slab
 	// decomposition uses vertical slabs.
 	sort.Slice(pts, func(i, j int) bool {
-		return dc.Vertices[pts[i]][0] < dc.Vertices[pts[j]][1]
+		return dc.Vertices[pts[i]][0] < dc.Vertices[pts[j]][0]
 	})
 	// At each point,
 	for _, p := range pts {

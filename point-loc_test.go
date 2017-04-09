@@ -9,7 +9,12 @@ import (
 )
 
 func TestPointLocSquare(t *testing.T) {
-	dc := dcel.Rect(0, 0, 10, 10)
+	dc := dcel.FourPoint(
+		dcel.Point{0, 0, 0},
+		dcel.Point{10, 1, 0},
+		dcel.Point{11, 11, 0},
+		dcel.Point{1, 10, 0},
+	)
 	sd, err := dc.SlabDecompose(tree.RedBlack)
 	if err != nil {
 		fmt.Println(err)
