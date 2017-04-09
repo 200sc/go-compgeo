@@ -10,6 +10,8 @@ type Node interface {
 // arbitrary values.
 type Searchable interface {
 	Search(float64) (bool, interface{})
+	SearchUp(float64) interface{}
+	SearchDown(float64) interface{}
 }
 
 // Traversable types can produce lists of elements

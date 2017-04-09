@@ -9,7 +9,7 @@ import (
 )
 
 type LocatesPoints interface {
-	PointLocate()
+	PointLocate(vs ...float64) (*DCELFace, error)
 }
 
 type shellNode struct {
@@ -27,7 +27,7 @@ func (sn shellNode) Val() interface{} {
 
 // The real difficulties in Slab Decomposition are all in the
 // persistent bst itself, so this is a fairly simple function.
-func (dc *DCEL) SlabDecompose(bstType tree.Type) (search.DynamicPersistent, error) {
+func (dc *DCEL) SlabDecompose(bstType tree.Type) (LocatesPoints, error) {
 	t := tree.New(bstType).ToPersistent()
 	// Sort points in order of X value
 	pts := make([]int, len(dc.Vertices))
@@ -57,17 +57,29 @@ func (dc *DCEL) SlabDecompose(bstType tree.Type) (search.DynamicPersistent, erro
 		// dimension than others that will cause further problems,
 		// but this is too expensive to check here.
 		leftEdges, rightEdges, _ := dc.PartitionVertexEdges(p, 0)
-		// // Add all edges to the PersistentBST connecting to the right
-		// // of the point
+		// Add all edges to the PersistentBST connecting to the right
+		// of the point
 		for _, e := range leftEdges {
 			t.Insert(shellNode{v[1], e})
 		}
-		// // Remove all edges from the PersistentBST connecting to the left
-		// // of the point
+		// Remove all edges from the PersistentBST connecting to the left
+		// of the point
 		for _, e := range rightEdges {
 			v2 := e.Twin.Origin
 			t.Delete(shellNode{v2[1], e})
 		}
 	}
-	return t, nil
+	return &slabPointLocator{t}, nil
+}
+
+type slabPointLocator struct {
+	dp search.DynamicPersistent
+}
+
+func (spl *slabPointLocator) PointLocate(vs ...float64) (*DCELFace, error) {
+	if len(vs) < 2 {
+		return nil, errors.New("Slab point location only supports 2 dimensions.")
+	}
+	edge := spl.dp.AtInstant(vs[0]).SearchUp(vs[1])
+	return edge.(*DCELEdge).Face, nil
 }

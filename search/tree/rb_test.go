@@ -99,7 +99,7 @@ func TestRBInOrder(t *testing.T) {
 	}
 	inOrder := tree.InOrderTraverse()
 	expected := [...]float64{
-		1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+		10, 9, 8, 7, 6, 5, 4, 3, 2, 1}
 	for i := range inOrder {
 		//fmt.Println(inOrder[i].Key(), inOrder[i].Val())
 		assert.Equal(t, expected[i], inOrder[i].Key())
@@ -115,6 +115,9 @@ func TestRBDefinedInput1(t *testing.T) {
 	valid, err := RBValid(tree.(*BST))
 	assert.True(t, valid)
 	assert.Nil(t, err)
+	valid2 := tree.(*BST).isValid()
+	assert.True(t, valid2)
+	t.Log(tree.(*BST).root)
 
 	// Should be in tree
 	for _, v := range test1Input {
@@ -135,12 +138,34 @@ func TestRBDefinedInput1(t *testing.T) {
 		assert.False(t, b)
 		assert.Nil(t, found)
 		valid, err := RBValid(tree.(*BST))
-		t.Log(tree.(*BST).root)
+		//t.Log(tree.(*BST).root)
 		assert.True(t, valid)
 		if !assert.Nil(t, err) {
 			t.FailNow()
 		}
+		valid2 := tree.(*BST).isValid()
+		assert.True(t, valid2)
 	}
+}
+
+func TestPredSucc(t *testing.T) {
+	tree := New(RedBlack)
+	for _, v := range test1Input {
+		tree.Insert(v)
+	}
+
+	v := tree.SearchUp(9.5)
+	assert.Equal(t, v, float64(1))
+	v = tree.SearchDown(9.5)
+	assert.Equal(t, v, float64(2))
+
+	t2 := tree.ToStatic()
+
+	v = t2.SearchUp(9.5)
+	assert.Equal(t, v, float64(1))
+	v = t2.SearchDown(9.5)
+	assert.Equal(t, v, float64(2))
+
 }
 
 func TestRBRandomInput(t *testing.T) {

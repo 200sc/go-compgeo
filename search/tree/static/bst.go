@@ -26,6 +26,13 @@ func (b *BST) minKey(i int) int {
 	return i
 }
 
+func (b *BST) maxKey(i int) int {
+	for !b.isNil(Right(i)) {
+		i = Right(i)
+	}
+	return i
+}
+
 // Size :
 // Return the number of elements in this static tree
 func (b *BST) Size() int {
@@ -45,6 +52,36 @@ func (b *BST) size(i int, sz *int) {
 	}
 }
 
+func (b *BST) successor(i int) int {
+	for b.isNil(i) {
+		i = Parent(i)
+	}
+	if !b.isNil(Right(i)) {
+		return b.minKey(Right(i))
+	}
+	j := Parent(i)
+	for !b.isNil(j) && !isLeftChild(i) {
+		i = j
+		j = Parent(j)
+	}
+	return j
+}
+
+func (b *BST) predecessor(i int) int {
+	for b.isNil(i) {
+		i = Parent(i)
+	}
+	if !b.isNil(Left(i)) {
+		return b.maxKey(Left(i))
+	}
+	j := Parent(i)
+	for !b.isNil(j) && isLeftChild(i) {
+		i = j
+		j = Parent(j)
+	}
+	return j
+}
+
 // Search :
 // Search returns the first value of the given key found in the
 // tree. No guarantee is made about what is returned if multiple
@@ -53,6 +90,40 @@ func (b *BST) size(i int, sz *int) {
 //
 // Value vs pointer reciever was benchmarked. Result: maybe pointer is better
 func (b *BST) Search(key float64) (bool, interface{}) {
+	i, ok := b.search(key)
+	if ok {
+		return true, (*b)[i].val
+	}
+	return false, nil
+}
+
+func (b *BST) SearchUp(key float64) interface{} {
+	i, ok := b.search(key)
+	if ok {
+		return (*b)[i]
+	}
+	j := b.successor(i)
+	bst := *b
+	if b.isNil(j) || ((bst[j].key > bst[i].key) && (bst[i].key > key)) {
+		j = i
+	}
+	return bst[j].val
+}
+
+func (b *BST) SearchDown(key float64) interface{} {
+	i, ok := b.search(key)
+	if ok {
+		return (*b)[i]
+	}
+	j := b.predecessor(i)
+	bst := *b
+	if b.isNil(j) || ((bst[j].key < bst[i].key) && (bst[i].key < key)) {
+		j = i
+	}
+	return bst[j].val
+}
+
+func (b *BST) search(key float64) (int, bool) {
 	i := 1
 	bst := *b
 	var n *Node
@@ -61,14 +132,14 @@ func (b *BST) Search(key float64) (bool, interface{}) {
 		n = bst[i]
 		k = n.key
 		if k == key {
-			return true, n.val
+			return i, true
 		}
 		i = Left(i)
-		if k > key {
+		if k < key {
 			i++
 		}
 		if b.isNil(i) {
-			return false, nil
+			return Parent(i), false
 		}
 	}
 }

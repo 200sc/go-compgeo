@@ -3,6 +3,7 @@ package tree
 import (
 	"errors"
 	"fmt"
+	"math"
 
 	"github.com/200sc/go-compgeo/search"
 	"github.com/200sc/go-compgeo/search/tree/static"
@@ -32,9 +33,17 @@ type BST struct {
 	size int
 }
 
+func (bst *BST) isValid() bool {
+	ok, _, _ := bst.root.isValid()
+	return ok
+}
+
 // ToPersistent converts this BST into a Persistent BST.
 func (bst *BST) ToPersistent() search.DynamicPersistent {
-	return nil
+	pbst := new(PersistentBST)
+	pbst.instant = math.MaxFloat64 * -1
+	pbst.instants = []BSTInstant{{BST: bst, instant: pbst.instant}}
+	return pbst
 }
 
 // ToStatic on a BST figures out where all nodes
@@ -72,7 +81,7 @@ func (bst *BST) Insert(inNode search.Node) error {
 			break
 		}
 		parent = curNode
-		if curNode.key < n.key {
+		if curNode.key > n.key {
 			curNode = curNode.left
 		} else {
 			curNode = curNode.right
@@ -86,7 +95,7 @@ func (bst *BST) Insert(inNode search.Node) error {
 	// curNode == nil
 	n.parent = parent
 	if parent != nil {
-		if parent.key < n.key {
+		if parent.key > n.key {
 			parent.left = n
 		} else {
 			parent.right = n
@@ -129,7 +138,7 @@ func (bst *BST) Delete(n search.Node) error {
 				}
 			}
 			break
-		} else if k2 < k {
+		} else if k2 > k {
 			curNode = curNode.left
 		} else {
 			curNode = curNode.right
@@ -151,7 +160,7 @@ func (bst *BST) Search(key float64) (bool, interface{}) {
 		k = curNode.key
 		if k == key {
 			break
-		} else if k < key {
+		} else if k > key {
 			curNode = curNode.left
 		} else {
 			curNode = curNode.right
@@ -162,6 +171,58 @@ func (bst *BST) Search(key float64) (bool, interface{}) {
 		return true, curNode.val
 	}
 	return false, nil
+}
+
+func (bst *BST) search(key float64) (*node, bool) {
+	curNode := bst.root
+	var k float64
+	var parent *node
+	for curNode != nil {
+		k = curNode.key
+		parent = curNode
+		if k == key {
+			break
+		} else if k > key {
+			curNode = curNode.left
+		} else {
+			curNode = curNode.right
+		}
+	}
+	if curNode != nil {
+		return curNode, true
+	}
+	return parent, false
+}
+
+// SearchUp performs a search, and rounds up to the nearest
+// existing key if no node of the query key exists.
+func (bst *BST) SearchUp(key float64) interface{} {
+	n, ok := bst.search(key)
+	// The tree is empty
+	if n == nil {
+		return nil
+	}
+	if ok {
+		return n.val
+	}
+	v := n.successor()
+	if v == nil || ((v.key > n.key) && (n.key > key)) {
+		return n.val
+	}
+	return v.val
+}
+
+// SearchDown acts as SearchUp, but rounds down.
+func (bst *BST) SearchDown(key float64) interface{} {
+	n, ok := bst.search(key)
+	if ok {
+		return n.val
+	}
+	v := n.predecessor()
+	if v == nil || ((v.key < n.key) && (n.key < key)) {
+		return n.val
+	}
+	return v.val
 }
 
 func (bst *BST) updateRoot(n *node) {
@@ -199,7 +260,7 @@ func (bst *BST) copy() *BST {
 func (bst *BST) String() string {
 	s := bst.root.string("", true)
 	if s == "" {
-		return "<Empty BST>"
+		return "<Empty BST>\n"
 	}
 	return s
 }

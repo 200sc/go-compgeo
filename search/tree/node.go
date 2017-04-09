@@ -2,6 +2,7 @@ package tree
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 
 	"github.com/200sc/go-compgeo/search"
@@ -26,6 +27,31 @@ func (n *node) Key() float64 {
 
 func (n *node) Val() interface{} {
 	return n.val
+}
+
+func (n *node) isValid() (bool, float64, float64) {
+	if n == nil {
+		return true, math.MaxFloat64 * -1, math.MaxFloat64
+	}
+	ok, min, max2 := n.left.isValid()
+	if !ok {
+		return false, 0, 0
+	}
+	ok, min2, max := n.right.isValid()
+	if !ok {
+		return false, 0, 0
+	}
+	if n.key < min || n.key > max {
+		fmt.Println(n)
+		return false, 0, 0
+	}
+	if min2 < min {
+		min = min2
+	}
+	if max2 > max {
+		max = max2
+	}
+	return true, min, max
 }
 
 func (n *node) copy() *node {
@@ -60,6 +86,36 @@ func (n *node) maxKey() *node {
 		return n
 	}
 	return n.right.maxKey()
+}
+
+func (n *node) successor() *node {
+	if n == nil {
+		return nil
+	}
+	if n.right != nil {
+		return n.right.minKey()
+	}
+	p := n.parent
+	for p != nil && n == p.right {
+		n = p
+		p = p.parent
+	}
+	return p
+}
+
+func (n *node) predecessor() *node {
+	if n == nil {
+		return nil
+	}
+	if n.left != nil {
+		return n.left.maxKey()
+	}
+	p := n.parent
+	for p != nil && n == p.left {
+		n = p
+		p = p.parent
+	}
+	return p
 }
 
 func (n *node) sibling() *node {

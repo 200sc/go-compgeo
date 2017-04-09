@@ -5,6 +5,10 @@ import (
 	"testing"
 )
 
+var (
+	j int
+)
+
 func BenchmarkRBDynamic1(b *testing.B) {
 	benchmarkRBDynamic(b, test1Input, notInInput1)
 }
@@ -24,26 +28,31 @@ func BenchmarkMap2(b *testing.B) {
 	benchmarkMap(b, test2Input, notInInput2)
 }
 func BenchmarkRBDynamic3(b *testing.B) {
-	randomInput := make([]testNode, randomInputCt)
-	for i := range randomInput {
-		randomInput[i] = testNode{
-			float64(rand.Intn(randomInputRange)),
-			float64(rand.Intn(randomInputRange)),
-		}
-	}
+	randomInput := randomInput()
 	benchmarkRBDynamic(b, randomInput, randomInputRange+1)
 }
 func BenchmarkRBStatic3(b *testing.B) {
-	randomInput := make([]testNode, randomInputCt)
-	for i := range randomInput {
-		randomInput[i] = testNode{
-			float64(rand.Intn(randomInputRange)),
-			float64(rand.Intn(randomInputRange)),
-		}
-	}
+	randomInput := randomInput()
 	benchmarkRBStatic(b, randomInput, randomInputRange+1)
 }
 func BenchmarkMap3(b *testing.B) {
+	randomInput := randomInput()
+	benchmarkMap(b, randomInput, randomInputRange+1)
+}
+func BenchmarkRBDynamic4(b *testing.B) {
+	randomInput := randomInputNoDupes()
+	benchmarkRBDynamic(b, randomInput, randomInputRange+1)
+}
+func BenchmarkRBStatic4(b *testing.B) {
+	randomInput := randomInputNoDupes()
+	benchmarkRBStatic(b, randomInput, randomInputRange+1)
+}
+func BenchmarkMap4(b *testing.B) {
+	randomInput := randomInputNoDupes()
+	benchmarkMap(b, randomInput, randomInputRange+1)
+}
+
+func randomInput() []testNode {
 	randomInput := make([]testNode, randomInputCt)
 	for i := range randomInput {
 		randomInput[i] = testNode{
@@ -51,7 +60,18 @@ func BenchmarkMap3(b *testing.B) {
 			float64(rand.Intn(randomInputRange)),
 		}
 	}
-	benchmarkMap(b, randomInput, randomInputRange+1)
+	return randomInput
+}
+
+func randomInputNoDupes() []testNode {
+	randomInput := make([]testNode, randomInputCt)
+	for i := range randomInput {
+		randomInput[i] = testNode{
+			float64(i),
+			float64(i),
+		}
+	}
+	return randomInput
 }
 
 func benchmarkRBDynamic(b *testing.B, input []testNode, inputLimit int) {
@@ -59,7 +79,6 @@ func benchmarkRBDynamic(b *testing.B, input []testNode, inputLimit int) {
 	for _, v := range input {
 		tree.Insert(v)
 	}
-	j := 0
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		b, _ := tree.Search(float64(rand.Intn(inputLimit)))
@@ -76,7 +95,6 @@ func benchmarkRBStatic(b *testing.B, input []testNode, inputLimit int) {
 		tree.Insert(v)
 	}
 	t2 := tree.ToStatic()
-	j := 0
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		b, _ := t2.Search(float64(rand.Intn(inputLimit)))
@@ -95,7 +113,6 @@ func benchmarkMap(b *testing.B, input []testNode, inputLimit int) {
 		}
 		m[v.key][v.val] = true
 	}
-	j := 0
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		k := m[float64(rand.Intn(inputLimit))]

@@ -191,3 +191,104 @@ func (dc *DCEL) PartitionVertexEdges(vertex int, d int) ([]*DCELEdge, []*DCELEdg
 	}
 	return lesser, greater, nil
 }
+
+// Result:
+//
+// Vertices
+//
+// 0-1
+// | |
+// 3-2
+//
+// Edges
+//
+//   3>
+// .---.
+//^|v2<|
+//1|0 4|5
+// |>6^|v
+// .---.
+//  <7
+//
+// Faces
+//
+// .--.
+// |  |
+// |0 | 1
+// .--.
+//
+func DCELSquare(x, y, w, h float64) *DCEL {
+	dc := new(DCEL)
+	dc.Vertices = make([]DCELPoint, 4)
+	dc.Vertices[0] = DCELPoint{x, y, 0}
+	dc.Vertices[1] = DCELPoint{x + w, y, 0}
+	dc.Vertices[2] = DCELPoint{x + w, y + h, 0}
+	dc.Vertices[3] = DCELPoint{x, y + h, 0}
+	dc.OutEdges = make([]*DCELEdge, 4)
+	dc.HalfEdges = make([]DCELEdge, 8)
+	dc.Faces = make([]DCELFace, 2)
+	dc.Faces[0] = DCELFace{}
+	dc.Faces[1] = DCELFace{}
+	dc.HalfEdges[0] = DCELEdge{
+		Origin: &dc.Vertices[0],
+		Face:   &dc.Faces[0],
+	}
+	dc.OutEdges[0] = &dc.HalfEdges[0]
+	dc.HalfEdges[1] = DCELEdge{
+		Origin: &dc.Vertices[3],
+		Face:   &dc.Faces[1],
+	}
+	dc.OutEdges[3] = &dc.HalfEdges[1]
+	dc.HalfEdges[2] = DCELEdge{
+		Origin: &dc.Vertices[1],
+		Face:   &dc.Faces[0],
+	}
+	dc.OutEdges[1] = &dc.HalfEdges[2]
+	dc.HalfEdges[3] = DCELEdge{
+		Origin: &dc.Vertices[0],
+		Face:   &dc.Faces[1],
+	}
+	dc.HalfEdges[4] = DCELEdge{
+		Origin: &dc.Vertices[2],
+		Face:   &dc.Faces[0],
+	}
+	dc.OutEdges[2] = &dc.HalfEdges[4]
+	dc.HalfEdges[5] = DCELEdge{
+		Origin: &dc.Vertices[1],
+		Face:   &dc.Faces[1],
+	}
+	dc.HalfEdges[6] = DCELEdge{
+		Origin: &dc.Vertices[3],
+		Face:   &dc.Faces[0],
+	}
+	dc.HalfEdges[7] = DCELEdge{
+		Origin: &dc.Vertices[2],
+		Face:   &dc.Faces[1],
+	}
+	//Twins
+	for i := range dc.HalfEdges {
+		dc.HalfEdges[i].Twin = &dc.HalfEdges[DCELEdgeTwin(i)]
+	}
+	dc.HalfEdges[0].Prev = &dc.HalfEdges[2]
+	dc.HalfEdges[0].Next = &dc.HalfEdges[6]
+	dc.HalfEdges[6].Prev = &dc.HalfEdges[0]
+	dc.HalfEdges[6].Next = &dc.HalfEdges[4]
+	dc.HalfEdges[4].Prev = &dc.HalfEdges[6]
+	dc.HalfEdges[4].Next = &dc.HalfEdges[2]
+	dc.HalfEdges[2].Prev = &dc.HalfEdges[4]
+	dc.HalfEdges[2].Next = &dc.HalfEdges[0]
+
+	dc.HalfEdges[1].Next = &dc.HalfEdges[3]
+	dc.HalfEdges[1].Prev = &dc.HalfEdges[7]
+	dc.HalfEdges[7].Next = &dc.HalfEdges[1]
+	dc.HalfEdges[7].Prev = &dc.HalfEdges[5]
+	dc.HalfEdges[5].Next = &dc.HalfEdges[7]
+	dc.HalfEdges[5].Prev = &dc.HalfEdges[3]
+	dc.HalfEdges[3].Next = &dc.HalfEdges[5]
+	dc.HalfEdges[3].Prev = &dc.HalfEdges[1]
+
+	dc.Faces[0].Outer = &dc.HalfEdges[0]
+	dc.Faces[1].Inner = &dc.HalfEdges[1]
+
+	return dc
+}

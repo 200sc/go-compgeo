@@ -63,6 +63,6 @@ func Right(i int) int {
 
 // This is an interesting, useful thing that would be
 // useful if the static tree cared.
-// func isLeftChild(i int) bool {
-// 	return i%2 == 0
-// }
+func isLeftChild(i int) bool {
+	return i%2 == 0
+}
