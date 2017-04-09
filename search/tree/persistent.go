@@ -1,6 +1,9 @@
 package tree
 
-import "github.com/200sc/go-compgeo/search"
+import (
+	"github.com/200sc/go-compgeo/printutil"
+	"github.com/200sc/go-compgeo/search"
+)
 
 type PersistentBST struct {
 	instant float64
@@ -87,7 +90,7 @@ func (pbst *PersistentBST) SearchUp(f float64) interface{} {
 func (pbst *PersistentBST) String() string {
 	s := ""
 	for _, ins := range pbst.instants {
-		s += keyString(ins.instant) + ":\n"
+		s += printutil.Stringf64(ins.instant) + ":\n"
 		s += ins.BST.String()
 	}
 	return s

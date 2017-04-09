@@ -1,20 +1,17 @@
-package compgeo
+package dcel
 
 import (
 	"errors"
+	"fmt"
 	"sort"
 
 	"github.com/200sc/go-compgeo/search"
 	"github.com/200sc/go-compgeo/search/tree"
 )
 
-type LocatesPoints interface {
-	PointLocate(vs ...float64) (*DCELFace, error)
-}
-
 type shellNode struct {
 	k float64
-	v *DCELEdge
+	v *Edge
 }
 
 func (sn shellNode) Key() float64 {
@@ -23,6 +20,10 @@ func (sn shellNode) Key() float64 {
 
 func (sn shellNode) Val() interface{} {
 	return sn.v
+}
+
+type LocatesPoints interface {
+	PointLocate(vs ...float64) (*Face, error)
 }
 
 // The real difficulties in Slab Decomposition are all in the
@@ -69,17 +70,21 @@ func (dc *DCEL) SlabDecompose(bstType tree.Type) (LocatesPoints, error) {
 			t.Delete(shellNode{v2[1], e})
 		}
 	}
-	return &slabPointLocator{t}, nil
+	return &SlabPointLocator{t}, nil
 }
 
-type slabPointLocator struct {
+type SlabPointLocator struct {
 	dp search.DynamicPersistent
 }
 
-func (spl *slabPointLocator) PointLocate(vs ...float64) (*DCELFace, error) {
+func (spl *SlabPointLocator) String() string {
+	return fmt.Sprintf("%v", spl.dp)
+}
+
+func (spl *SlabPointLocator) PointLocate(vs ...float64) (*Face, error) {
 	if len(vs) < 2 {
 		return nil, errors.New("Slab point location only supports 2 dimensions.")
 	}
 	edge := spl.dp.AtInstant(vs[0]).SearchUp(vs[1])
-	return edge.(*DCELEdge).Face, nil
+	return edge.(*Edge).Face, nil
 }

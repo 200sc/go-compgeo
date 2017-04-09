@@ -3,8 +3,8 @@ package tree
 import (
 	"fmt"
 	"math"
-	"strconv"
 
+	"github.com/200sc/go-compgeo/printutil"
 	"github.com/200sc/go-compgeo/search"
 	"github.com/200sc/go-compgeo/search/tree/static"
 )
@@ -259,24 +259,27 @@ func (n *node) string(prefix string, isTail bool) string {
 		s += "R:"
 	}
 	if n.parent != nil {
-		s += keyString(n.parent.key) + "->"
+		s += n.parent.keyString() + "->"
 	}
-	s += keyString(n.key) + "\n"
+	s += n.keyString() + n.valString() + "\n"
 	s += n.left.string(prefix, false)
 	s += n.right.string(prefix, true)
 
 	return s
 }
 
-func keyString(k float64) string {
-	return strconv.FormatFloat(k, 'f', -1, 64)
-}
-
 func (n *node) keyString() string {
 	if n == nil {
 		return ""
 	}
-	return keyString(n.key)
+	return printutil.Stringf64(n.key)
+}
+
+func (n *node) valString() string {
+	if n == nil {
+		return ""
+	}
+	return fmt.Sprintf("%v", n.val)
 }
 
 func (n *node) printRoot() {
