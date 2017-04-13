@@ -9,9 +9,6 @@ import (
 	"strings"
 )
 
-type OFFdata struct {
-}
-
 type TypeError struct{}
 
 func (fte TypeError) Error() string {
