@@ -167,7 +167,7 @@ func main() {
 				nme := mouse.LastMouseEvent
 				mouseStr.SetText(dcel.Point{float64(nme.X) - phd.X,
 					float64(nme.Y) - phd.Y, mouseZ})
-				if mode == ROTATE {
+				if mode == ROTATE || ((mode == ADD_DCEL || mode == ADDING_DCEL) && shft) {
 					if dragX != -1 {
 						dx := float64(nme.X - dragX)
 						dy := float64(nme.Y - dragY)
@@ -184,11 +184,6 @@ func main() {
 							phd.RotX(.01 * dy)
 							phd.UpdateSpaces()
 						}
-					}
-					if oak.IsDown("D") {
-						mouseZ += zMoveSpeed
-					} else if oak.IsDown("C") {
-						mouseZ -= zMoveSpeed
 					}
 				} else if mode == MOVE_POINT && dragging != -1 {
 					update := false
@@ -212,23 +207,13 @@ func main() {
 						phd.Update()
 						phd.UpdateSpaces()
 					}
-				} else if mode == ADD_DCEL {
+				}
+				if mode != MOVE_POINT {
 					if oak.IsDown("D") {
 						mouseZ += zMoveSpeed
 					} else if oak.IsDown("C") {
 						mouseZ -= zMoveSpeed
 					}
-					// Detect clicks
-					// On first click, declare the first point and edge and face
-					// First off, assume that this point is new
-				} else if mode == ADDING_DCEL {
-					// On following clicks, prev.next = next, next.prev = prev
-					//                      next.origin = origin
-					//                      next.face = theface
-					//                      prev.twin = make a twin at origin
-					//                      twin.face = 0 I guess for now
-					// Detect final click by clicking on first point or
-					//                      by right clicking
 				}
 				if oak.IsDown("LeftMouse") {
 					dragX = nme.X
@@ -242,6 +227,9 @@ func main() {
 			event.GlobalBind(func(no int, event interface{}) int {
 				me := event.(mouse.MouseEvent)
 				if me.Button == "LeftMouse" {
+					// Detect clicks
+					// On first click, declare the first point and edge and face
+					// First off, assume that this point is new
 					if mode == ADD_DCEL {
 						firstAddedPoint = len(phd.Vertices)
 						phd.Vertices = append(phd.Vertices,
@@ -263,7 +251,13 @@ func main() {
 
 						phd.Update()
 						phd.UpdateSpaces()
-
+						// On following clicks, prev.next = next, next.prev = prev
+						//                      next.origin = origin
+						//                      next.face = theface
+						//                      prev.twin = make a twin at origin
+						//                      twin.face = 0 I guess for now
+						// Detect final click by clicking on first point or
+						//                      by right clicking
 					} else if mode == ADDING_DCEL {
 						phd.Vertices = append(phd.Vertices,
 							dcel.NewPoint(float64(me.X)-phd.X, float64(me.Y)-phd.Y, mouseZ))
@@ -289,11 +283,14 @@ func main() {
 
 						prev = next
 
+						phd.OutEdges = append(phd.OutEdges, prev)
+
 						phd.Update()
 						phd.UpdateSpaces()
 					}
 				} else if me.Button == "RightMouse" {
 					if mode == ADDING_DCEL {
+						fmt.Println(firstAddedPoint)
 						prev.Next = phd.OutEdges[firstAddedPoint]
 						phd.OutEdges[firstAddedPoint].Prev = prev
 
