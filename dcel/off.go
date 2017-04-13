@@ -2,7 +2,6 @@ package dcel
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"os"
 	"strconv"
@@ -72,7 +71,7 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 	var edge *Edge
 	var face *Face
 
-	dc.Vertices = make([]Point, numVertices)
+	dc.Vertices = make([]*Point, numVertices)
 
 	// Read numVertices lines as vertices
 	// Each vertex is represented as three numbers,
@@ -82,7 +81,7 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 		if err != nil {
 			return nil, err
 		}
-		dc.Vertices[i] = Point{fs[0], fs[1], fs[2]}
+		dc.Vertices[i] = NewPoint(fs[0], fs[1], fs[2])
 	}
 
 	var vi int
@@ -91,12 +90,12 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 
 	edges := make([]*Edge, numEdges)
 	edgeIndex := 0
-	faces := make([]*Face, numFaces+1)
+	dc.Faces = make([]*Face, numFaces+1)
 	auxData := make(map[*Point][]*Edge)
 
 	// Faces are represented by a count of edges followed
 	// by a list of vertex indices
-	faces[OUTER_FACE] = new(Face)
+	dc.Faces[OUTER_FACE] = new(Face)
 	// We start at 1 because 0 is reserved for the outermost
 	// face, which this algorithm deals with later
 	for i := 1; i < numFaces+1; i++ {
@@ -106,7 +105,7 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 		}
 
 		face = new(Face)
-		faces[i] = face
+		dc.Faces[i] = face
 
 		edge = new(Edge)
 		edges[edgeIndex] = edge
@@ -118,14 +117,14 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 
 		vi = fs[0]
 
-		edge.Origin = &dc.Vertices[vi]
+		edge.Origin = dc.Vertices[vi]
 		dc.OutEdges[vi] = edge
 
-		aux := auxData[&dc.Vertices[vi]]
+		aux := auxData[dc.Vertices[vi]]
 		if aux == nil {
 			aux = make([]*Edge, 0)
 		}
-		auxData[&dc.Vertices[vi]] = append(aux, edge)
+		auxData[dc.Vertices[vi]] = append(aux, edge)
 
 		for j := 1; j < numEdges; j++ {
 			edge.Next = new(Edge)
@@ -138,14 +137,14 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 
 			vi = fs[j]
 
-			edge.Origin = &dc.Vertices[vi]
+			edge.Origin = dc.Vertices[vi]
 			dc.OutEdges[vi] = edge
 
-			aux := auxData[&dc.Vertices[vi]]
+			aux := auxData[dc.Vertices[vi]]
 			if aux == nil {
 				aux = make([]*Edge, 0)
 			}
-			auxData[&dc.Vertices[vi]] = append(aux, edge)
+			auxData[dc.Vertices[vi]] = append(aux, edge)
 		}
 		edge.Next = face.Inner
 		face.Inner.Prev = edge
@@ -175,7 +174,7 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 				edgeList[edgeIndex] = twin
 				twin.Twin = edge
 				edge.Twin = twin
-				edge.Face = faces[OUTER_FACE]
+				edge.Face = dc.Faces[OUTER_FACE]
 				twin.Origin = edge.Next.Origin
 			} else if numFound == 1 {
 				edgeList[foundIndex] = nil
@@ -224,7 +223,7 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 	var prev *Edge
 	for i := 0; i < len(edges); i++ {
 		edge = edges[i]
-		if edge.Face == faces[OUTER_FACE] {
+		if edge.Face == dc.Faces[OUTER_FACE] {
 			prev = edge.Twin.Next.Twin
 			for prev.Next != nil { // Could infinite loop, apparently??
 				prev = prev.Next.Twin
@@ -232,7 +231,7 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 			prev.Next = edge
 		}
 	}
-	dc.HalfEdges = make([]Edge, len(edges))
+	dc.HalfEdges = make([]*Edge, len(edges))
 	ei := 0
 	hei := 0
 	marked := make(map[*Edge]bool)
@@ -240,18 +239,12 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 	// Our internal DCEL format expects edges[i].Twin to be edges[i+1].
 	for hei < len(dc.HalfEdges) {
 		if _, ok := marked[edges[ei]]; !ok {
-			dc.HalfEdges[hei] = *edges[ei]
-			dc.HalfEdges[hei+1] = *(edges[ei].Twin)
+			dc.HalfEdges[hei] = edges[ei]
+			dc.HalfEdges[hei+1] = edges[ei].Twin
 			marked[edges[ei].Twin] = true
 			hei += 2
 		}
 		ei++
-	}
-	fmt.Println(&dc.HalfEdges[len(dc.HalfEdges)-1])
-
-	dc.Faces = make([]Face, len(faces))
-	for i := 0; i < len(faces); i++ {
-		dc.Faces[i] = *faces[i]
 	}
 
 	return dc, nil

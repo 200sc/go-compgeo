@@ -26,7 +26,9 @@ const (
 	MOVE_POINT
 	POINT_LOCATE
 	ADD_DCEL
+	REM_DCEL
 	LAST_MODE
+	ADDING_DCEL
 )
 
 func (m mouseMode) String() string {
@@ -38,7 +40,11 @@ func (m mouseMode) String() string {
 	case POINT_LOCATE:
 		return "Point Location"
 	case ADD_DCEL:
-		return "Define Geometry"
+		return "Define Face"
+	case ADDING_DCEL:
+		return "Defining Face..."
+	case REM_DCEL:
+		return "Define Inside Face"
 	default:
 		return "INVALID"
 	}
@@ -55,12 +61,16 @@ const (
 )
 
 var (
-	dragX    float32 = -1
-	dragY    float32 = -1
-	dragging         = -1
-	offFile          = filepath.Join("data", "A.off")
-	mode             = ROTATE
-	loopDemo bool
+	dragX           float32 = -1
+	dragY           float32 = -1
+	dragging                = -1
+	offFile                 = filepath.Join("data", "A.off")
+	mode                    = ROTATE
+	loopDemo        bool
+	firstAddedPoint int
+	prev            *dcel.Edge
+	addedFace       *dcel.Face
+	mouseZ          = 0.0
 )
 
 func main() {
@@ -96,6 +106,11 @@ func main() {
 
 			modeStr := render.DefFont().NewText(mode.String(), 3, 40)
 			render.Draw(modeStr, 1)
+
+			mouseStr := render.DefFont().NewInterfaceText(
+				dcel.Point{0, 0, 0}, 3, 465)
+
+			render.Draw(mouseStr, 1)
 
 			event.GlobalBind(vertexStopDrag, "MouseRelease")
 			event.GlobalBind(func(no int, nothing interface{}) int {
@@ -150,6 +165,8 @@ func main() {
 					}
 				}
 				nme := mouse.LastMouseEvent
+				mouseStr.SetText(dcel.Point{float64(nme.X) - phd.X,
+					float64(nme.Y) - phd.Y, mouseZ})
 				if mode == ROTATE {
 					if dragX != -1 {
 						dx := float64(nme.X - dragX)
@@ -168,9 +185,14 @@ func main() {
 							phd.UpdateSpaces()
 						}
 					}
-
+					if oak.IsDown("D") {
+						mouseZ += zMoveSpeed
+					} else if oak.IsDown("C") {
+						mouseZ -= zMoveSpeed
+					}
 				} else if mode == MOVE_POINT && dragging != -1 {
 					update := false
+					mouseZ = phd.Vertices[dragging][2]
 					if dragX != -1 {
 						phd.Vertices[dragging][0] = float64(dragX) - phd.X
 						update = true
@@ -179,10 +201,10 @@ func main() {
 						phd.Vertices[dragging][1] = float64(dragY) - phd.Y
 						update = true
 					}
-					if nme.Button == "ScrollUpMouse" {
+					if oak.IsDown("D") {
 						phd.Vertices[dragging][2] += zMoveSpeed
 						update = true
-					} else if nme.Button == "ScrollDownMouse" {
+					} else if oak.IsDown("C") {
 						phd.Vertices[dragging][2] -= zMoveSpeed
 						update = true
 					}
@@ -190,6 +212,23 @@ func main() {
 						phd.Update()
 						phd.UpdateSpaces()
 					}
+				} else if mode == ADD_DCEL {
+					if oak.IsDown("D") {
+						mouseZ += zMoveSpeed
+					} else if oak.IsDown("C") {
+						mouseZ -= zMoveSpeed
+					}
+					// Detect clicks
+					// On first click, declare the first point and edge and face
+					// First off, assume that this point is new
+				} else if mode == ADDING_DCEL {
+					// On following clicks, prev.next = next, next.prev = prev
+					//                      next.origin = origin
+					//                      next.face = theface
+					//                      prev.twin = make a twin at origin
+					//                      twin.face = 0 I guess for now
+					// Detect final click by clicking on first point or
+					//                      by right clicking
 				}
 				if oak.IsDown("LeftMouse") {
 					dragX = nme.X
@@ -200,6 +239,89 @@ func main() {
 				}
 				return 0
 			}, "EnterFrame")
+			event.GlobalBind(func(no int, event interface{}) int {
+				me := event.(mouse.MouseEvent)
+				if me.Button == "LeftMouse" {
+					if mode == ADD_DCEL {
+						firstAddedPoint = len(phd.Vertices)
+						phd.Vertices = append(phd.Vertices,
+							dcel.NewPoint(float64(me.X)-phd.X, float64(me.Y)-phd.Y, mouseZ))
+
+						phd.HalfEdges = append(phd.HalfEdges, dcel.NewEdge())
+						prev = phd.HalfEdges[len(phd.HalfEdges)-1]
+						prev.Origin = phd.Vertices[firstAddedPoint]
+
+						f := dcel.NewFace()
+						f.Inner = prev
+						phd.Faces = append(phd.Faces, f)
+						addedFace = phd.Faces[len(phd.Faces)-1]
+
+						prev.Face = addedFace
+						phd.OutEdges = append(phd.OutEdges, prev)
+
+						mode = ADDING_DCEL
+
+						phd.Update()
+						phd.UpdateSpaces()
+
+					} else if mode == ADDING_DCEL {
+						phd.Vertices = append(phd.Vertices,
+							dcel.NewPoint(float64(me.X)-phd.X, float64(me.Y)-phd.Y, mouseZ))
+
+						phd.HalfEdges = append(phd.HalfEdges, dcel.NewEdge())
+						twin := phd.HalfEdges[len(phd.HalfEdges)-1]
+						twin.Origin = phd.Vertices[len(phd.Vertices)-1]
+						twin.Face = phd.Faces[dcel.OUTER_FACE]
+						prev.Twin = twin
+						twin.Twin = prev
+						// If prev.Prev is nil, we add the pointer
+						// on right click.
+						if prev.Prev != nil {
+							twin.Next = prev.Prev.Twin
+						}
+
+						phd.HalfEdges = append(phd.HalfEdges, dcel.NewEdge())
+						next := phd.HalfEdges[len(phd.HalfEdges)-1]
+						next.Origin = phd.Vertices[len(phd.Vertices)-1]
+						next.Prev = prev
+						next.Face = addedFace
+						prev.Next = next
+
+						prev = next
+
+						phd.Update()
+						phd.UpdateSpaces()
+					}
+				} else if me.Button == "RightMouse" {
+					if mode == ADDING_DCEL {
+						prev.Next = phd.OutEdges[firstAddedPoint]
+						phd.OutEdges[firstAddedPoint].Prev = prev
+
+						phd.HalfEdges = append(phd.HalfEdges, dcel.NewEdge())
+						// The final twin
+						twin := phd.HalfEdges[len(phd.HalfEdges)-1]
+						twin.Origin = phd.Vertices[firstAddedPoint]
+						twin.Face = phd.Faces[dcel.OUTER_FACE]
+						prev.Twin = twin
+						twin.Twin = prev
+						twin.Prev = prev.Next.Twin
+						prev.Next.Twin.Prev = twin
+						twin.Next = prev.Prev.Twin
+						prev.Prev.Twin.Next = twin
+
+						prev = nil
+						addedFace = nil
+						firstAddedPoint = -1
+
+						mode = ADD_DCEL
+
+						phd.Update()
+						phd.UpdateSpaces()
+
+					}
+				}
+				return 0
+			}, "MouseRelease")
 			// event.GlobalBind(func(no int, me interface{}) int {
 			// 	event := me.(mouse.MouseEvent)
 			// 	if event.Button == "LeftMouse" {
@@ -250,7 +372,7 @@ func (ip *InteractivePolyhedron) Init() event.CID {
 }
 
 type InteractivePoint struct {
-	dcel.Point
+	*dcel.Point
 	s            *collision.Space
 	cID          event.CID
 	index        int
@@ -258,7 +380,7 @@ type InteractivePoint struct {
 	showing      bool
 }
 
-func NewInteractivePoint(v dcel.Point, i int) *InteractivePoint {
+func NewInteractivePoint(v *dcel.Point, i int) *InteractivePoint {
 	ip := new(InteractivePoint)
 	ip.Init()
 	ip.s = collision.NewSpace(0, 0, 1, 1, ip.cID)

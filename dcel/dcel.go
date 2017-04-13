@@ -11,14 +11,14 @@ import (
 // self-explanatory but constructing it is significantly
 // harder.
 type DCEL struct {
-	Vertices []Point
+	Vertices []*Point
 	// outEdges[0] is the (an) edge in HalfEdges whose
 	// orgin is Vertices[0]
 	OutEdges  []*Edge
-	HalfEdges []Edge
+	HalfEdges []*Edge
 	// The first value in a face is the outside component
 	// of the face, the second value is the inside component
-	Faces []Face
+	Faces []*Face
 }
 
 // MaxX returns the Maximum of all X values

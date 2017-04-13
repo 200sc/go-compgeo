@@ -7,16 +7,22 @@ type Face struct {
 	Outer, Inner *Edge
 }
 
+func NewFace() *Face {
+	return &Face{}
+}
+
 func (f *Face) Vertices() []Point {
 	// Outer is not populated by anything as of this writing.
 
 	pts := []Point{}
 	e := f.Inner
-	for e.Next != f.Inner {
+	for e != nil && e.Next != f.Inner {
 		pts = append(pts, *e.Origin)
 		e = e.Next
 	}
-	pts = append(pts, *e.Origin)
+	if e != nil {
+		pts = append(pts, *e.Origin)
+	}
 	return pts
 }
 

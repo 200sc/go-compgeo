@@ -25,6 +25,10 @@ type Edge struct {
 	Twin *Edge
 }
 
+func NewEdge() *Edge {
+	return &Edge{}
+}
+
 func (e *Edge) String() string {
 	s := ""
 	s += fmt.Sprintf("%v", e.Origin) + "->" + fmt.Sprintf("%v", e.Twin.Origin)
@@ -48,10 +52,22 @@ func EdgeTwin(i int) int {
 
 // FullEdge returns the ith edge in the form of its
 // two vertices
-func (d *DCEL) FullEdge(i int) [2]*Point {
+func (d *DCEL) FullEdge(i int) ([2]*Point, error) {
+	if i >= len(d.HalfEdges) {
+		return [2]*Point{}, BadEdgeError{}
+	}
 	e := d.HalfEdges[i]
+	if e.Twin == nil {
+		return [2]*Point{}, BadEdgeError{}
+	}
 	e2 := e.Twin
 	return [2]*Point{
 		e.Origin,
-		e2.Origin}
+		e2.Origin}, nil
+}
+
+type BadEdgeError struct{}
+
+func (bee BadEdgeError) Error() string {
+	return "The input edge was invalid"
 }
