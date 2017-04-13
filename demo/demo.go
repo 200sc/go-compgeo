@@ -2,6 +2,9 @@ package main
 
 import (
 	"log"
+	"path/filepath"
+
+	"github.com/200sc/go-compgeo/dcel"
 
 	"bitbucket.org/oakmoundstudio/oak"
 	"bitbucket.org/oakmoundstudio/oak/event"
@@ -11,7 +14,7 @@ import (
 
 const (
 	shiftSpeed = 3
-	scaleSpeed = .01
+	scaleSpeed = .02
 )
 
 var (
@@ -26,7 +29,12 @@ func main() {
 	}
 	oak.AddScene("demo",
 		func(prevScene string, data interface{}) {
-			phd := render.NewCuboid(100, 100, 100, 100, 100, 100)
+			//phd := render.NewCuboid(100, 100, 100, 100, 100, 100)
+			dc, err := dcel.LoadOFF(filepath.Join("data", "A.off"))
+			if err != nil {
+				log.Fatal(err)
+			}
+			phd := render.NewPolyhedronFromDCEL(dc, 100, 100)
 			render.Draw(phd, 1)
 			event.GlobalBind(func(no int, nothing interface{}) int {
 				shft := oak.IsDown("LeftShift")
