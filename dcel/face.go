@@ -7,6 +7,19 @@ type Face struct {
 	Outer, Inner *Edge
 }
 
+func (f *Face) Vertices() []Point {
+	// Outer is not populated by anything as of this writing.
+
+	pts := []Point{}
+	e := f.Inner
+	for e.Next != f.Inner {
+		pts = append(pts, *e.Origin)
+		e = e.Next
+	}
+	pts = append(pts, *e.Origin)
+	return pts
+}
+
 const (
 	OUTER_FACE = 0
 )
