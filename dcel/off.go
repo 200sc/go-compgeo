@@ -2,6 +2,7 @@ package dcel
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"os"
 	"strconv"
@@ -93,7 +94,7 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 
 	edges := make([]*Edge, numEdges)
 	edgeIndex := 0
-	faces := make([]*Face, numFaces)
+	faces := make([]*Face, numFaces+1)
 	auxData := make(map[*Point][]*Edge)
 
 	// Faces are represented by a count of edges followed
@@ -114,11 +115,7 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 		edges[edgeIndex] = edge
 		edgeIndex++
 
-		// Inner or outer?
-		// The model we are basing off of does not
-		// have faces with both inner and outer edges.
-		// How is the outer face represented?
-		// What about holes??
+		// This model does not use Outer faces.
 		face.Inner = edge
 		edge.Face = face
 
@@ -135,6 +132,7 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 
 		for j := 1; j < numEdges; j++ {
 			edge.Next = new(Edge)
+			edge.Next.Prev = edge
 			edge = edge.Next
 
 			edges[edgeIndex] = edge
@@ -153,11 +151,13 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 			auxData[&dc.Vertices[vi]] = append(aux, edge)
 		}
 		edge.Next = face.Inner
+		face.Inner.Prev = edge
 	}
 
 	var numFound, foundIndex int
 	var twin *Edge
 
+	// Create twins
 	for j := 0; j < len(edges); j++ {
 		edge = edges[j]
 		if edge.Twin == nil {
@@ -200,15 +200,26 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 		}
 	}
 
-	// Even if we've decided the mesh is non-manifold, we need to clean up the auxData pointers before we clear the mesh
-	// (If the mesh is manifold, this is easy. If not, we almost definitely have auxData pointers to clear)
-	for _, v := range auxData {
-		if v == nil || len(v) == 0 {
-			continue
-		}
-		isManifold = false
-		break
-	}
+	// The original algorithm here had auxData attached to each vertex,
+	// and called this step "cleaning up" those pointers, when all it was
+	// doing was making sure they were all empty.
+	//
+	// It seems like the algorithm will -always- have elements in some auxdata,
+	// as it doesn't remove things from auxdata that already had twins in the
+	// twin-attaching phase.
+	// for _, v := range auxData {
+	// 	if v == nil || len(v) == 0 {
+	// 		continue
+	// 	}
+	// 	for _, v2 := range v {
+	// 		if v2 != nil {
+	// 			break
+	// 		}
+	// 	}
+	// 	fmt.Println("AuxData was not empty because of course it wasn't")
+	// 	isManifold = false
+	// 	break
+	// }
 
 	if !isManifold {
 		return nil, NotManifoldError{}
@@ -223,6 +234,27 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 			}
 			prev.Next = edge
 		}
+	}
+	dc.HalfEdges = make([]Edge, len(edges))
+	ei := 0
+	hei := 0
+	marked := make(map[*Edge]bool)
+
+	// Our internal DCEL format expects edges[i].Twin to be edges[i+1].
+	for hei < len(dc.HalfEdges) {
+		if _, ok := marked[edges[ei]]; !ok {
+			dc.HalfEdges[hei] = *edges[ei]
+			dc.HalfEdges[hei+1] = *(edges[ei].Twin)
+			marked[edges[ei].Twin] = true
+			hei += 2
+		}
+		ei++
+	}
+	fmt.Println(&dc.HalfEdges[len(dc.HalfEdges)-1])
+
+	dc.Faces = make([]Face, len(faces))
+	for i := 0; i < len(faces); i++ {
+		dc.Faces[i] = *faces[i]
 	}
 
 	return dc, nil
@@ -295,7 +327,7 @@ func readIntsLineNoLength(s *bufio.Scanner) (int, []int, error) {
 	}
 
 	for i := 0; i < length; i++ {
-		out[i], err = strconv.Atoi(ints[i])
+		out[i], err = strconv.Atoi(ints[i+1])
 		if err != nil {
 			return 0, nil, TypeError{}
 		}
