@@ -54,6 +54,7 @@ const (
 	zMoveSpeed    = 1
 	shiftSpeed    = 3
 	scaleSpeed    = .02
+	rotSpeed      = .01
 	vCollisionDim = 8
 	defScale      = 20
 	defRotZ       = math.Pi
@@ -88,13 +89,22 @@ func main() {
 			loopDemo = false
 		}
 	})
+	oak.AddCommand("clear", func(strs []string) {
+		offFile = "none"
+		loopDemo = false
+	})
 	oak.AddScene("demo",
 		func(prevScene string, data interface{}) {
 			loopDemo = true
 			//phd := render.NewCuboid(100, 100, 100, 100, 100, 100)
-			dc, err := dcel.LoadOFF(offFile)
-			if err != nil {
-				log.Fatal(err)
+			var dc *dcel.DCEL
+			if offFile == "none" {
+				dc = dcel.New()
+			} else {
+				dc, err = dcel.LoadOFF(offFile)
+				if err != nil {
+					log.Fatal(err)
+				}
 			}
 			phd := new(InteractivePolyhedron)
 			phd.Polyhedron = render.NewPolyhedronFromDCEL(dc, 100, 100)
@@ -173,15 +183,15 @@ func main() {
 						dy := float64(nme.Y - dragY)
 						if dx != 0 {
 							if shft {
-								phd.RotZ(.01 * dx)
+								phd.RotZ(rotSpeed * dx)
 								phd.UpdateSpaces()
 							} else {
-								phd.RotY(.01 * dx)
+								phd.RotY(rotSpeed * dx)
 								phd.UpdateSpaces()
 							}
 						}
 						if dy != 0 {
-							phd.RotX(.01 * dy)
+							phd.RotX(rotSpeed * dy)
 							phd.UpdateSpaces()
 						}
 					}
@@ -290,7 +300,6 @@ func main() {
 					}
 				} else if me.Button == "RightMouse" {
 					if mode == ADDING_DCEL {
-						fmt.Println(firstAddedPoint)
 						prev.Next = phd.OutEdges[firstAddedPoint]
 						phd.OutEdges[firstAddedPoint].Prev = prev
 
@@ -319,24 +328,6 @@ func main() {
 				}
 				return 0
 			}, "MouseRelease")
-			// event.GlobalBind(func(no int, me interface{}) int {
-			// 	event := me.(mouse.MouseEvent)
-			// 	if event.Button == "LeftMouse" {
-			// 		fmt.Println(event.X, event.Y, event.Button)
-			// 		dragX = event.X
-			// 		dragY = event.Y
-			// 	}
-			// 	return 0
-			// }, "MousePress")
-			// event.GlobalBind(func(no int, me interface{}) int {
-			// 	event := me.(mouse.MouseEvent)
-			// 	if event.Button == "LeftMouse" {
-			// 		fmt.Println(event.X, event.Y, event.Button)
-			// 		dragX = -1
-			// 		dragY = -1
-			// 	}
-			// 	return 0
-			// }, "MouseRelease")
 		},
 		func() bool {
 			return loopDemo

@@ -21,6 +21,18 @@ type DCEL struct {
 	Faces []*Face
 }
 
+// New returns an empty DCEL with its inner
+// fields initialized to empty slices, and a
+// zeroth outside face.
+func New() *DCEL {
+	dc := new(DCEL)
+	dc.Vertices = []*Point{}
+	dc.OutEdges = []*Edge{}
+	dc.HalfEdges = []*Edge{}
+	dc.Faces = []*Face{NewFace()}
+	return dc
+}
+
 // MaxX returns the Maximum of all X values
 func (dc *DCEL) MaxX() float64 {
 	return dc.Max(0)
