@@ -6,3 +6,7 @@ package dcel
 type Face struct {
 	Outer, Inner *Edge
 }
+
+const (
+	OUTER_FACE = 0
+)
