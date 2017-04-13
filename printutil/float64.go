@@ -13,7 +13,7 @@ func Stringf64(ks ...float64) string {
 		} else if k == math.MaxFloat64 {
 			s += "∞"
 		} else {
-			s += strconv.FormatFloat(k, 'f', -1, 64)
+			s += strconv.FormatFloat(k, 'f', 5, 64)
 		}
 		if i != len(ks)-1 {
 			s += ", "
