@@ -36,3 +36,11 @@ func (dp Point) Y() float64 {
 func (dp Point) Z() float64 {
 	return dp[2]
 }
+
+func (dp Point) Mid(p2 *Point) *Point {
+	p3 := new(Point)
+	for i := range dp {
+		p3[i] = (dp[i] + (*p2)[i]) / 2
+	}
+	return p3
+}

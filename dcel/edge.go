@@ -59,13 +59,24 @@ func (d *DCEL) FullEdge(i int) ([2]*Point, error) {
 		return [2]*Point{}, BadEdgeError{}
 	}
 	e := d.HalfEdges[i]
-	if e.Twin == nil {
+	e2 := e.Twin
+	if e2 == nil {
 		return [2]*Point{}, BadEdgeError{}
 	}
-	e2 := e.Twin
 	return [2]*Point{
 		e.Origin,
 		e2.Origin}, nil
+}
+
+func (e *Edge) Mid() (*Point, error) {
+	if e == nil {
+		return nil, BadEdgeError{}
+	}
+	t := e.Twin
+	if t == nil {
+		return nil, BadEdgeError{}
+	}
+	return e.Origin.Mid(t.Origin), nil
 }
 
 // BadEdgeError is returned from edge-processing functions
