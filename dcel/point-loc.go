@@ -60,14 +60,16 @@ func (dc *DCEL) SlabDecompose(bstType tree.Type) (LocatesPoints, error) {
 		leftEdges, rightEdges, _ := dc.PartitionVertexEdges(p, 0)
 		// Add all edges to the PersistentBST connecting to the right
 		// of the point
-		for _, e := range leftEdges {
+		for _, e := range rightEdges {
 			t.Insert(shellNode{v[1], e})
+			fmt.Println("Adding", e, "at", v[1])
 		}
 		// Remove all edges from the PersistentBST connecting to the left
 		// of the point
-		for _, e := range rightEdges {
+		for _, e := range leftEdges {
 			v2 := e.Twin.Origin
-			t.Delete(shellNode{v2[1], e})
+			err := t.Delete(shellNode{v2[1], e.Twin})
+			fmt.Println("Removing", e.Twin, "from", v2[1], err)
 		}
 	}
 	return &SlabPointLocator{t}, nil

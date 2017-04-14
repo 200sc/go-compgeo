@@ -2,6 +2,7 @@ package dcel
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"strconv"
 )
@@ -119,6 +120,7 @@ func (dc *DCEL) AllEdges(vertex int) []*Edge {
 // given vertex with respect to a specific dimension
 func (dc *DCEL) PartitionVertexEdges(vertex int, d int) ([]*Edge, []*Edge, error) {
 	allEdges := dc.AllEdges(vertex)
+	fmt.Println("All edges off of vertex,", dc.Vertices[vertex], "::", allEdges)
 	lesser := make([]*Edge, 0)
 	greater := make([]*Edge, 0)
 	v := dc.Vertices[vertex]
@@ -131,10 +133,13 @@ func (dc *DCEL) PartitionVertexEdges(vertex int, d int) ([]*Edge, []*Edge, error
 		// Potential issue:
 		// Will something bad happen if there are multiple
 		// elements with the same value in this dimension?
-		if e2.Origin[d] <= checkAgainst {
+		if e2.Origin[d] < checkAgainst {
 			lesser = append(lesser, e1)
-		} else {
+		} else if e2.Origin[d] > checkAgainst {
 			greater = append(greater, e1)
+		} else {
+			// We completely ignore vertical lines?.
+			fmt.Println("Wtf", e1, e2, v[d])
 		}
 	}
 	return lesser, greater, nil

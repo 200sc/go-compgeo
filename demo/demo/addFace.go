@@ -1,9 +1,12 @@
 package demo
 
 import (
+	"fmt"
+
 	"bitbucket.org/oakmoundstudio/oak/event"
 	"bitbucket.org/oakmoundstudio/oak/mouse"
 	"github.com/200sc/go-compgeo/dcel"
+	"github.com/200sc/go-compgeo/search/tree"
 )
 
 func addFace(cID int, ev interface{}) int {
@@ -14,6 +17,9 @@ func addFace(cID int, ev interface{}) int {
 		// On first click, declare the first point and edge and face
 		// First off, assume that this point is new
 		if mode == ADD_DCEL {
+			// Need a real copy function
+			//undoPhd = append(undoPhd, *phd)
+
 			faceVertices = make(map[*dcel.Point]bool)
 			// Add Case A: The first point of the face
 			// already exists.
@@ -84,16 +90,27 @@ func addFace(cID int, ev interface{}) int {
 				vi = len(phd.Vertices) - 1
 				faceVertices[phd.Vertices[vi]] = true
 			}
+			// This twin points from the new point to the previous point.
 			phd.HalfEdges = append(phd.HalfEdges, dcel.NewEdge())
 			twin := phd.HalfEdges[len(phd.HalfEdges)-1]
+
 			twin.Origin = phd.Vertices[vi]
+
+			// We make an assumption here that all twins have the outer face
+			// as their face.
 			twin.Face = phd.Faces[dcel.OUTER_FACE]
+
+			// This should be the twin of the previous edge,
+			// and vice versa.
 			prev.Twin = twin
 			twin.Twin = prev
-			// If prev.Prev is nil, we add the pointer
-			// on right click.
+
+			// If the previous edge has a previous edge,
 			if prev.Prev != nil {
+				// This twin's next should be the previous twin,
+				// and the previous twin's previous should be this.
 				twin.Next = prev.Prev.Twin
+				prev.Prev.Twin.Prev = twin
 			}
 
 			phd.HalfEdges = append(phd.HalfEdges, dcel.NewEdge())
@@ -111,23 +128,37 @@ func addFace(cID int, ev interface{}) int {
 
 			phd.Update()
 			phd.UpdateSpaces()
+		} else if mode == POINT_LOCATE {
+			sd, err := phd.SlabDecompose(tree.RedBlack)
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				fmt.Println(sd.(*dcel.SlabPointLocator))
+			}
 		}
 	} else if me.Button == "RightMouse" {
 		if mode == ADDING_DCEL {
-			prev.Next = addedFace.Inner
-			phd.OutEdges[firstAddedPoint].Prev = prev
+			first := addedFace.Inner
+			prev.Next = first
+			first.Prev = prev
 
 			phd.HalfEdges = append(phd.HalfEdges, dcel.NewEdge())
-			// The final twin
+			// The final twin starts at the first point of this face
 			twin := phd.HalfEdges[len(phd.HalfEdges)-1]
 			twin.Origin = phd.Vertices[firstAddedPoint]
 			twin.Face = phd.Faces[dcel.OUTER_FACE]
+
 			prev.Twin = twin
 			twin.Twin = prev
-			twin.Prev = prev.Next.Twin
-			prev.Next.Twin.Prev = twin
+
+			// This twin's next should be the previous twin,
+			// and the previous twin's previous should be this.
 			twin.Next = prev.Prev.Twin
-			prev.Prev.Twin.Next = twin
+			prev.Prev.Twin.Prev = twin
+			// This twin's previous should be the first edge
+			// we added's twin. and vice versa
+			twin.Prev = first.Twin
+			first.Twin.Next = twin
 
 			prev = nil
 			addedFace = nil
@@ -137,6 +168,13 @@ func addFace(cID int, ev interface{}) int {
 
 			phd.Update()
 			phd.UpdateSpaces()
+
+			fmt.Println(phd.DCEL.HalfEdges)
+			for i, e := range phd.HalfEdges {
+				if e.Twin == nil || e.Next == nil || e.Prev == nil {
+					fmt.Println(i, e.Origin, e.Next, e.Prev, e.Twin)
+				}
+			}
 
 		}
 	}

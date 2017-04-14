@@ -46,7 +46,6 @@ func NewInteractivePoint(v *dcel.Point, i int) *InteractivePoint {
 
 func vertexShow(cID int, nothing interface{}) int {
 	ip := event.GetEntity(cID).(*InteractivePoint)
-	fmt.Println("Mouse drag on triggered")
 	if !ip.showing {
 		ip.showing = true
 		txt := font.NewInterfaceText(ip.Point, ip.s.GetX(), ip.s.GetY())
