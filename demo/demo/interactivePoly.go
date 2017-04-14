@@ -6,6 +6,10 @@ import (
 	"bitbucket.org/oakmoundstudio/oak/render"
 )
 
+// An InteractivePolyhedron is a wrapper around
+// an oak polyhedron which defines mouse collision
+// areas to interact with parts of the underlying DCEL
+// structure.
 type InteractivePolyhedron struct {
 	*render.Polyhedron
 	vs []*InteractivePoint
@@ -17,6 +21,7 @@ type InteractivePolyhedron struct {
 	cID event.CID
 }
 
+// Init establishes ip's non-polyhedron variables.
 func (ip *InteractivePolyhedron) Init() event.CID {
 	ip.cID = event.NextID(ip)
 	ip.vs = make([]*InteractivePoint, len(ip.Vertices))
@@ -26,6 +31,10 @@ func (ip *InteractivePolyhedron) Init() event.CID {
 	return ip.cID
 }
 
+// UpdateSpaces is a helper function to polyhedron's Update
+// which similarly resets parts of the ip as it is moved
+// through space. In this case the large job here is making sure
+// all of the vertex collision areas stay in the right spots.
 func (ip *InteractivePolyhedron) UpdateSpaces() {
 	if len(ip.vs) < len(ip.Vertices) {
 		diff := len(ip.Vertices) - len(ip.vs)

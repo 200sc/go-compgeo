@@ -11,6 +11,8 @@ import (
 	"github.com/200sc/go-compgeo/dcel"
 )
 
+// InteractivePoint is a struct to wrap around dcel points
+// and extend them to be bindable and have collision space.
 type InteractivePoint struct {
 	*dcel.Point
 	s            *collision.Space
@@ -20,6 +22,15 @@ type InteractivePoint struct {
 	showing      bool
 }
 
+// Init allows ip to satisfy the event.Entity interface,
+// so it may be stored with other entities in a global
+// list managed by oak.
+func (ip *InteractivePoint) Init() event.CID {
+	ip.cID = event.NextID(ip)
+	return ip.cID
+}
+
+// NewInteractivePoint creates a new ip given a dcel point to base it off of.
 func NewInteractivePoint(v *dcel.Point, i int) *InteractivePoint {
 	ip := new(InteractivePoint)
 	ip.Init()
@@ -76,9 +87,4 @@ func vertexStartDrag(cID int, nothing interface{}) int {
 func vertexStopDrag(no int, nothing interface{}) int {
 	dragging = -1
 	return 0
-}
-
-func (ip *InteractivePoint) Init() event.CID {
-	ip.cID = event.NextID(ip)
-	return ip.cID
 }

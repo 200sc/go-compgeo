@@ -5,6 +5,9 @@ import (
 	"strconv"
 )
 
+// Stringf64 is a helper function which will take in
+// any number of float65s and return a standard-formatted
+// string.
 func Stringf64(ks ...float64) string {
 	s := ""
 	for i, k := range ks {

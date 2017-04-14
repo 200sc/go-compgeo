@@ -40,6 +40,8 @@ var (
 	modeStr         *render.Text
 )
 
+// InitScene is called whenever the scene 'demo' starts.
+// it creates the objects in our application.
 func InitScene(prevScene string, data interface{}) {
 	loopDemo = true
 	//phd := render.NewCuboid(100, 100, 100, 100, 100, 100)
@@ -82,34 +84,22 @@ func InitScene(prevScene string, data interface{}) {
 			return 0
 		}, "KeyDown"+k)
 	}
-	// event.GlobalBind(func(no int, nothing interface{}) int {
-	// 	mode = 0
-	// 	modeStr.SetText(mode.String())
-	// 	return 0
-	// }, "KeyDown1")
-	// event.GlobalBind(func(no int, nothing interface{}) int {
-	// 	mode = 1
-	// 	modeStr.SetText(mode.String())
-	// 	return 0
-	// }, "KeyDown2")
-	// event.GlobalBind(func(no int, nothing interface{}) int {
-	// 	mode = 2
-	// 	modeStr.SetText(mode.String())
-	// 	return 0
-	// }, "KeyDown3")
-	// event.GlobalBind(func(no int, nothing interface{}) int {
-	// 	mode = 3
-	// 	modeStr.SetText(mode.String())
-	// 	return 0
-	// }, "KeyDown4")
 	phd.cID.Bind(phdEnter, "EnterFrame")
 	phd.cID.Bind(addFace, "MouseRelease")
 }
 
+// LoopScene is a basic scene-loop function,
+// returning the value of some boolean defined
+// in this oak project package.
+// When loopDemo is false, the scene will stop
+// (and then immediately reset, as it is defined
+// to be followed by itself).
 func LoopScene() bool {
 	return loopDemo
 }
 
+// AddCommands opens up some command line functions
+// to the application.
 func AddCommands() {
 	args := os.Args[1:]
 	if len(args) > 0 {
