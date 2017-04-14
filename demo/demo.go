@@ -72,6 +72,7 @@ var (
 	prev            *dcel.Edge
 	addedFace       *dcel.Face
 	mouseZ          = 0.0
+	faceVertices    = make(map[*dcel.Point]bool)
 )
 
 func main() {
@@ -241,10 +242,14 @@ func main() {
 					// On first click, declare the first point and edge and face
 					// First off, assume that this point is new
 					if mode == ADD_DCEL {
+						faceVertices = make(map[*dcel.Point]bool)
+						// Add Case A: The first point of the face
+						// already exists.
 						hits := mouse.Hits(me.ToSpace())
 						if len(hits) > 0 {
 							ip := event.GetEntity(int(hits[0].CID)).(*InteractivePoint)
 							p := ip.Point
+							faceVertices[p] = true
 							mouseZ = p.Z()
 							// Todo: consider if we should change how outEdges
 							// are handled so this linear scan doesn't need to
@@ -254,6 +259,7 @@ func main() {
 							firstAddedPoint = len(phd.Vertices)
 							phd.Vertices = append(phd.Vertices,
 								dcel.NewPoint(float64(me.X)-phd.X, float64(me.Y)-phd.Y, mouseZ))
+							faceVertices[phd.Vertices[len(phd.Vertices)-1]] = true
 						}
 						phd.HalfEdges = append(phd.HalfEdges, dcel.NewEdge())
 						prev = phd.HalfEdges[len(phd.HalfEdges)-1]
@@ -281,12 +287,34 @@ func main() {
 						// Detect final click by clicking on first point or
 						//                      by right clicking
 					} else if mode == ADDING_DCEL {
-						phd.Vertices = append(phd.Vertices,
-							dcel.NewPoint(float64(me.X)-phd.X, float64(me.Y)-phd.Y, mouseZ))
-
+						// Add Case D:
+						// Some node other than the first in the face already
+						// exists
+						var vi int
+						hits := mouse.Hits(me.ToSpace())
+						if len(hits) > 0 {
+							ip := event.GetEntity(int(hits[0].CID)).(*InteractivePoint)
+							p := ip.Point
+							// Add Case F: this point already exists in this
+							// face. Reject it.
+							if _, ok := faceVertices[p]; ok {
+								return 0
+							}
+							faceVertices[p] = true
+							mouseZ = p.Z()
+							// Todo: consider if we should change how outEdges
+							// are handled so this linear scan doesn't need to
+							// happen
+							vi = phd.ScanPoints(p)
+						} else {
+							phd.Vertices = append(phd.Vertices,
+								dcel.NewPoint(float64(me.X)-phd.X, float64(me.Y)-phd.Y, mouseZ))
+							vi = len(phd.Vertices) - 1
+							faceVertices[phd.Vertices[vi]] = true
+						}
 						phd.HalfEdges = append(phd.HalfEdges, dcel.NewEdge())
 						twin := phd.HalfEdges[len(phd.HalfEdges)-1]
-						twin.Origin = phd.Vertices[len(phd.Vertices)-1]
+						twin.Origin = phd.Vertices[vi]
 						twin.Face = phd.Faces[dcel.OUTER_FACE]
 						prev.Twin = twin
 						twin.Twin = prev
@@ -298,14 +326,16 @@ func main() {
 
 						phd.HalfEdges = append(phd.HalfEdges, dcel.NewEdge())
 						next := phd.HalfEdges[len(phd.HalfEdges)-1]
-						next.Origin = phd.Vertices[len(phd.Vertices)-1]
+						next.Origin = phd.Vertices[vi]
 						next.Prev = prev
 						next.Face = addedFace
 						prev.Next = next
 
 						prev = next
 
-						phd.OutEdges = append(phd.OutEdges, prev)
+						if vi == len(phd.Vertices)-1 {
+							phd.OutEdges = append(phd.OutEdges, prev)
+						}
 
 						phd.Update()
 						phd.UpdateSpaces()
