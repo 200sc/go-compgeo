@@ -40,6 +40,7 @@ var (
 	mouseStr        *render.IFText
 	modeStr         *render.Text
 	font            *render.Font
+	undoPhd         []InteractivePolyhedron
 )
 
 // InitScene is called whenever the scene 'demo' starts.
@@ -92,6 +93,16 @@ func InitScene(prevScene string, data interface{}) {
 	}
 	phd.cID.Bind(phdEnter, "EnterFrame")
 	phd.cID.Bind(addFace, "MouseRelease")
+	// phd.cID.Bind(func(cID int, nothing interface{}) int {
+	// 	if oak.IsDown("LeftControl") && len(undoPhd) != 0 {
+	// 		phd := event.GetEntity(cID).(*InteractivePolyhedron)
+	// 		*phd = undoPhd[len(undoPhd)-1]
+	// 		// Discarding right now,
+	// 		// could offer redo later
+	// 		undoPhd = undoPhd[len(undoPhd)-1:]
+	// 	}
+	// 	return 0
+	// }, "KeyDownZ")
 }
 
 // LoopScene is a basic scene-loop function,

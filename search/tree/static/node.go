@@ -6,6 +6,11 @@ type Node struct {
 	// eventually key should be a comparable interface
 	// but that would probably poorly effect performance
 	key float64
+	// Unlike pointer BSTs, right now static BSTs don't support
+	// multiple-valued keys, as our API only has a difference in
+	// how they are dealt with in modification cases. In search
+	// cases, as search just takes a key (right now), we always
+	// return the same value.
 	val interface{}
 }
 

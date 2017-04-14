@@ -72,7 +72,7 @@ func (bst *BST) Size() int {
 func (bst *BST) Insert(inNode search.Node) error {
 	n := new(node)
 	n.key = inNode.Key()
-	n.val = inNode.Val()
+	n.val = []interface{}{inNode.Val()}
 	n.payload = red
 	var parent *node
 	curNode := bst.root
@@ -83,12 +83,14 @@ func (bst *BST) Insert(inNode search.Node) error {
 		parent = curNode
 		if curNode.key > n.key {
 			curNode = curNode.left
-		} else {
+		} else if curNode.key < n.key {
 			curNode = curNode.right
+		} else {
+			// All values of the same key are stored at the same node
+			curNode.val = append(curNode.val, inNode.Val())
+			bst.size++
+			return nil
 		}
-		// We do not do any sort of checking for duplicates in this type.
-		// This means the same key and value pair, or two values with the
-		// same key can both be in this tree.
 		// Todo: if we need the type, create treeSet types which
 		// do nothing on duplicates being added.
 	}
@@ -129,18 +131,29 @@ func (bst *BST) Delete(n search.Node) error {
 		}
 		k2 := curNode.key
 		if k2 == k {
-			if v == nil {
+			// If only one value exists here, delete the entire node.
+			if len(curNode.val) == 1 {
 				break
 			}
-			for curNode.val != v {
-				// We're only going to find keys that are the same
-				// as this key in this key's right descendants
-				curNode = curNode.right
-				if curNode == nil {
-					return errors.New("Value not found")
+			// Otherwise if no value to delete was specified, delete
+			// the first value in this list.
+			if v == nil {
+				curNode.val = curNode.val[len(curNode.val)-1:]
+				bst.size--
+				return nil
+			}
+			// Otherwise scan to find the value to delete.
+			// If this becomes a performance hit, the user
+			// should consider whether some part of the value
+			// should not be encoded into the key.
+			for vi := 0; vi < len(curNode.val); vi++ {
+				if curNode.val[vi] == v {
+					curNode.val = append(curNode.val[:vi], curNode.val[vi+1:]...)
+					bst.size--
+					return nil
 				}
 			}
-			break
+			return errors.New("Value not found")
 		} else if k2 > k {
 			curNode = curNode.left
 		} else {
@@ -168,7 +181,7 @@ func (bst *BST) Search(key float64) (bool, interface{}) {
 	}
 	if curNode != nil {
 		bst.updateRoot(bst.searchFn(curNode))
-		return true, curNode.val
+		return true, curNode.val[0]
 	}
 	return false, nil
 }
@@ -203,35 +216,36 @@ func (bst *BST) SearchUp(key float64) interface{} {
 		return nil
 	}
 	if ok {
-		return n.val
+		return n.val[0]
 	}
 	v := n.successor()
 	if v == nil || ((v.key > n.key) && (n.key > key)) {
-		return n.val
+		return n.val[0]
 	}
-	return v.val
+	return v.val[0]
 }
 
 // SearchDown acts as SearchUp, but rounds down.
 func (bst *BST) SearchDown(key float64) interface{} {
 	n, ok := bst.search(key)
 	if ok {
-		return n.val
+		return n.val[0]
 	}
 	v := n.predecessor()
 	if v == nil || ((v.key < n.key) && (n.key < key)) {
-		return n.val
+		return n.val[0]
 	}
-	return v.val
+	return v.val[0]
 }
 
 func (bst *BST) updateRoot(n *node) {
+	if bst.size == 0 {
+		bst.root = nil
+		return
+	}
 	if n != nil {
 		bst.root = n
 		return
-	}
-	if bst.size == 0 {
-		bst.root = nil
 	}
 	if bst.root == nil {
 		return
@@ -254,6 +268,7 @@ func (bst *BST) copy() *BST {
 	newBst := new(BST)
 	newBst.root = bst.root.copy()
 	newBst.fnSet = bst.fnSet
+	newBst.size = bst.size
 	return newBst
 }
 
@@ -266,25 +281,21 @@ func (bst *BST) String() string {
 }
 
 func findCycle(bst *BST) error {
-	seen := make(map[float64]map[float64]bool)
+	seen := make(map[float64]bool)
 	return bst.root.findCycle(seen)
 }
 
 // findCycle will mis-report duplicate input nodes as cycles.
-func (n *node) findCycle(seen map[float64]map[float64]bool) error {
+func (n *node) findCycle(seen map[float64]bool) error {
 	if n == nil {
 		return nil
 	}
-	if v, ok := seen[n.key]; ok {
-		if _, ok = v[n.val.(float64)]; ok {
-			fmt.Println(n)
-			return errors.New("Cycle found")
-		}
-		seen[n.key][n.val.(float64)] = true
-	} else {
-		seen[n.key] = make(map[float64]bool)
-		seen[n.key][n.val.(float64)] = true
+	if _, ok := seen[n.key]; ok {
+		fmt.Println(n)
+		return errors.New("Cycle found")
 	}
+	seen[n.key] = true
+
 	err := n.left.findCycle(seen)
 	if err != nil {
 		return err

@@ -13,7 +13,7 @@ type node struct {
 	// eventually key should be a comparable interface
 	// but that would probably poorly effect performance
 	key float64
-	val interface{}
+	val []interface{}
 	// Each tree type might have a different payload on each node
 	// a good example of this is RED or BLACK on RBtrees.
 	payload interface{}
@@ -26,7 +26,7 @@ func (n *node) Key() float64 {
 }
 
 func (n *node) Val() interface{} {
-	return n.val
+	return n.val[0]
 }
 
 func (n *node) isValid() (bool, float64, float64) {
@@ -61,6 +61,7 @@ func (n *node) copy() *node {
 	cp := new(node)
 	cp.left = n.left.copy()
 	cp.right = n.right.copy()
+	cp.key = n.key
 	cp.val = n.val
 
 	if cp.left != nil {
@@ -216,7 +217,7 @@ func (n *node) staticTree(m map[int]*static.Node, i int) (map[int]*static.Node, 
 	if n == nil {
 		return m, 0
 	}
-	m[i] = static.NewNode(n.key, n.val)
+	m[i] = static.NewNode(n.key, n.val[0])
 	var maxIndex1, maxIndex2 int
 	m, maxIndex1 = n.left.staticTree(m, static.Left(i))
 	m, maxIndex2 = n.right.staticTree(m, static.Right(i))
