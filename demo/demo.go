@@ -116,7 +116,7 @@ func main() {
 			render.Draw(phd, 2)
 
 			modeStr := render.DefFont().NewText(mode.String(), 3, 40)
-			render.Draw(modeStr, 1)
+			render.Draw(modeStr, 3)
 
 			mouseStr := render.DefFont().NewInterfaceText(
 				dcel.Point{0, 0, 0}, 3, 465)
