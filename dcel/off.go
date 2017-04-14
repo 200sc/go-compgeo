@@ -8,18 +8,25 @@ import (
 	"strings"
 )
 
+// TypeError is returned when some input to be
+// read is improperly formatted for the expected type.
 type TypeError struct{}
 
 func (fte TypeError) Error() string {
 	return "The input was not of the expected type, or was malformed"
 }
 
+// EmptyError is returned when some input to be read
+// did not have any contents.
 type EmptyError struct{}
 
 func (ee EmptyError) Error() string {
 	return "The input was empty"
 }
 
+// NotManifoldError is returned when it is detected
+// that the input shape to ReadOFF was not possible
+// Euclidean geometry.
 type NotManifoldError struct{}
 
 func (nme NotManifoldError) Error() string {

@@ -2,13 +2,15 @@ package dcel
 
 import "github.com/200sc/go-compgeo/printutil"
 
-// A DCELPoint is just a 3-dimensional point.
+// A Point is just a 3-dimensional point.
 type Point [3]float64
 
-func NewPoint(x,y,z float64) *Point {
-	return &Point{x,y,z}
+// NewPoint returns a Point initialized at the given position
+func NewPoint(x, y, z float64) *Point {
+	return &Point{x, y, z}
 }
 
+// String converts dp into a string.
 func (dp Point) String() string {
 	s := ""
 	s += "("

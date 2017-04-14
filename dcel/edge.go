@@ -2,7 +2,7 @@ package dcel
 
 import "fmt"
 
-// A DCELEdge represents an edge within a DCEL,
+// An Edge represents an edge within a DCEL,
 // specifically a half edge, which maintains
 // references to it's origin vertex, the face
 // it bounds, the half edge sharing its space
@@ -25,17 +25,19 @@ type Edge struct {
 	Twin *Edge
 }
 
+// NewEdge returns a null-initialized Edge.
 func NewEdge() *Edge {
 	return &Edge{}
 }
 
+// String converts an edge into a string.
 func (e *Edge) String() string {
 	s := ""
 	s += fmt.Sprintf("%v", e.Origin) + "->" + fmt.Sprintf("%v", e.Twin.Origin)
 	return s
 }
 
-// DCELEdgeTwin can obtain a given edge index's twin
+// EdgeTwin can obtain a given edge index's twin
 // without accessing the edge itself, for index
 // manipulation, or for initially setting the Twins
 // in construction.
@@ -66,6 +68,10 @@ func (d *DCEL) FullEdge(i int) ([2]*Point, error) {
 		e2.Origin}, nil
 }
 
+// BadEdgeError is returned from edge-processing functions
+// if an edge is expected to have access to some field, or
+// be initialized, when it does or is not. I.E. an edge has
+// no twin for FullEdge.
 type BadEdgeError struct{}
 
 func (bee BadEdgeError) Error() string {

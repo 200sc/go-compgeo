@@ -25,6 +25,9 @@ package dcel
 // |0 | 1
 // .--.
 //
+
+// Rect is a wrapper around FourPoint to make
+// a rectangle with top left position and dimensions.
 func Rect(x, y, w, h float64) *DCEL {
 	return FourPoint(
 		Point{x, y, 0},
@@ -34,6 +37,8 @@ func Rect(x, y, w, h float64) *DCEL {
 	)
 }
 
+// FourPoint creates a dcel from four points, connected
+// in order around one face.
 func FourPoint(p1, p2, p3, p4 Point) *DCEL {
 	dc := new(DCEL)
 	dc.Vertices = make([]*Point, 4)
