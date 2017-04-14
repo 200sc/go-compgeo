@@ -234,17 +234,27 @@ func main() {
 				}
 				return 0
 			}, "EnterFrame")
-			event.GlobalBind(func(no int, event interface{}) int {
-				me := event.(mouse.MouseEvent)
+			event.GlobalBind(func(no int, ev interface{}) int {
+				me := ev.(mouse.MouseEvent)
 				if me.Button == "LeftMouse" {
 					// Detect clicks
 					// On first click, declare the first point and edge and face
 					// First off, assume that this point is new
 					if mode == ADD_DCEL {
-						firstAddedPoint = len(phd.Vertices)
-						phd.Vertices = append(phd.Vertices,
-							dcel.NewPoint(float64(me.X)-phd.X, float64(me.Y)-phd.Y, mouseZ))
-
+						hits := mouse.Hits(me.ToSpace())
+						if len(hits) > 0 {
+							ip := event.GetEntity(int(hits[0].CID)).(*InteractivePoint)
+							p := ip.Point
+							mouseZ = p.Z()
+							// Todo: consider if we should change how outEdges
+							// are handled so this linear scan doesn't need to
+							// happen
+							firstAddedPoint = phd.ScanPoints(p)
+						} else {
+							firstAddedPoint = len(phd.Vertices)
+							phd.Vertices = append(phd.Vertices,
+								dcel.NewPoint(float64(me.X)-phd.X, float64(me.Y)-phd.Y, mouseZ))
+						}
 						phd.HalfEdges = append(phd.HalfEdges, dcel.NewEdge())
 						prev = phd.HalfEdges[len(phd.HalfEdges)-1]
 						prev.Origin = phd.Vertices[firstAddedPoint]
@@ -255,7 +265,9 @@ func main() {
 						addedFace = phd.Faces[len(phd.Faces)-1]
 
 						prev.Face = addedFace
-						phd.OutEdges = append(phd.OutEdges, prev)
+						if firstAddedPoint == len(phd.Vertices)-1 {
+							phd.OutEdges = append(phd.OutEdges, prev)
+						}
 
 						mode = ADDING_DCEL
 
@@ -300,7 +312,7 @@ func main() {
 					}
 				} else if me.Button == "RightMouse" {
 					if mode == ADDING_DCEL {
-						prev.Next = phd.OutEdges[firstAddedPoint]
+						prev.Next = addedFace.Inner
 						phd.OutEdges[firstAddedPoint].Prev = prev
 
 						phd.HalfEdges = append(phd.HalfEdges, dcel.NewEdge())

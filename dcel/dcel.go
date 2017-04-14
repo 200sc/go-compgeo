@@ -88,6 +88,18 @@ func (dc *DCEL) Min(i int) (x float64) {
 	return x
 }
 
+// ScanPoints returns the index within
+// dc.Vertices where p is, or -1 if it
+// does not exist in dc.
+func (dc *DCEL) ScanPoints(p *Point) int {
+	for i, v := range dc.Vertices {
+		if v == p {
+			return i
+		}
+	}
+	return -1
+}
+
 // AllEdges iterates through the edges surrounding
 // a vertex and returns them all.
 func (dc *DCEL) AllEdges(vertex int) []*Edge {
