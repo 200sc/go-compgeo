@@ -1,6 +1,7 @@
 package demo
 
 import (
+	"fmt"
 	"log"
 	"math"
 	"os"
@@ -38,6 +39,7 @@ var (
 	err             error
 	mouseStr        *render.IFText
 	modeStr         *render.Text
+	font            *render.Font
 )
 
 // InitScene is called whenever the scene 'demo' starts.
@@ -62,10 +64,14 @@ func InitScene(prevScene string, data interface{}) {
 	phd.Init()
 	render.Draw(phd, 2)
 
-	modeStr = render.DefFont().NewText(mode.String(), 3, 40)
+	fg := render.FontGenerator{File: "luxisr.ttf", Color: render.FontColor("white"), Size: 12}
+	fmt.Println("Making the totally not default font")
+	font = fg.Generate()
+
+	modeStr = font.NewText(mode.String(), 3, 40)
 	render.Draw(modeStr, 3)
 
-	mouseStr = render.DefFont().NewInterfaceText(
+	mouseStr = font.NewInterfaceText(
 		dcel.Point{0, 0, 0}, 3, 465)
 	render.Draw(mouseStr, 3)
 

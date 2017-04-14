@@ -49,7 +49,7 @@ func vertexShow(cID int, nothing interface{}) int {
 	fmt.Println("Mouse drag on triggered")
 	if !ip.showing {
 		ip.showing = true
-		txt := render.DefFont().NewInterfaceText(ip.Point, ip.s.GetX(), ip.s.GetY())
+		txt := font.NewInterfaceText(ip.Point, ip.s.GetX(), ip.s.GetY())
 		render.Draw(txt, 3)
 		go func() {
 			for {
