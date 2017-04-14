@@ -12,6 +12,8 @@ import (
 func addFace(cID int, ev interface{}) int {
 	phd := event.GetEntity(cID).(*InteractivePolyhedron)
 	me := ev.(mouse.MouseEvent)
+	mx := float64(me.X) - phd.X
+	my := float64(me.Y) - phd.Y
 	if me.Button == "LeftMouse" {
 		// Detect clicks
 		// On first click, declare the first point and edge and face
@@ -36,7 +38,7 @@ func addFace(cID int, ev interface{}) int {
 			} else {
 				firstAddedPoint = len(phd.Vertices)
 				phd.Vertices = append(phd.Vertices,
-					dcel.NewPoint(float64(me.X)-phd.X, float64(me.Y)-phd.Y, mouseZ))
+					dcel.NewPoint(mx, my, mouseZ))
 				faceVertices[phd.Vertices[len(phd.Vertices)-1]] = true
 			}
 			phd.HalfEdges = append(phd.HalfEdges, dcel.NewEdge())
@@ -86,7 +88,7 @@ func addFace(cID int, ev interface{}) int {
 				vi = phd.ScanPoints(p)
 			} else {
 				phd.Vertices = append(phd.Vertices,
-					dcel.NewPoint(float64(me.X)-phd.X, float64(me.Y)-phd.Y, mouseZ))
+					dcel.NewPoint(mx, my, mouseZ))
 				vi = len(phd.Vertices) - 1
 				faceVertices[phd.Vertices[vi]] = true
 			}
@@ -135,6 +137,7 @@ func addFace(cID int, ev interface{}) int {
 			} else {
 				fmt.Println(sd.(*dcel.SlabPointLocator))
 			}
+			sd.PointLocate(mx, my)
 		}
 	} else if me.Button == "RightMouse" {
 		if mode == ADDING_DCEL {

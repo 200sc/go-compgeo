@@ -2,7 +2,6 @@ package dcel
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"strconv"
 )
@@ -120,7 +119,7 @@ func (dc *DCEL) AllEdges(vertex int) []*Edge {
 // given vertex with respect to a specific dimension
 func (dc *DCEL) PartitionVertexEdges(vertex int, d int) ([]*Edge, []*Edge, error) {
 	allEdges := dc.AllEdges(vertex)
-	fmt.Println("All edges off of vertex,", dc.Vertices[vertex], "::", allEdges)
+	//fmt.Println("All edges off of vertex,", dc.Vertices[vertex], "::", allEdges)
 	lesser := make([]*Edge, 0)
 	greater := make([]*Edge, 0)
 	v := dc.Vertices[vertex]

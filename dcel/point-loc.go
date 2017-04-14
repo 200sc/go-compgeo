@@ -61,15 +61,17 @@ func (dc *DCEL) SlabDecompose(bstType tree.Type) (LocatesPoints, error) {
 		// Add all edges to the PersistentBST connecting to the right
 		// of the point
 		for _, e := range rightEdges {
-			t.Insert(shellNode{v[1], e})
-			fmt.Println("Adding", e, "at", v[1])
+			// We want to add at the midpoint between two vertices
+			y, _ := e.Mid()
+			t.Insert(shellNode{y[1], e})
+			//fmt.Println("Adding", e, "at", v[1])
 		}
 		// Remove all edges from the PersistentBST connecting to the left
 		// of the point
 		for _, e := range leftEdges {
-			v2 := e.Twin.Origin
-			err := t.Delete(shellNode{v2[1], e.Twin})
-			fmt.Println("Removing", e.Twin, "from", v2[1], err)
+			y, _ := e.Mid()
+			t.Delete(shellNode{y[1], e.Twin})
+			//fmt.Println("Removing", e.Twin, "from", v2[1], err)
 		}
 	}
 	return &SlabPointLocator{t}, nil
@@ -85,8 +87,20 @@ func (spl *SlabPointLocator) String() string {
 
 func (spl *SlabPointLocator) PointLocate(vs ...float64) (*Face, error) {
 	if len(vs) < 2 {
-		return nil, errors.New("Slab point location only supports 2 dimensions.")
+		return nil, errors.New("Slab point location only supports 2 dimensions")
 	}
-	edge := spl.dp.AtInstant(vs[0]).SearchUp(vs[1])
-	return edge.(*Edge).Face, nil
+	fmt.Println("Querying", vs)
+	tree := spl.dp.AtInstant(vs[0])
+	fmt.Println("Tree found", tree)
+	edge := tree.SearchDown(vs[1]).(*Edge)
+	// The outer face
+	mid, err := edge.Mid()
+	if err != nil {
+		return nil, err
+	}
+	if mid.Y() > vs[1] {
+		return nil, nil
+	}
+	fmt.Println("Edge found:", edge)
+	return edge.Face, nil
 }
