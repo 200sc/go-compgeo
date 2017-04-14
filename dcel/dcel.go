@@ -137,10 +137,9 @@ func (dc *DCEL) PartitionVertexEdges(vertex int, d int) ([]*Edge, []*Edge, error
 			lesser = append(lesser, e1)
 		} else if e2.Origin[d] > checkAgainst {
 			greater = append(greater, e1)
-		} else {
-			// We completely ignore vertical lines?.
-			fmt.Println("Wtf", e1, e2, v[d])
-		}
+		} //else {
+		// We completely ignore vertical lines?.
+		//}
 	}
 	return lesser, greater, nil
 }
