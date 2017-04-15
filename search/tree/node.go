@@ -2,7 +2,6 @@ package tree
 
 import (
 	"fmt"
-	"math"
 
 	"github.com/200sc/go-compgeo/printutil"
 	"github.com/200sc/go-compgeo/search"
@@ -12,7 +11,7 @@ import (
 type node struct {
 	// eventually key should be a comparable interface
 	// but that would probably poorly effect performance
-	key float64
+	key search.Comparable
 	val []interface{}
 	// Each tree type might have a different payload on each node
 	// a good example of this is RED or BLACK on RBtrees.
@@ -21,7 +20,7 @@ type node struct {
 	left, right, parent *node
 }
 
-func (n *node) Key() float64 {
+func (n *node) Key() search.Comparable {
 	return n.key
 }
 
@@ -29,26 +28,27 @@ func (n *node) Val() interface{} {
 	return n.val[0]
 }
 
-func (n *node) isValid() (bool, float64, float64) {
+func (n *node) isValid() (bool, search.Comparable, search.Comparable) {
 	if n == nil {
-		return true, math.MaxFloat64 * -1, math.MaxFloat64
+		return true, search.NegativeInf{}, search.Inf{}
 	}
 	ok, min, max2 := n.left.isValid()
 	if !ok {
-		return false, 0, 0
+		return false, nil, nil
 	}
 	ok, min2, max := n.right.isValid()
 	if !ok {
-		return false, 0, 0
+		return false, nil, nil
 	}
-	if n.key < min || n.key > max {
-		fmt.Println(n)
-		return false, 0, 0
+
+	if n.key.Compare(min) == search.Less ||
+		n.key.Compare(max) == search.Greater {
+		return false, nil, nil
 	}
-	if min2 < min {
+	if min2.Compare(min) == search.Less {
 		min = min2
 	}
-	if max2 > max {
+	if max2.Compare(max) == search.Greater {
 		max = max2
 	}
 	return true, min, max
@@ -232,9 +232,9 @@ func (n *node) staticTree(m map[int]*static.Node, i int) (map[int]*static.Node, 
 
 func inOrderTraverse(n *node) []search.Node {
 	if n != nil {
-		lst := inOrderTraverse(n.right)
+		lst := inOrderTraverse(n.left)
 		lst = append(lst, n)
-		return append(lst, inOrderTraverse(n.left)...)
+		return append(lst, inOrderTraverse(n.right)...)
 	}
 	return []search.Node{}
 }
@@ -274,7 +274,7 @@ func (n *node) keyString() string {
 	if n == nil {
 		return ""
 	}
-	return printutil.Stringf64(n.key)
+	return printutil.String(n.key)
 }
 
 func (n *node) valString() string {

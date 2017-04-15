@@ -3,6 +3,8 @@ package tree
 import (
 	"math/rand"
 	"testing"
+
+	"github.com/200sc/go-compgeo/search"
 )
 
 var (
@@ -56,7 +58,7 @@ func randomInput() []testNode {
 	randomInput := make([]testNode, randomInputCt)
 	for i := range randomInput {
 		randomInput[i] = testNode{
-			float64(rand.Intn(randomInputRange)),
+			compFloat(float64(rand.Intn(randomInputRange))),
 			float64(rand.Intn(randomInputRange)),
 		}
 	}
@@ -67,7 +69,7 @@ func randomInputNoDupes() []testNode {
 	randomInput := make([]testNode, randomInputCt)
 	for i := range randomInput {
 		randomInput[i] = testNode{
-			float64(i),
+			compFloat(float64(i)),
 			float64(i),
 		}
 	}
@@ -106,7 +108,7 @@ func benchmarkRBStatic(b *testing.B, input []testNode, inputLimit int) {
 }
 
 func benchmarkMap(b *testing.B, input []testNode, inputLimit int) {
-	m := make(map[float64]map[float64]bool)
+	m := make(map[search.Comparable]map[float64]bool)
 	for _, v := range input {
 		if _, ok := m[v.key]; !ok {
 			m[v.key] = make(map[float64]bool)
@@ -115,7 +117,7 @@ func benchmarkMap(b *testing.B, input []testNode, inputLimit int) {
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		k := m[float64(rand.Intn(inputLimit))]
+		k := m[compFloat(float64(rand.Intn(inputLimit)))]
 		// The Go compiler won't let m[...] exist
 		// by itself, so we need to do something
 		// with its output

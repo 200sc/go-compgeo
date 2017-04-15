@@ -1,17 +1,52 @@
 package search
 
+// A CompareResult is returned from a Compare query.
+type CompareResult int
+
+// Compare result constant
+const (
+	Less CompareResult = iota
+	Equal
+	Greater
+	Invalid
+)
+
+// NegativeInf is a Comparable type which is less than everything (including itself!)
+// (the less than itself part might change!)
+type NegativeInf struct{}
+
+// Compare on NegativeInf returns Less.
+func (ni NegativeInf) Compare(c interface{}) CompareResult {
+	return Less
+}
+
+// Inf is a Comparable type which is greater than everything (including itself)
+type Inf struct{}
+
+// Compare on Inf returns Greater.
+func (i Inf) Compare(c interface{}) CompareResult {
+	return Greater
+}
+
+// Comparable types can be compared to arbitrary
+// elements and will return a CompareResult following.
+// They are intended for use as search keys.
+type Comparable interface {
+	Compare(interface{}) CompareResult
+}
+
 // Node types can be stored in modifiable search types.
 type Node interface {
-	Key() float64
+	Key() Comparable
 	Val() interface{}
 }
 
 // Searchable types can be searched, with float64 keys pointing to
 // arbitrary values.
 type Searchable interface {
-	Search(float64) (bool, interface{})
-	SearchUp(float64) interface{}
-	SearchDown(float64) interface{}
+	Search(interface{}) (bool, interface{})
+	SearchUp(interface{}) interface{}
+	SearchDown(interface{}) interface{}
 }
 
 // Traversable types can produce lists of elements

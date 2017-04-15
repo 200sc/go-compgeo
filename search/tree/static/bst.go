@@ -89,7 +89,7 @@ func (b *BST) predecessor(i int) int {
 // If no key is found, returns (false, nil).
 //
 // Value vs pointer reciever was benchmarked. Result: maybe pointer is better
-func (b *BST) Search(key float64) (bool, interface{}) {
+func (b *BST) Search(key interface{}) (bool, interface{}) {
 	i, ok := b.search(key)
 	if ok {
 		return true, (*b)[i].val
@@ -97,45 +97,50 @@ func (b *BST) Search(key float64) (bool, interface{}) {
 	return false, nil
 }
 
-func (b *BST) SearchUp(key float64) interface{} {
+func (b *BST) SearchUp(key interface{}) interface{} {
 	i, ok := b.search(key)
 	if ok {
 		return (*b)[i]
 	}
 	j := b.successor(i)
 	bst := *b
-	if b.isNil(j) || ((bst[j].key > bst[i].key) && (bst[i].key > key)) {
+	if b.isNil(j) ||
+		((bst[j].key.Compare(bst[i].key) == search.Greater) &&
+			(bst[i].key.Compare(key) == search.Greater)) {
 		j = i
 	}
 	return bst[j].val
 }
 
-func (b *BST) SearchDown(key float64) interface{} {
+func (b *BST) SearchDown(key interface{}) interface{} {
 	i, ok := b.search(key)
 	if ok {
 		return (*b)[i]
 	}
 	j := b.predecessor(i)
 	bst := *b
-	if b.isNil(j) || ((bst[j].key < bst[i].key) && (bst[i].key < key)) {
+	if b.isNil(j) ||
+		((bst[j].key.Compare(bst[i].key) == search.Less) &&
+			(bst[i].key.Compare(key) == search.Less)) {
 		j = i
 	}
 	return bst[j].val
 }
 
-func (b *BST) search(key float64) (int, bool) {
+func (b *BST) search(key interface{}) (int, bool) {
 	i := 1
 	bst := *b
 	var n *Node
-	var k float64
+	var k search.Comparable
 	for {
 		n = bst[i]
 		k = n.key
-		if k == key {
+		r := k.Compare(key)
+		if r == search.Equal {
 			return i, true
 		}
 		i = Left(i)
-		if k < key {
+		if r == search.Less {
 			i++
 		}
 		if b.isNil(i) {

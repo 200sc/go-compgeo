@@ -1,11 +1,11 @@
 package static
 
+import "github.com/200sc/go-compgeo/search"
+
 // Node is a data structures which
 // just contain a key and value
 type Node struct {
-	// eventually key should be a comparable interface
-	// but that would probably poorly effect performance
-	key float64
+	key search.Comparable
 	// Unlike pointer BSTs, right now static BSTs don't support
 	// multiple-valued keys, as our API only has a difference in
 	// how they are dealt with in modification cases. In search
@@ -19,12 +19,12 @@ type Node struct {
 
 // NewNode returns a node constructed from the input
 // key and value.
-func NewNode(k float64, v interface{}) *Node {
+func NewNode(k search.Comparable, v interface{}) *Node {
 	return &Node{key: k, val: v}
 }
 
 // Key returns the key of this node.
-func (n Node) Key() float64 {
+func (n Node) Key() search.Comparable {
 	return n.key
 }
 

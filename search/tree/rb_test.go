@@ -4,14 +4,16 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/200sc/go-compgeo/printutil"
+	"github.com/200sc/go-compgeo/search"
 	"github.com/stretchr/testify/assert"
 )
 
 type nilValNode struct {
-	key float64
+	key compFloat
 }
 
-func (n nilValNode) Key() float64 {
+func (n nilValNode) Key() search.Comparable {
 	return n.key
 }
 
@@ -19,11 +21,36 @@ func (n nilValNode) Val() interface{} {
 	return nil
 }
 
-type testNode struct {
-	key, val float64
+type compFloat float64
+
+func (f compFloat) Compare(i interface{}) search.CompareResult {
+	var f3 compFloat
+	switch f2 := i.(type) {
+	case float64:
+		f3 = compFloat(f2)
+	case compFloat:
+		f3 = f2
+	default:
+		return search.Invalid
+	}
+	if f == f3 {
+		return search.Equal
+	} else if f < f3 {
+		return search.Less
+	}
+	return search.Greater
 }
 
-func (t testNode) Key() float64 {
+func (f compFloat) String() string {
+	return printutil.Stringf64(float64(f))
+}
+
+type testNode struct {
+	key compFloat
+	val float64
+}
+
+func (t testNode) Key() search.Comparable {
 	return t.key
 }
 
@@ -98,8 +125,8 @@ func TestRBInOrder(t *testing.T) {
 		tree.Insert(v)
 	}
 	inOrder := tree.InOrderTraverse()
-	expected := [...]float64{
-		10, 9, 8, 7, 6, 5, 4, 3, 2, 1}
+	expected := [...]compFloat{
+		1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 	for i := range inOrder {
 		//fmt.Println(inOrder[i].Key(), inOrder[i].Val())
 		assert.Equal(t, expected[i], inOrder[i].Key())
@@ -173,7 +200,7 @@ func TestRBRandomInput(t *testing.T) {
 	t.Log("Uh")
 	for i := 0; i < randomInputCt; i++ {
 		n := testNode{
-			float64(rand.Intn(randomInputRange)),
+			compFloat(float64(rand.Intn(randomInputRange))),
 			float64(rand.Intn(randomInputRange)),
 		}
 		t.Log("Inserting", n)
@@ -187,7 +214,7 @@ func TestRBRandomInput(t *testing.T) {
 	t.Log("Insert Complete")
 	// These values might not be in the bst.
 	for i := 0; i < randomInputCt; i++ {
-		n := nilValNode{float64(rand.Intn(randomInputRange))}
+		n := nilValNode{compFloat(float64(rand.Intn(randomInputRange)))}
 
 		t.Log("Deleting", n)
 		tree.Delete(n)
@@ -201,10 +228,10 @@ func TestRBRandomInput(t *testing.T) {
 
 func TestRBToStatic(t *testing.T) {
 	tree := New(RedBlack)
-	inserted := make(map[float64]bool)
+	inserted := make(map[compFloat]bool)
 	for i := 0; i < randomInputCt; i++ {
 		n := testNode{
-			float64(rand.Intn(randomInputRange)),
+			compFloat(float64(rand.Intn(randomInputRange))),
 			float64(rand.Intn(randomInputRange)),
 		}
 		inserted[n.key] = true
@@ -214,7 +241,7 @@ func TestRBToStatic(t *testing.T) {
 	}
 	t2 := tree.ToStatic()
 	for i := 0; i < randomInputCt; i++ {
-		key := float64(rand.Intn(randomInputRange))
+		key := compFloat(float64(rand.Intn(randomInputRange)))
 		b, _ := t2.Search(key)
 		assert.Equal(t, b, inserted[key])
 	}

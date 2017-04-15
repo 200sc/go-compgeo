@@ -83,13 +83,13 @@ func (pbst *PersistentBST) Size() int {
 func (pbst *PersistentBST) InOrderTraverse() []search.Node {
 	return pbst.AtInstant(pbst.instant).InOrderTraverse()
 }
-func (pbst *PersistentBST) Search(f float64) (bool, interface{}) {
+func (pbst *PersistentBST) Search(f interface{}) (bool, interface{}) {
 	return pbst.AtInstant(pbst.instant).Search(f)
 }
-func (pbst *PersistentBST) SearchDown(f float64) interface{} {
+func (pbst *PersistentBST) SearchDown(f interface{}) interface{} {
 	return pbst.AtInstant(pbst.instant).SearchDown(f)
 }
-func (pbst *PersistentBST) SearchUp(f float64) interface{} {
+func (pbst *PersistentBST) SearchUp(f interface{}) interface{} {
 	return pbst.AtInstant(pbst.instant).SearchUp(f)
 }
 func (pbst *PersistentBST) String() string {

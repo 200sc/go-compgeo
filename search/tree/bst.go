@@ -70,9 +70,11 @@ func (bst *BST) Size() int {
 
 // Insert :
 func (bst *BST) Insert(inNode search.Node) error {
+	//fmt.Println("Inserting ", inNode)
 	n := new(node)
 	n.key = inNode.Key()
 	n.val = []interface{}{inNode.Val()}
+	// We can't do this once we have more than RB trees wow
 	n.payload = red
 	var parent *node
 	curNode := bst.root
@@ -81,15 +83,18 @@ func (bst *BST) Insert(inNode search.Node) error {
 			break
 		}
 		parent = curNode
-		if curNode.key > n.key {
+		r := curNode.key.Compare(n.key)
+		if r == search.Greater {
 			curNode = curNode.left
-		} else if curNode.key < n.key {
+		} else if r == search.Less {
 			curNode = curNode.right
-		} else {
+		} else if r == search.Equal {
 			// All values of the same key are stored at the same node
 			curNode.val = append(curNode.val, inNode.Val())
 			bst.size++
 			return nil
+		} else {
+			panic("Invalid types for BST operatrions")
 		}
 		// Todo: if we need the type, create treeSet types which
 		// do nothing on duplicates being added.
@@ -97,7 +102,7 @@ func (bst *BST) Insert(inNode search.Node) error {
 	// curNode == nil
 	n.parent = parent
 	if parent != nil {
-		if parent.key > n.key {
+		if parent.key.Compare(n.key) == search.Greater {
 			parent.left = n
 		} else {
 			parent.right = n
@@ -110,6 +115,7 @@ func (bst *BST) Insert(inNode search.Node) error {
 	}
 
 	bst.size++
+	//fmt.Println("Inserting for real!", n, parent)
 	bst.updateRoot(bst.insertFn(n))
 	return nil
 }
@@ -125,40 +131,30 @@ func (bst *BST) Delete(n search.Node) error {
 	curNode := bst.root
 	v := n.Val()
 	k := n.Key()
-	for {
-		if curNode == nil {
-			return errors.New("Key not found")
+	curNode, isReal := bst.search(k)
+	if !isReal {
+		return errors.New("Key not found")
+	}
+	if len(curNode.val) != 1 {
+		// Otherwise if no value to delete was specified, delete
+		// the first value in this list.
+		if v == nil {
+			curNode.val = curNode.val[len(curNode.val)-1:]
+			bst.size--
+			return nil
 		}
-		k2 := curNode.key
-		if k2 == k {
-			// If only one value exists here, delete the entire node.
-			if len(curNode.val) == 1 {
-				break
-			}
-			// Otherwise if no value to delete was specified, delete
-			// the first value in this list.
-			if v == nil {
-				curNode.val = curNode.val[len(curNode.val)-1:]
+		// Otherwise scan to find the value to delete.
+		// If this becomes a performance hit, the user
+		// should consider whether some part of the value
+		// should not be encoded into the key.
+		for vi := 0; vi < len(curNode.val); vi++ {
+			if curNode.val[vi] == v {
+				curNode.val = append(curNode.val[:vi], curNode.val[vi+1:]...)
 				bst.size--
 				return nil
 			}
-			// Otherwise scan to find the value to delete.
-			// If this becomes a performance hit, the user
-			// should consider whether some part of the value
-			// should not be encoded into the key.
-			for vi := 0; vi < len(curNode.val); vi++ {
-				if curNode.val[vi] == v {
-					curNode.val = append(curNode.val[:vi], curNode.val[vi+1:]...)
-					bst.size--
-					return nil
-				}
-			}
-			return errors.New("Value not found")
-		} else if k2 > k {
-			curNode = curNode.left
-		} else {
-			curNode = curNode.right
 		}
+		return errors.New("Value not found")
 	}
 	bst.size--
 	bst.updateRoot(bst.deleteFn(curNode))
@@ -166,39 +162,31 @@ func (bst *BST) Delete(n search.Node) error {
 }
 
 // Search :
-func (bst *BST) Search(key float64) (bool, interface{}) {
-	curNode := bst.root
-	var k float64
-	for curNode != nil {
-		k = curNode.key
-		if k == key {
-			break
-		} else if k > key {
-			curNode = curNode.left
-		} else {
-			curNode = curNode.right
-		}
+func (bst *BST) Search(key interface{}) (bool, interface{}) {
+	curNode, isReal := bst.search(key)
+	if !isReal {
+		return false, nil
 	}
-	if curNode != nil {
-		bst.updateRoot(bst.searchFn(curNode))
-		return true, curNode.val[0]
-	}
-	return false, nil
+	bst.updateRoot(bst.searchFn(curNode))
+	return true, curNode.val[0]
 }
 
-func (bst *BST) search(key float64) (*node, bool) {
+func (bst *BST) search(key interface{}) (*node, bool) {
 	curNode := bst.root
-	var k float64
+	var k search.Comparable
 	var parent *node
 	for curNode != nil {
 		k = curNode.key
 		parent = curNode
-		if k == key {
+		r := k.Compare(key)
+		if r == search.Equal {
 			break
-		} else if k > key {
+		} else if r == search.Greater {
 			curNode = curNode.left
-		} else {
+		} else if r == search.Less {
 			curNode = curNode.right
+		} else {
+			panic("Invalid types for BST operations")
 		}
 	}
 	if curNode != nil {
@@ -209,7 +197,7 @@ func (bst *BST) search(key float64) (*node, bool) {
 
 // SearchUp performs a search, and rounds up to the nearest
 // existing key if no node of the query key exists.
-func (bst *BST) SearchUp(key float64) interface{} {
+func (bst *BST) SearchUp(key interface{}) interface{} {
 	n, ok := bst.search(key)
 	// The tree is empty
 	if n == nil {
@@ -219,20 +207,24 @@ func (bst *BST) SearchUp(key float64) interface{} {
 		return n.val[0]
 	}
 	v := n.successor()
-	if v == nil || ((v.key > n.key) && (n.key > key)) {
+	if v == nil ||
+		((v.key.Compare(n.key) == search.Greater) &&
+			(n.key.Compare(key) == search.Greater)) {
 		return n.val[0]
 	}
 	return v.val[0]
 }
 
 // SearchDown acts as SearchUp, but rounds down.
-func (bst *BST) SearchDown(key float64) interface{} {
+func (bst *BST) SearchDown(key interface{}) interface{} {
 	n, ok := bst.search(key)
 	if ok {
 		return n.val[0]
 	}
 	v := n.predecessor()
-	if v == nil || ((v.key < n.key) && (n.key < key)) {
+	if v == nil ||
+		((v.key.Compare(n.key) == search.Less) &&
+			n.key.Compare(key) == search.Less) {
 		return n.val[0]
 	}
 	return v.val[0]
@@ -245,6 +237,7 @@ func (bst *BST) updateRoot(n *node) {
 	}
 	if n != nil {
 		bst.root = n
+		//fmt.Println("Setting root to", n)
 		return
 	}
 	if bst.root == nil {
@@ -281,12 +274,12 @@ func (bst *BST) String() string {
 }
 
 func findCycle(bst *BST) error {
-	seen := make(map[float64]bool)
+	seen := make(map[search.Comparable]bool)
 	return bst.root.findCycle(seen)
 }
 
 // findCycle will mis-report duplicate input nodes as cycles.
-func (n *node) findCycle(seen map[float64]bool) error {
+func (n *node) findCycle(seen map[search.Comparable]bool) error {
 	if n == nil {
 		return nil
 	}
