@@ -197,37 +197,40 @@ func (bst *BST) search(key interface{}) (*node, bool) {
 
 // SearchUp performs a search, and rounds up to the nearest
 // existing key if no node of the query key exists.
-func (bst *BST) SearchUp(key interface{}) interface{} {
+func (bst *BST) SearchUp(key interface{}) (search.Comparable, interface{}) {
 	n, ok := bst.search(key)
 	// The tree is empty
 	if n == nil {
-		return nil
+		return nil, nil
 	}
 	if ok {
-		return n.val[0]
+		return n.key, n.val[0]
 	}
 	v := n.successor()
 	if v == nil ||
 		((v.key.Compare(n.key) == search.Greater) &&
 			(n.key.Compare(key) == search.Greater)) {
-		return n.val[0]
+		return n.key, n.val[0]
 	}
-	return v.val[0]
+	return v.key, v.val[0]
 }
 
 // SearchDown acts as SearchUp, but rounds down.
-func (bst *BST) SearchDown(key interface{}) interface{} {
+func (bst *BST) SearchDown(key interface{}) (search.Comparable, interface{}) {
 	n, ok := bst.search(key)
+	if n == nil {
+		return nil, nil
+	}
 	if ok {
-		return n.val[0]
+		return n.key, n.val[0]
 	}
 	v := n.predecessor()
 	if v == nil ||
 		((v.key.Compare(n.key) == search.Less) &&
 			n.key.Compare(key) == search.Less) {
-		return n.val[0]
+		return n.key, n.val[0]
 	}
-	return v.val[0]
+	return v.key, v.val[0]
 }
 
 func (bst *BST) updateRoot(n *node) {

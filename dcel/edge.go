@@ -1,6 +1,11 @@
 package dcel
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+
+	"github.com/200sc/go-compgeo/search"
+)
 
 // An Edge represents an edge within a DCEL,
 // specifically a half edge, which maintains
@@ -77,6 +82,104 @@ func (e *Edge) Mid() (*Point, error) {
 		return nil, BadEdgeError{}
 	}
 	return e.Origin.Mid(t.Origin), nil
+}
+
+func (e *Edge) Compare(i interface{}) search.CompareResult {
+	switch c := i.(type) {
+	case Point:
+		return c.VerticalCompare(e)
+	case *Point:
+		return c.VerticalCompare(e)
+	default:
+		return search.Invalid
+	}
+}
+
+// IsClockwise returns whether a given set of
+// edges is clockwise or not.
+// Method credit: lhf on stackOverflow
+// https://math.stackexchange.com/questions/340830
+func (e *Edge) IsClockwise() (bool, error) {
+	if e == nil {
+		return false, BadEdgeError{}
+	}
+	start := e
+	lowest := e
+	// Find the highest, rightmost point.
+	// We find the highest because the axes
+	// in this system are flipped so y increases
+	// going downward. Ultimately as long as we
+	// are consistent with one approach this does
+	// not change anything.
+	e = e.Next
+	for e != start {
+		if e == nil || e.Next == nil {
+			return false, BadEdgeError{}
+		}
+		if e.Origin[1] > lowest.Origin[1] ||
+			(e.Origin[1] == lowest.Origin[1] &&
+				e.Origin[0] > lowest.Origin[0]) {
+			lowest = e
+		}
+		e = e.Next
+	}
+	if lowest.Prev == nil {
+		return false, BadEdgeError{}
+	}
+	p := lowest.Prev.Origin
+	c := lowest.Origin
+	n := lowest.Next.Origin
+
+	cross := (p[0] * c[1]) - (c[0] * p[1]) +
+		(p[1] * n[0]) - (p[0] * n[1]) +
+		(c[0] * n[1]) - (n[0] * c[1])
+
+	// We assume the points are not colinear,
+	// as they must not be. If they were,
+	// one of lowest's neighbors would be
+	// higher than lowest.
+	if cross > 0 {
+		return true, nil
+	}
+	return false, nil
+}
+
+// Flip converts edge and all that share a
+// face with edge from counterclockwise to clockwise
+// or vice versa
+func (e *Edge) Flip() {
+	start := e
+	next := e.Next
+	for next != start {
+		next = e.Next
+		e.Next, e.Prev = e.Prev, e.Next
+		e.Twin.Next, e.Twin.Prev = e.Twin.Prev, e.Twin.Next
+		e = next
+	}
+}
+
+func (e *Edge) PointAt(d int, v float64) (*Point, error) {
+	e1 := e.Origin
+	e2 := e.Twin.Origin
+	if e1[d] > e2[d] {
+		e1, e2 = e2, e1
+	}
+	if v < e1[d] || v > e2[d] {
+		fmt.Println(v, e1[d], e2[d])
+		return nil, errors.New("Value given is not on edge")
+	}
+	v -= e1[d]
+	span := e2[d] - e1[d]
+	portion := v / span
+	p := new(Point)
+	for i := 0; i < len(p); i++ {
+		if i == d {
+			p[i] = v
+		} else {
+			p[i] = e1[i] + (portion * (e2[i] - e1[i]))
+		}
+	}
+	return p, nil
 }
 
 // BadEdgeError is returned from edge-processing functions

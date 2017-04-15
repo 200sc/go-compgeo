@@ -97,10 +97,10 @@ func (b *BST) Search(key interface{}) (bool, interface{}) {
 	return false, nil
 }
 
-func (b *BST) SearchUp(key interface{}) interface{} {
+func (b *BST) SearchUp(key interface{}) (search.Comparable, interface{}) {
 	i, ok := b.search(key)
 	if ok {
-		return (*b)[i]
+		return (*b)[i].key, (*b)[i].val
 	}
 	j := b.successor(i)
 	bst := *b
@@ -109,13 +109,13 @@ func (b *BST) SearchUp(key interface{}) interface{} {
 			(bst[i].key.Compare(key) == search.Greater)) {
 		j = i
 	}
-	return bst[j].val
+	return bst[j].key, bst[j].val
 }
 
-func (b *BST) SearchDown(key interface{}) interface{} {
+func (b *BST) SearchDown(key interface{}) (search.Comparable, interface{}) {
 	i, ok := b.search(key)
 	if ok {
-		return (*b)[i]
+		return (*b)[i].key, (*b)[i].val
 	}
 	j := b.predecessor(i)
 	bst := *b
@@ -124,7 +124,7 @@ func (b *BST) SearchDown(key interface{}) interface{} {
 			(bst[i].key.Compare(key) == search.Less)) {
 		j = i
 	}
-	return bst[j].val
+	return bst[j].key, bst[j].val
 }
 
 func (b *BST) search(key interface{}) (int, bool) {

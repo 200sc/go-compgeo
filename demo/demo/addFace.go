@@ -137,7 +137,10 @@ func addFace(cID int, ev interface{}) int {
 			} else {
 				fmt.Println(sd.(*dcel.SlabPointLocator))
 			}
-			sd.PointLocate(mx, my)
+			f, _ := sd.PointLocate(mx, my)
+			if f == phd.Faces[0] || f == nil {
+				fmt.Println("Outer/No Face")
+			}
 		}
 	} else if me.Button == "RightMouse" {
 		if mode == ADDING_DCEL {
@@ -163,6 +166,9 @@ func addFace(cID int, ev interface{}) int {
 			twin.Prev = first.Twin
 			first.Twin.Next = twin
 
+			fmt.Println(phd.DCEL.HalfEdges)
+			addedFace.CorrectDirectionality()
+
 			prev = nil
 			addedFace = nil
 			firstAddedPoint = -1
@@ -173,12 +179,6 @@ func addFace(cID int, ev interface{}) int {
 			phd.UpdateSpaces()
 
 			fmt.Println(phd.DCEL.HalfEdges)
-			for i, e := range phd.HalfEdges {
-				if e.Twin == nil || e.Next == nil || e.Prev == nil {
-					fmt.Println(i, e.Origin, e.Next, e.Prev, e.Twin)
-				}
-			}
-
 		}
 	}
 	return 0

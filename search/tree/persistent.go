@@ -86,10 +86,10 @@ func (pbst *PersistentBST) InOrderTraverse() []search.Node {
 func (pbst *PersistentBST) Search(f interface{}) (bool, interface{}) {
 	return pbst.AtInstant(pbst.instant).Search(f)
 }
-func (pbst *PersistentBST) SearchDown(f interface{}) interface{} {
+func (pbst *PersistentBST) SearchDown(f interface{}) (search.Comparable, interface{}) {
 	return pbst.AtInstant(pbst.instant).SearchDown(f)
 }
-func (pbst *PersistentBST) SearchUp(f interface{}) interface{} {
+func (pbst *PersistentBST) SearchUp(f interface{}) (search.Comparable, interface{}) {
 	return pbst.AtInstant(pbst.instant).SearchUp(f)
 }
 func (pbst *PersistentBST) String() string {
