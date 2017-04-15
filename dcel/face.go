@@ -1,6 +1,9 @@
 package dcel
 
-import "fmt"
+import (
+	"fmt"
+	"image/color"
+)
 
 // A Face points to the edges on its inner and
 // outer portions. Any given face may have either
@@ -10,11 +13,12 @@ import "fmt"
 // Outer is unused when Inner should be.
 type Face struct {
 	Outer, Inner *Edge
+	Color        color.Color
 }
 
 // NewFace returns a null-initialized Face.
 func NewFace() *Face {
-	return &Face{}
+	return &Face{Color: color.RGBA{0, 255, 255, 255}}
 }
 
 // Vertices wraps around a face and

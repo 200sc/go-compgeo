@@ -3,6 +3,7 @@ package dcel
 import (
 	"errors"
 	"fmt"
+	"image/color"
 
 	"github.com/200sc/go-compgeo/search"
 )
@@ -28,11 +29,13 @@ type Edge struct {
 	// half-edge's origin, and respectively whose
 	// origin this half-edge points to.
 	Twin *Edge
+	//
+	Color color.Color
 }
 
 // NewEdge returns a null-initialized Edge.
 func NewEdge() *Edge {
-	return &Edge{}
+	return &Edge{Color: color.RGBA{255, 0, 255, 255}}
 }
 
 // String converts an edge into a string.

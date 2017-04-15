@@ -2,9 +2,12 @@ package demo
 
 import (
 	"fmt"
+	"image/color"
+	"time"
 
 	"bitbucket.org/oakmoundstudio/oak/event"
 	"bitbucket.org/oakmoundstudio/oak/mouse"
+	"bitbucket.org/oakmoundstudio/oak/timing"
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/search/tree"
 )
@@ -140,6 +143,16 @@ func addFace(cID int, ev interface{}) int {
 			f, _ := sd.PointLocate(mx, my)
 			if f == phd.Faces[0] || f == nil {
 				fmt.Println("Outer/No Face")
+			} else {
+				f.Color = color.RGBA{255, 0, 0, 255}
+				timing.DoAfter(50*time.Millisecond, func() {
+					phd.Update()
+				})
+				timing.DoAfter(2500*time.Millisecond, func() {
+					fmt.Println("Face color is:", f.Color)
+					f.Color = color.RGBA{0, 255, 255, 255}
+					phd.Update()
+				})
 			}
 		}
 	} else if me.Button == "RightMouse" {
