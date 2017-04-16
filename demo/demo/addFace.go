@@ -144,13 +144,13 @@ func addFace(cID int, ev interface{}) int {
 			if f == phd.Faces[0] || f == nil {
 				fmt.Println("Outer/No Face")
 			} else {
-				f.Color = color.RGBA{255, 0, 0, 255}
+				faceIndex := phd.ScanFaces(f)
+				phd.FaceColors[faceIndex] = color.RGBA{255, 0, 0, 255}
 				timing.DoAfter(50*time.Millisecond, func() {
 					phd.Update()
 				})
 				timing.DoAfter(2500*time.Millisecond, func() {
-					fmt.Println("Face color is:", f.Color)
-					f.Color = color.RGBA{0, 255, 255, 255}
+					phd.FaceColors[faceIndex] = color.RGBA{0, 255, 255, 255}
 					phd.Update()
 				})
 			}
@@ -180,7 +180,7 @@ func addFace(cID int, ev interface{}) int {
 			first.Twin.Next = twin
 
 			fmt.Println(phd.DCEL.HalfEdges)
-			addedFace.CorrectDirectionality()
+			phd.CorrectDirectionality(addedFace)
 
 			prev = nil
 			addedFace = nil

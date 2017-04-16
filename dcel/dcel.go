@@ -2,6 +2,7 @@ package dcel
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"strconv"
 )
@@ -119,7 +120,7 @@ func (dc *DCEL) AllEdges(vertex int) []*Edge {
 // given vertex with respect to a specific dimension
 func (dc *DCEL) PartitionVertexEdges(vertex int, d int) ([]*Edge, []*Edge, error) {
 	allEdges := dc.AllEdges(vertex)
-	//fmt.Println("All edges off of vertex,", dc.Vertices[vertex], "::", allEdges)
+	fmt.Println("All edges off of vertex,", dc.Vertices[vertex], "::", allEdges)
 	lesser := make([]*Edge, 0)
 	greater := make([]*Edge, 0)
 	v := dc.Vertices[vertex]
@@ -141,4 +142,42 @@ func (dc *DCEL) PartitionVertexEdges(vertex int, d int) ([]*Edge, []*Edge, error
 		//}
 	}
 	return lesser, greater, nil
+}
+
+// ScanFaces returns which index, if any, within dc matches f.
+func (dc *DCEL) ScanFaces(f *Face) int {
+	for i, f2 := range dc.Faces {
+		if f2 == f {
+			return i
+		}
+	}
+	return -1
+}
+
+func (dc *DCEL) CorrectDirectionality(f *Face) {
+	// Inners need to be going CC
+	// Outers need to be going Clockwise
+
+	clock, err := f.Inner.IsClockwise()
+	if err == nil && clock {
+		vs := f.Inner.Flip()
+		fmt.Println("~~~~~~~~~~~~~FLIPPED!")
+		for i, v := range dc.Vertices {
+			if vs[v] == true {
+				dc.OutEdges[i] = dc.OutEdges[i].Twin
+			}
+		}
+	} else {
+		fmt.Println(err, clock)
+	}
+	clock, err = f.Outer.IsClockwise()
+	if err == nil && !clock {
+		vs := f.Outer.Flip()
+		fmt.Println("~~~~~~~~~~~~~FLIPPED!")
+		for i, v := range dc.Vertices {
+			if vs[v] == true {
+				dc.OutEdges[i] = dc.OutEdges[i].Twin
+			}
+		}
+	}
 }

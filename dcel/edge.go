@@ -3,7 +3,6 @@ package dcel
 import (
 	"errors"
 	"fmt"
-	"image/color"
 
 	"github.com/200sc/go-compgeo/search"
 )
@@ -29,13 +28,11 @@ type Edge struct {
 	// half-edge's origin, and respectively whose
 	// origin this half-edge points to.
 	Twin *Edge
-	//
-	Color color.Color
 }
 
 // NewEdge returns a null-initialized Edge.
 func NewEdge() *Edge {
-	return &Edge{Color: color.RGBA{255, 0, 255, 255}}
+	return &Edge{}
 }
 
 // String converts an edge into a string.
@@ -150,15 +147,29 @@ func (e *Edge) IsClockwise() (bool, error) {
 // Flip converts edge and all that share a
 // face with edge from counterclockwise to clockwise
 // or vice versa
-func (e *Edge) Flip() {
+func (e *Edge) Flip() map[*Point]bool {
 	start := e
-	next := e.Next
-	for next != start {
-		next = e.Next
+	outEdgesToFix := make(map[*Point]bool)
+	for {
+		fmt.Println("Flipping!")
 		e.Next, e.Prev = e.Prev, e.Next
 		e.Twin.Next, e.Twin.Prev = e.Twin.Prev, e.Twin.Next
-		e = next
+		e.Origin, e.Twin.Origin = e.Twin.Origin, e.Origin
+		outEdgesToFix[e.Origin] = true
+		e = e.Prev
+		if e == start {
+			break
+		}
 	}
+	for {
+		fmt.Println("E:", e)
+		fmt.Println("Twin", e.Twin)
+		e = e.Next
+		if e == start {
+			break
+		}
+	}
+	return outEdgesToFix
 }
 
 func (e *Edge) PointAt(d int, v float64) (*Point, error) {
@@ -183,6 +194,18 @@ func (e *Edge) PointAt(d int, v float64) (*Point, error) {
 		}
 	}
 	return p, nil
+}
+
+func (e *Edge) Y() float64 {
+	return e.Origin.Y()
+}
+
+func (e *Edge) X() float64 {
+	return e.Origin.X()
+}
+
+func (e *Edge) Z() float64 {
+	return e.Origin.Z()
 }
 
 // BadEdgeError is returned from edge-processing functions

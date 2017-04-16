@@ -1,9 +1,6 @@
 package dcel
 
-import (
-	"fmt"
-	"image/color"
-)
+import "fmt"
 
 // A Face points to the edges on its inner and
 // outer portions. Any given face may have either
@@ -13,12 +10,11 @@ import (
 // Outer is unused when Inner should be.
 type Face struct {
 	Outer, Inner *Edge
-	Color        color.Color
 }
 
 // NewFace returns a null-initialized Face.
 func NewFace() *Face {
-	return &Face{Color: color.RGBA{0, 255, 255, 255}}
+	return &Face{}
 }
 
 // Vertices wraps around a face and
@@ -38,32 +34,53 @@ func (f *Face) Vertices() []Point {
 	return pts
 }
 
-func (f *Face) CorrectDirectionality() {
-	// Inners need to be going CC
-	// Outers need to be going Clockwise
-
-	clock, err := f.Inner.IsClockwise()
-	if err == nil && clock {
-		f.Inner.Flip()
-	} else {
-		fmt.Println(err, clock)
-	}
-	clock, err = f.Outer.IsClockwise()
-	if err == nil && !clock {
-		f.Outer.Flip()
-	}
+type Contains2D interface {
+	X() float64
+	Y() float64
 }
 
-// Encloses returns whether f compleletly enwraps
-// f2.
-func (f *Face) Encloses(f2 *Face) bool {
-	// Doing this check legitimately would
-	// be costly and complex. We assume, right now,
-	// that we already -know- that either f encloses f2
-	// or f2 encloses f.
-	// If this is true, if one of them has a point higher
-	// than the other, that one is the encloser.
-	return (f.Max(1) > f2.Max(1))
+// Contains returns whether a point lies inside f.
+// We cannot assume that f is convex, or anything
+// besides some polygon. That leaves us with a rather
+// complex form of PIP--
+func (f *Face) Contains(p Contains2D) bool {
+	x := p.X()
+	y := p.Y()
+	contains := false
+	bounds := f.Bounds()
+	fmt.Println("Face bounds", bounds)
+	if x < bounds.Min.X() || x > bounds.Max.X() ||
+		y < bounds.Min.Y() || y > bounds.Max.Y() {
+		return contains
+	}
+	fmt.Println("Point lied in bounds")
+
+	e1 := f.Inner.Prev
+	e2 := f.Inner
+	for {
+		if (e2.Y() > y) != (e1.Y() > y) { // Three comparisons
+			if x < (e1.X()-e2.X())*(y-e2.Y())/(e1.Y()-e2.Y())+e2.X() { // One Comparison, Four add/sub, Two mult/div
+				contains = !contains
+			}
+		}
+		e1 = e1.Next
+		e2 = e2.Next
+		if e1 == f.Inner.Prev {
+			break
+		}
+	}
+	return contains
+}
+
+func (f *Face) Bounds() Span {
+	sp := NewSpan()
+	e := f.Inner
+	sp = sp.Expand(e.Origin)
+	for e.Next != f.Inner {
+		e = e.Next
+		sp = sp.Expand(e.Origin)
+	}
+	return sp
 }
 
 func (f *Face) Max(i int) (x float64) {
@@ -80,6 +97,6 @@ func (f *Face) Max(i int) (x float64) {
 
 const (
 	// OUTER_FACE is used to represent the infinite space
-	// around the outer edge of a DCEL.
+	// around the outer edge(s) of a DCEL.
 	OUTER_FACE = 0
 )

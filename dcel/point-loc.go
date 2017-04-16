@@ -48,22 +48,30 @@ func (dc *DCEL) SlabDecompose(bstType tree.Type) (LocatesPoints, error) {
 		return dc.Vertices[pts[i]][0] < dc.Vertices[pts[j]][0]
 	})
 	compXMap := make(map[float64]float64)
-	fmt.Println(pts)
-	for i, p := range pts {
-		v := dc.Vertices[p]
-		var compX float64
-		if i < (len(pts) - 1) {
-			v2 := dc.Vertices[pts[i+1]]
-			compX = (v[0] + v2[0]) / 2
-			compXMap[v[0]] = compX
-			fmt.Println("Compx set to", compX, "index", p)
-			fmt.Println(dc.Vertices)
-		} else {
-			// We shouldn't be adding anything at this stage
-			compX = -1
+	i := 1
+	for i < len(pts) {
+		j := i - 1
+		prevX := dc.Vertices[pts[j]][0]
+		thisX := dc.Vertices[pts[i]][0]
+		for thisX == prevX {
+			i++
+			thisX = dc.Vertices[pts[i]][0]
 		}
+		compXMap[prevX] = (prevX + thisX) / 2
+		i++
+	}
+	compXMap[dc.Vertices[pts[len(pts)-1]][0]] = -1
+
+	fmt.Println(dc.Vertices)
+	fmt.Println(pts)
+	fmt.Println(compXMap)
+	fmt.Println("START CONSTRUCTION")
+	for _, p := range pts {
+		v := dc.Vertices[p]
 		// Set the BST's instant to the x value of this point
+		fmt.Println("Setting Instant to", v[0])
 		t.SetInstant(v[0])
+
 		// We don't need to check the returned error here
 		// because we already checked this above-- if a DCEL
 		// contains points where some points have a different
@@ -74,10 +82,11 @@ func (dc *DCEL) SlabDecompose(bstType tree.Type) (LocatesPoints, error) {
 		// of the point
 		for _, e := range leftEdges {
 			var fs [2]*Face
-			compX2 := compXMap[e.Twin.Origin[0]]
-			t.Delete(shellNode{CompEdge{e.Twin, compX2}, fs})
+			fmt.Println("Removing", e.Twin)
+			err := t.Delete(shellNode{CompEdge{e.Twin, compXMap[e.Twin.Origin[0]]}, fs})
+			fmt.Println("Removed", err)
 			fmt.Println(t)
-			//fmt.Println("Removing", e.Twin, "from", v2[1], err)
+
 		}
 		// Add all edges to the PersistentBST connecting to the right
 		// of the point
@@ -88,12 +97,13 @@ func (dc *DCEL) SlabDecompose(bstType tree.Type) (LocatesPoints, error) {
 			// locate to the edge above the query point. Returning an
 			// edge for a query represents that the query is below
 			// the edge,
-			t.Insert(shellNode{CompEdge{e, compX},
+			fmt.Println("Adding", e, "at", v[0])
+			t.Insert(shellNode{CompEdge{e, compXMap[v[0]]},
 				[2]*Face{e.Face, e.Twin.Face}})
 			fmt.Println(t)
-			//fmt.Println("Adding", e, "at", v[1])
 		}
 	}
+	fmt.Println("END CONSTRUCTION")
 	return &SlabPointLocator{t, dc.Faces[OUTER_FACE]}, nil
 }
 
@@ -102,6 +112,12 @@ func (dc *DCEL) SlabDecompose(bstType tree.Type) (LocatesPoints, error) {
 type CompEdge struct {
 	*Edge
 	x float64
+}
+
+type CompEdge2 struct {
+	*Edge
+	p1 Point
+	p2 Point
 }
 
 func (ce CompEdge) Compare(i interface{}) search.CompareResult {
@@ -173,21 +189,20 @@ func (spl *SlabPointLocator) PointLocate(vs ...float64) (*Face, error) {
 		return f1[0], nil
 	}
 	// Case unhappy:
-	// f2 and f1 have both faces in common. We need
-	// to find out which face is enclosed in the other.
-	// We return the enclosed face.
-
-	// If one is the outer face than we are good
-	if f1[0] == spl.outerFace {
-		return f1[1], nil
-	}
-	if f1[1] == spl.outerFace {
+	// f2 and f1 have both faces in common.
+	// We then do PIP on each face, and return
+	// whichever is true, if either.
+	fmt.Println("Checking if face contains", p)
+	if f1[0] != spl.outerFace && f1[0].Contains(p) {
+		fmt.Println("P was contained")
 		return f1[0], nil
 	}
-	if f1[0].Encloses(f1[1]) {
+	fmt.Println("Checking if other face contains", p)
+	if f1[1] != spl.outerFace && f1[1].Contains(p) {
+		fmt.Println("P was contained")
 		return f1[1], nil
 	}
-	return f1[0], nil
+	return nil, nil
 	// Case VERY unhappy:
 	// f2 and f1 have neither face in common, which
 	// means something went very wrong and we don't even
