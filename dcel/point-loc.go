@@ -10,7 +10,7 @@ import (
 )
 
 type shellNode struct {
-	k CompEdge
+	k compEdge
 	v [2]*Face
 }
 
@@ -22,10 +22,14 @@ func (sn shellNode) Val() interface{} {
 	return sn.v
 }
 
+// LocatesPoints is an interface to represent point location
+// queries.
 type LocatesPoints interface {
 	PointLocate(vs ...float64) (*Face, error)
 }
 
+// SlabDecompose is based on Dobkin and Lipton's work into
+// point location.
 // The real difficulties in Slab Decomposition are all in the
 // persistent bst itself, so this is a fairly simple function.
 func (dc *DCEL) SlabDecompose(bstType tree.Type) (LocatesPoints, error) {
@@ -49,12 +53,16 @@ func (dc *DCEL) SlabDecompose(bstType tree.Type) (LocatesPoints, error) {
 	})
 	compXMap := make(map[float64]float64)
 	i := 1
+OUTER:
 	for i < len(pts) {
 		j := i - 1
 		prevX := dc.Vertices[pts[j]][0]
 		thisX := dc.Vertices[pts[i]][0]
 		for thisX == prevX {
 			i++
+			if i == len(pts) {
+				break OUTER
+			}
 			thisX = dc.Vertices[pts[i]][0]
 		}
 		compXMap[prevX] = (prevX + thisX) / 2
@@ -83,7 +91,7 @@ func (dc *DCEL) SlabDecompose(bstType tree.Type) (LocatesPoints, error) {
 		for _, e := range leftEdges {
 			var fs [2]*Face
 			fmt.Println("Removing", e.Twin)
-			err := t.Delete(shellNode{CompEdge{e.Twin, compXMap[e.Twin.Origin[0]]}, fs})
+			err := t.Delete(shellNode{compEdge{e.Twin, compXMap[e.Twin.Origin[0]]}, fs})
 			fmt.Println("Removed", err)
 			fmt.Println(t)
 
@@ -98,7 +106,7 @@ func (dc *DCEL) SlabDecompose(bstType tree.Type) (LocatesPoints, error) {
 			// edge for a query represents that the query is below
 			// the edge,
 			fmt.Println("Adding", e, "at", v[0])
-			t.Insert(shellNode{CompEdge{e, compXMap[v[0]]},
+			t.Insert(shellNode{compEdge{e, compXMap[v[0]]},
 				[2]*Face{e.Face, e.Twin.Face}})
 			fmt.Println(t)
 		}
@@ -109,20 +117,14 @@ func (dc *DCEL) SlabDecompose(bstType tree.Type) (LocatesPoints, error) {
 
 // We need to have our keys be CompEdges so
 // they are comparable within a certain x range.
-type CompEdge struct {
+type compEdge struct {
 	*Edge
 	x float64
 }
 
-type CompEdge2 struct {
-	*Edge
-	p1 Point
-	p2 Point
-}
-
-func (ce CompEdge) Compare(i interface{}) search.CompareResult {
+func (ce compEdge) Compare(i interface{}) search.CompareResult {
 	switch c := i.(type) {
-	case CompEdge:
+	case compEdge:
 		compX := ce.x
 		if c.x > compX {
 			compX = c.x
@@ -135,6 +137,7 @@ func (ce CompEdge) Compare(i interface{}) search.CompareResult {
 		if err != nil {
 			fmt.Println("compX", compX, "not on point ", c)
 		}
+
 		if p1[1] == p2[1] {
 			return search.Equal
 		} else if p1[1] < p2[1] {
@@ -145,6 +148,8 @@ func (ce CompEdge) Compare(i interface{}) search.CompareResult {
 	return ce.Edge.Compare(i)
 }
 
+// SlabPointLocator is a construct that uses slab
+// decomposition for point location.
 type SlabPointLocator struct {
 	dp        search.DynamicPersistent
 	outerFace *Face
@@ -154,6 +159,8 @@ func (spl *SlabPointLocator) String() string {
 	return fmt.Sprintf("%v", spl.dp)
 }
 
+// PointLocate returns which face within this SlabPointLocator
+// the query point lands, within two dimensions.
 func (spl *SlabPointLocator) PointLocate(vs ...float64) (*Face, error) {
 	if len(vs) < 2 {
 		return nil, errors.New("Slab point location only supports 2 dimensions")
@@ -169,13 +176,13 @@ func (spl *SlabPointLocator) PointLocate(vs ...float64) (*Face, error) {
 		return nil, nil
 	}
 	fmt.Println("Edge found", e)
-	if p.VerticalCompare(e.(CompEdge).Edge) == search.Greater {
+	if p.VerticalCompare(e.(compEdge).Edge) == search.Greater {
 		fmt.Println(p, "is above found edge", e)
 		return nil, nil
 	}
 
 	e2, f2 := tree.SearchUp(p)
-	if p.VerticalCompare(e2.(CompEdge).Edge) == search.Less {
+	if p.VerticalCompare(e2.(compEdge).Edge) == search.Less {
 		fmt.Println(p, "is below edge", e2)
 		return nil, nil
 	}

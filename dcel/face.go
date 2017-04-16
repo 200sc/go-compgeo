@@ -34,6 +34,9 @@ func (f *Face) Vertices() []Point {
 	return pts
 }
 
+// Contains2D is an interface which satisfies
+// the functions needed to determine if
+// a one-dimensional element exists on a face
 type Contains2D interface {
 	X() float64
 	Y() float64
@@ -70,29 +73,6 @@ func (f *Face) Contains(p Contains2D) bool {
 		}
 	}
 	return contains
-}
-
-func (f *Face) Bounds() Span {
-	sp := NewSpan()
-	e := f.Inner
-	sp = sp.Expand(e.Origin)
-	for e.Next != f.Inner {
-		e = e.Next
-		sp = sp.Expand(e.Origin)
-	}
-	return sp
-}
-
-func (f *Face) Max(i int) (x float64) {
-	e := f.Inner
-	max := e.Origin
-	for e.Next != f.Inner {
-		e = e.Next
-		if e.Origin[i] > max[i] {
-			max = e.Origin
-		}
-	}
-	return max[i]
 }
 
 const (

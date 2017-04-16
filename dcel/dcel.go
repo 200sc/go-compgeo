@@ -7,6 +7,10 @@ import (
 	"strconv"
 )
 
+const (
+	ε = 1.0e-7
+)
+
 // A DCEL is a structure representin arbitrary plane
 // divisions and 3d polytopes. Its values are relatively
 // self-explanatory but constructing it is significantly
@@ -121,8 +125,8 @@ func (dc *DCEL) AllEdges(vertex int) []*Edge {
 func (dc *DCEL) PartitionVertexEdges(vertex int, d int) ([]*Edge, []*Edge, error) {
 	allEdges := dc.AllEdges(vertex)
 	fmt.Println("All edges off of vertex,", dc.Vertices[vertex], "::", allEdges)
-	lesser := make([]*Edge, 0)
-	greater := make([]*Edge, 0)
+	var lesser []*Edge
+	var greater []*Edge
 	v := dc.Vertices[vertex]
 	if len(v) <= d {
 		return lesser, greater, errors.New("DCEL's vertex does not support " + strconv.Itoa(d) + " dimensions")
@@ -154,6 +158,11 @@ func (dc *DCEL) ScanFaces(f *Face) int {
 	return -1
 }
 
+// CorrectDirectionality (rather innefficently)
+// ensures that a face has the right clockwise/
+// counter-clockwise orientation based on
+// whether its chain is the inner or outer
+// portion of a face.
 func (dc *DCEL) CorrectDirectionality(f *Face) {
 	// Inners need to be going CC
 	// Outers need to be going Clockwise
@@ -161,7 +170,6 @@ func (dc *DCEL) CorrectDirectionality(f *Face) {
 	clock, err := f.Inner.IsClockwise()
 	if err == nil && clock {
 		vs := f.Inner.Flip()
-		fmt.Println("~~~~~~~~~~~~~FLIPPED!")
 		for i, v := range dc.Vertices {
 			if vs[v] == true {
 				dc.OutEdges[i] = dc.OutEdges[i].Twin
@@ -173,7 +181,6 @@ func (dc *DCEL) CorrectDirectionality(f *Face) {
 	clock, err = f.Outer.IsClockwise()
 	if err == nil && !clock {
 		vs := f.Outer.Flip()
-		fmt.Println("~~~~~~~~~~~~~FLIPPED!")
 		for i, v := range dc.Vertices {
 			if vs[v] == true {
 				dc.OutEdges[i] = dc.OutEdges[i].Twin

@@ -73,6 +73,7 @@ func (d *DCEL) FullEdge(i int) ([2]*Point, error) {
 		e2.Origin}, nil
 }
 
+// Mid returns the midpoint of an Edge
 func (e *Edge) Mid() (*Point, error) {
 	if e == nil {
 		return nil, BadEdgeError{}
@@ -84,6 +85,8 @@ func (e *Edge) Mid() (*Point, error) {
 	return e.Origin.Mid(t.Origin), nil
 }
 
+// Compare allows Edge to satisfy search
+// interfaces for placement in BSTs.
 func (e *Edge) Compare(i interface{}) search.CompareResult {
 	switch c := i.(type) {
 	case Point:
@@ -172,6 +175,10 @@ func (e *Edge) Flip() map[*Point]bool {
 	return outEdgesToFix
 }
 
+// PointAt returns the point at a given position on some
+// d dimension along this edge. I.E. for d = 0, v = 5,
+// if this edge was represented as y = mx + b, this would
+// return y = m*5 + b.
 func (e *Edge) PointAt(d int, v float64) (*Point, error) {
 	e1 := e.Origin
 	e2 := e.Twin.Origin
@@ -196,14 +203,17 @@ func (e *Edge) PointAt(d int, v float64) (*Point, error) {
 	return p, nil
 }
 
+// Y redirects to Origin.Y
 func (e *Edge) Y() float64 {
 	return e.Origin.Y()
 }
 
+// X redirects to Origin.X
 func (e *Edge) X() float64 {
 	return e.Origin.X()
 }
 
+// Z redirects to Origin.Z
 func (e *Edge) Z() float64 {
 	return e.Origin.Z()
 }
