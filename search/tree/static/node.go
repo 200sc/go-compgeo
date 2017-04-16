@@ -11,7 +11,7 @@ type Node struct {
 	// how they are dealt with in modification cases. In search
 	// cases, as search just takes a key (right now), we always
 	// return the same value.
-	val interface{}
+	val search.Equalable
 }
 
 // *Node vs Node was benchmarked.
@@ -19,7 +19,7 @@ type Node struct {
 
 // NewNode returns a node constructed from the input
 // key and value.
-func NewNode(k search.Comparable, v interface{}) *Node {
+func NewNode(k search.Comparable, v search.Equalable) *Node {
 	return &Node{key: k, val: v}
 }
 
@@ -29,7 +29,7 @@ func (n Node) Key() search.Comparable {
 }
 
 // Val returns the value of this node.
-func (n Node) Val() interface{} {
+func (n Node) Val() search.Equalable {
 	return n.val
 }
 

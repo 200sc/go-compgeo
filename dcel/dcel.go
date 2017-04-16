@@ -1,10 +1,8 @@
 package dcel
 
 import (
-	"errors"
 	"fmt"
 	"math"
-	"strconv"
 )
 
 const (
@@ -16,10 +14,7 @@ const (
 // self-explanatory but constructing it is significantly
 // harder.
 type DCEL struct {
-	Vertices []*Point
-	// outEdges[0] is the (an) edge in HalfEdges whose
-	// orgin is Vertices[0]
-	OutEdges  []*Edge
+	Vertices  []*Vertex
 	HalfEdges []*Edge
 	// The first value in a face is the outside component
 	// of the face, the second value is the inside component
@@ -31,8 +26,7 @@ type DCEL struct {
 // zeroth outside face.
 func New() *DCEL {
 	dc := new(DCEL)
-	dc.Vertices = []*Point{}
-	dc.OutEdges = []*Edge{}
+	dc.Vertices = []*Vertex{}
 	dc.HalfEdges = []*Edge{}
 	dc.Faces = []*Face{NewFace()}
 	return dc
@@ -58,8 +52,8 @@ func (dc *DCEL) MaxZ() float64 {
 // in the DCEL
 func (dc *DCEL) Max(i int) (x float64) {
 	for _, p := range dc.Vertices {
-		if p[i] > x {
-			x = p[i]
+		if p.Val(i) > x {
+			x = p.Val(i)
 		}
 	}
 	return x
@@ -86,66 +80,11 @@ func (dc *DCEL) MinZ() float64 {
 func (dc *DCEL) Min(i int) (x float64) {
 	x = math.Inf(1)
 	for _, p := range dc.Vertices {
-		if p[i] < x {
-			x = p[i]
+		if p.Val(i) < x {
+			x = p.Val(i)
 		}
 	}
 	return x
-}
-
-// ScanPoints returns the index within
-// dc.Vertices where p is, or -1 if it
-// does not exist in dc.
-func (dc *DCEL) ScanPoints(p *Point) int {
-	for i, v := range dc.Vertices {
-		if v == p {
-			return i
-		}
-	}
-	return -1
-}
-
-// AllEdges iterates through the edges surrounding
-// a vertex and returns them all.
-func (dc *DCEL) AllEdges(vertex int) []*Edge {
-	e1 := dc.OutEdges[vertex]
-	edges := make([]*Edge, 1)
-	edges[0] = e1
-	edge := e1.Twin.Next
-	for edge != e1 {
-		edges = append(edges, edge)
-		edge = edge.Twin.Next
-	}
-	return edges
-}
-
-// PartitionVertexEdges partitions the edges of a vertex by
-// whether they connect to a vertex greater or lesser than the
-// given vertex with respect to a specific dimension
-func (dc *DCEL) PartitionVertexEdges(vertex int, d int) ([]*Edge, []*Edge, error) {
-	allEdges := dc.AllEdges(vertex)
-	fmt.Println("All edges off of vertex,", dc.Vertices[vertex], "::", allEdges)
-	var lesser []*Edge
-	var greater []*Edge
-	v := dc.Vertices[vertex]
-	if len(v) <= d {
-		return lesser, greater, errors.New("DCEL's vertex does not support " + strconv.Itoa(d) + " dimensions")
-	}
-	checkAgainst := v[d]
-	for _, e1 := range allEdges {
-		e2 := e1.Twin
-		// Potential issue:
-		// Will something bad happen if there are multiple
-		// elements with the same value in this dimension?
-		if e2.Origin[d] < checkAgainst {
-			lesser = append(lesser, e1)
-		} else if e2.Origin[d] > checkAgainst {
-			greater = append(greater, e1)
-		} //else {
-		// We completely ignore vertical lines?.
-		//}
-	}
-	return lesser, greater, nil
 }
 
 // ScanFaces returns which index, if any, within dc matches f.
@@ -169,22 +108,13 @@ func (dc *DCEL) CorrectDirectionality(f *Face) {
 
 	clock, err := f.Inner.IsClockwise()
 	if err == nil && clock {
-		vs := f.Inner.Flip()
-		for i, v := range dc.Vertices {
-			if vs[v] == true {
-				dc.OutEdges[i] = dc.OutEdges[i].Twin
-			}
-		}
+		f.Inner.Flip()
 	} else {
 		fmt.Println(err, clock)
 	}
 	clock, err = f.Outer.IsClockwise()
 	if err == nil && !clock {
-		vs := f.Outer.Flip()
-		for i, v := range dc.Vertices {
-			if vs[v] == true {
-				dc.OutEdges[i] = dc.OutEdges[i].Twin
-			}
-		}
+		f.Outer.Flip()
+
 	}
 }

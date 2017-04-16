@@ -19,10 +19,10 @@ func NewFace() *Face {
 
 // Vertices wraps around a face and
 // finds all vertices that border it.
-func (f *Face) Vertices() []Point {
+func (f *Face) Vertices() []Vertex {
 	// Outer is not populated by anything as of this writing.
 
-	pts := []Point{}
+	pts := []Vertex{}
 	e := f.Inner
 	for e != nil && e.Next != f.Inner {
 		pts = append(pts, *e.Origin)

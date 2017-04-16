@@ -25,28 +25,23 @@ func addFace(cID int, ev interface{}) int {
 			// Need a real copy function
 			//undoPhd = append(undoPhd, *phd)
 
-			faceVertices = make(map[*dcel.Point]bool)
+			faceVertices = make(map[*dcel.Vertex]bool)
 			// Add Case A: The first point of the face
 			// already exists.
 			hits := mouse.Hits(me.ToSpace())
 			if len(hits) > 0 {
 				ip := event.GetEntity(int(hits[0].CID)).(*InteractivePoint)
-				p := ip.Point
-				faceVertices[p] = true
-				mouseZ = p.Z()
-				// Todo: consider if we should change how outEdges
-				// are handled so this linear scan doesn't need to
-				// happen
-				firstAddedPoint = phd.ScanPoints(p)
+				firstAddedPoint = ip.Vertex
+				faceVertices[firstAddedPoint] = true
+				mouseZ = firstAddedPoint.Z()
 			} else {
-				firstAddedPoint = len(phd.Vertices)
-				phd.Vertices = append(phd.Vertices,
-					dcel.NewPoint(mx, my, mouseZ))
+				firstAddedPoint = dcel.NewVertex(mx, my, mouseZ)
+				phd.Vertices = append(phd.Vertices, firstAddedPoint)
 				faceVertices[phd.Vertices[len(phd.Vertices)-1]] = true
 			}
 			phd.HalfEdges = append(phd.HalfEdges, dcel.NewEdge())
 			prev = phd.HalfEdges[len(phd.HalfEdges)-1]
-			prev.Origin = phd.Vertices[firstAddedPoint]
+			prev.Origin = firstAddedPoint
 
 			f := dcel.NewFace()
 			f.Inner = prev
@@ -54,8 +49,8 @@ func addFace(cID int, ev interface{}) int {
 			addedFace = phd.Faces[len(phd.Faces)-1]
 
 			prev.Face = addedFace
-			if firstAddedPoint == len(phd.Vertices)-1 {
-				phd.OutEdges = append(phd.OutEdges, prev)
+			if firstAddedPoint.OutEdge == nil {
+				firstAddedPoint.OutEdge = prev
 			}
 
 			mode = ADDING_DCEL
@@ -73,11 +68,11 @@ func addFace(cID int, ev interface{}) int {
 			// Add Case D:
 			// Some node other than the first in the face already
 			// exists
-			var vi int
+			var p *dcel.Vertex
 			hits := mouse.Hits(me.ToSpace())
 			if len(hits) > 0 {
 				ip := event.GetEntity(int(hits[0].CID)).(*InteractivePoint)
-				p := ip.Point
+				p = ip.Vertex
 				// Add Case F: this point already exists in this
 				// face. Reject it.
 				if _, ok := faceVertices[p]; ok {
@@ -85,21 +80,16 @@ func addFace(cID int, ev interface{}) int {
 				}
 				faceVertices[p] = true
 				mouseZ = p.Z()
-				// Todo: consider if we should change how outEdges
-				// are handled so this linear scan doesn't need to
-				// happen
-				vi = phd.ScanPoints(p)
 			} else {
-				phd.Vertices = append(phd.Vertices,
-					dcel.NewPoint(mx, my, mouseZ))
-				vi = len(phd.Vertices) - 1
-				faceVertices[phd.Vertices[vi]] = true
+				p = dcel.NewVertex(mx, my, mouseZ)
+				phd.Vertices = append(phd.Vertices, p)
+				faceVertices[p] = true
 			}
 			// This twin points from the new point to the previous point.
 			phd.HalfEdges = append(phd.HalfEdges, dcel.NewEdge())
 			twin := phd.HalfEdges[len(phd.HalfEdges)-1]
 
-			twin.Origin = phd.Vertices[vi]
+			twin.Origin = p
 
 			// We make an assumption here that all twins have the outer face
 			// as their face.
@@ -120,15 +110,15 @@ func addFace(cID int, ev interface{}) int {
 
 			phd.HalfEdges = append(phd.HalfEdges, dcel.NewEdge())
 			next := phd.HalfEdges[len(phd.HalfEdges)-1]
-			next.Origin = phd.Vertices[vi]
+			next.Origin = p
 			next.Prev = prev
 			next.Face = addedFace
 			prev.Next = next
 
 			prev = next
 
-			if vi == len(phd.Vertices)-1 {
-				phd.OutEdges = append(phd.OutEdges, prev)
+			if p.OutEdge == nil {
+				p.OutEdge = prev
 			}
 
 			phd.Update()
@@ -164,7 +154,7 @@ func addFace(cID int, ev interface{}) int {
 			phd.HalfEdges = append(phd.HalfEdges, dcel.NewEdge())
 			// The final twin starts at the first point of this face
 			twin := phd.HalfEdges[len(phd.HalfEdges)-1]
-			twin.Origin = phd.Vertices[firstAddedPoint]
+			twin.Origin = firstAddedPoint
 			twin.Face = phd.Faces[dcel.OUTER_FACE]
 
 			prev.Twin = twin
@@ -184,7 +174,7 @@ func addFace(cID int, ev interface{}) int {
 
 			prev = nil
 			addedFace = nil
-			firstAddedPoint = -1
+			firstAddedPoint = nil
 
 			mode = ADD_DCEL
 

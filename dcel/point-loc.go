@@ -1,7 +1,6 @@
 package dcel
 
 import (
-	"errors"
 	"fmt"
 	"sort"
 
@@ -9,16 +8,28 @@ import (
 	"github.com/200sc/go-compgeo/search/tree"
 )
 
+type faces struct {
+	f1, f2 *Face
+}
+
+func (fs faces) Equals(e search.Equalable) bool {
+	switch fs2 := e.(type) {
+	case faces:
+		return fs2.f1 == fs.f1 && fs2.f2 == fs.f2
+	}
+	return false
+}
+
 type shellNode struct {
 	k compEdge
-	v [2]*Face
+	v search.Equalable
 }
 
 func (sn shellNode) Key() search.Comparable {
 	return sn.k
 }
 
-func (sn shellNode) Val() interface{} {
+func (sn shellNode) Val() search.Equalable {
 	return sn.v
 }
 
@@ -39,77 +50,99 @@ func (dc *DCEL) SlabDecompose(bstType tree.Type) (LocatesPoints, error) {
 	for i := range dc.Vertices {
 		pts[i] = i
 	}
-	if len(dc.Vertices[0]) < 2 {
+	if dc.Vertices[0].D() < 2 {
 		// I don't know why someone would want to get the slab decomposition of
 		// a structure which has more than two dimensions but there could be
 		// applications so we don't reject that idea offhand.
-		return nil, errors.New("DCEL's vertices aren't at least two dimensional")
+		return nil, BadDimensionError{}
 	}
 	// We sort by the 0th dimension here. There is no necessary requirement that
 	// the 0th dimension maps to X, but there's also no requirement that slab
 	// decomposition uses vertical slabs.
 	sort.Slice(pts, func(i, j int) bool {
-		return dc.Vertices[pts[i]][0] < dc.Vertices[pts[j]][0]
+		return dc.Vertices[pts[i]].X() < dc.Vertices[pts[j]].X()
 	})
 	compXMap := make(map[float64]float64)
 	i := 1
 OUTER:
 	for i < len(pts) {
 		j := i - 1
-		prevX := dc.Vertices[pts[j]][0]
-		thisX := dc.Vertices[pts[i]][0]
+		prevX := dc.Vertices[pts[j]].X()
+		thisX := dc.Vertices[pts[i]].X()
 		for thisX == prevX {
 			i++
 			if i == len(pts) {
 				break OUTER
 			}
-			thisX = dc.Vertices[pts[i]][0]
+			thisX = dc.Vertices[pts[i]].X()
 		}
 		compXMap[prevX] = (prevX + thisX) / 2
 		i++
 	}
-	compXMap[dc.Vertices[pts[len(pts)-1]][0]] = -1
+	compXMap[dc.Vertices[pts[len(pts)-1]].X()] = -1
 
 	fmt.Println(dc.Vertices)
 	fmt.Println(pts)
 	fmt.Println(compXMap)
 	fmt.Println("START CONSTRUCTION")
-	for _, p := range pts {
+	i = 0
+	for i < len(pts) {
+		p := pts[i]
 		v := dc.Vertices[p]
 		// Set the BST's instant to the x value of this point
-		fmt.Println("Setting Instant to", v[0])
-		t.SetInstant(v[0])
+		fmt.Println("Setting Instant to", v.X())
+		t.SetInstant(v.X())
 
-		// We don't need to check the returned error here
-		// because we already checked this above-- if a DCEL
-		// contains points where some points have a different
-		// dimension than others that will cause further problems,
-		// but this is too expensive to check here.
-		leftEdges, rightEdges, _ := dc.PartitionVertexEdges(p, 0)
+		// Aggregate all points at this x value so we do not
+		// attempt to add edges to a tree which contains edges
+		// point to the left of v[0]
+		vs := []*Vertex{v}
+		for (i+1) < len(pts) && dc.Vertices[pts[i+1]].X() == v.X() {
+			i++
+			p = pts[i]
+			vs = append(vs, dc.Vertices[p])
+		}
+
+		le := []*Edge{}
+		re := []*Edge{}
+
+		for _, v := range vs {
+			// We don't need to check the returned error here
+			// because we already checked this above-- if a DCEL
+			// contains points where some points have a different
+			// dimension than others that will cause further problems,
+			// but this is too expensive to check here.
+			leftEdges, rightEdges, _, _ := v.PartitionEdges(0)
+			le = append(le, leftEdges...)
+			re = append(re, rightEdges...)
+		}
+		fmt.Println("Left Edges", le)
+		fmt.Println("Right Edges", re)
 		// Remove all edges from the PersistentBST connecting to the left
-		// of the point
-		for _, e := range leftEdges {
-			var fs [2]*Face
+		// of the points
+		for _, e := range le {
 			fmt.Println("Removing", e.Twin)
-			err := t.Delete(shellNode{compEdge{e.Twin, compXMap[e.Twin.Origin[0]]}, fs})
-			fmt.Println("Removed", err)
+			err := t.Delete(shellNode{compEdge{e.Twin, compXMap[e.Twin.Origin.X()]}, search.Nil{}})
+			fmt.Println("Remove result", err)
 			fmt.Println(t)
 
 		}
 		// Add all edges to the PersistentBST connecting to the right
 		// of the point
-		for _, e := range rightEdges {
+		for _, e := range re {
 			// We always want the half edge that points to the right,
 			// and between the two faces this edge is on we want the
 			// face which is LOWER. This is because we ulimately point
 			// locate to the edge above the query point. Returning an
 			// edge for a query represents that the query is below
 			// the edge,
-			fmt.Println("Adding", e, "at", v[0])
-			t.Insert(shellNode{compEdge{e, compXMap[v[0]]},
-				[2]*Face{e.Face, e.Twin.Face}})
+			fmt.Println("Adding", e, "at", v.X())
+			t.Insert(shellNode{compEdge{e, compXMap[v.X()]},
+				faces{e.Face, e.Twin.Face}})
 			fmt.Println(t)
 		}
+
+		i++
 	}
 	fmt.Println("END CONSTRUCTION")
 	return &SlabPointLocator{t, dc.Faces[OUTER_FACE]}, nil
@@ -125,6 +158,14 @@ type compEdge struct {
 func (ce compEdge) Compare(i interface{}) search.CompareResult {
 	switch c := i.(type) {
 	case compEdge:
+		fmt.Println("Comparing", ce, c)
+		if ce.Edge == c.Edge {
+			return search.Equal
+		}
+		if ce.X() == c.X() && ce.Y() == c.Y() &&
+			ce.Twin.X() == c.Twin.X() && ce.Twin.Y() == c.Twin.Y() {
+			return search.Equal
+		}
 		compX := ce.x
 		if c.x > compX {
 			compX = c.x
@@ -137,10 +178,7 @@ func (ce compEdge) Compare(i interface{}) search.CompareResult {
 		if err != nil {
 			fmt.Println("compX", compX, "not on point ", c)
 		}
-
-		if p1[1] == p2[1] {
-			return search.Equal
-		} else if p1[1] < p2[1] {
+		if p1[1] < p2[1] {
 			return search.Less
 		}
 		return search.Greater
@@ -163,13 +201,14 @@ func (spl *SlabPointLocator) String() string {
 // the query point lands, within two dimensions.
 func (spl *SlabPointLocator) PointLocate(vs ...float64) (*Face, error) {
 	if len(vs) < 2 {
-		return nil, errors.New("Slab point location only supports 2 dimensions")
+		return nil, InsufficientDimensionsError{}
 	}
 	fmt.Println("Querying", vs)
 	tree := spl.dp.AtInstant(vs[0])
 	fmt.Println("Tree found:")
 	fmt.Println(tree)
 	p := Point{vs[0], vs[1], 0}
+	fmt.Println("Searching on tree")
 	e, f := tree.SearchDown(p)
 	if e == nil {
 		fmt.Println("Location on empty tree")
@@ -188,26 +227,29 @@ func (spl *SlabPointLocator) PointLocate(vs ...float64) (*Face, error) {
 	}
 	// Case Happy:
 	// f2 and f1 have one face in common. Return it.
-	f1 := f.([2]*Face)
-	f3 := f2.([2]*Face)
-	if f1[0] != f3[0] && f1[0] != f3[1] {
-		return f1[1], nil
-	} else if f1[1] != f3[0] && f1[1] != f3[1] {
-		return f1[0], nil
+	f1 := f.(faces)
+	f3 := f2.(faces)
+	if f1.f1 != f3.f1 && f1.f1 != f3.f2 {
+		return f1.f2, nil
+	} else if f1.f2 != f3.f1 && f1.f2 != f3.f2 {
+		return f1.f1, nil
 	}
 	// Case unhappy:
 	// f2 and f1 have both faces in common.
 	// We then do PIP on each face, and return
 	// whichever is true, if either.
+	f4 := f1.f2
+	f5 := f1.f1
+
 	fmt.Println("Checking if face contains", p)
-	if f1[0] != spl.outerFace && f1[0].Contains(p) {
+	if f5 != spl.outerFace && f5.Contains(p) {
 		fmt.Println("P was contained")
-		return f1[0], nil
+		return f5, nil
 	}
 	fmt.Println("Checking if other face contains", p)
-	if f1[1] != spl.outerFace && f1[1].Contains(p) {
+	if f4 != spl.outerFace && f4.Contains(p) {
 		fmt.Println("P was contained")
-		return f1[1], nil
+		return f4, nil
 	}
 	return nil, nil
 	// Case VERY unhappy:

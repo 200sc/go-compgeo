@@ -24,13 +24,12 @@ func (pbst *PersistentBST) AtInstant(ins float64) search.Dynamic {
 	bot := 0
 	top := len(pbst.instants) - 1
 	var mid int
-	fmt.Println("bot,top", bot, top)
 	for {
 		if top <= bot {
-			fmt.Println("Returning index", bot)
 			if pbst.instants[bot].instant > ins {
-				return pbst.instants[bot-1]
+				bot--
 			}
+			fmt.Println("Returning index", bot)
 			return pbst.instants[bot]
 		}
 		mid = (bot + top) / 2

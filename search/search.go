@@ -35,10 +35,26 @@ type Comparable interface {
 	Compare(interface{}) CompareResult
 }
 
+// Equalable types can be compared to one another
+// and will return a boolean if they are the same.
+type Equalable interface {
+	Equals(Equalable) bool
+}
+
+// Nil Equalables are equal to any value.
+// Insert them in deletion queries in order to
+// delete arbitrary elements.
+type Nil struct{}
+
+// Equals on Nil always returns true.
+func (n Nil) Equals(Equalable) bool {
+	return true
+}
+
 // Node types can be stored in modifiable search types.
 type Node interface {
 	Key() Comparable
-	Val() interface{}
+	Val() Equalable
 }
 
 // Searchable types can be searched, with float64 keys pointing to

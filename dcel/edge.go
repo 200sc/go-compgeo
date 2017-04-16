@@ -1,7 +1,6 @@
 package dcel
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/200sc/go-compgeo/search"
@@ -15,7 +14,7 @@ import (
 // and following edges which bound its face.
 type Edge struct {
 	// Origin is the vertex this edge starts at
-	Origin *Point
+	Origin *Vertex
 	// Face is the index within Faces that this
 	// edge wraps around
 	Face *Face
@@ -59,22 +58,22 @@ func EdgeTwin(i int) int {
 
 // FullEdge returns the ith edge in the form of its
 // two vertices
-func (d *DCEL) FullEdge(i int) ([2]*Point, error) {
+func (d *DCEL) FullEdge(i int) ([2]*Vertex, error) {
 	if i >= len(d.HalfEdges) {
-		return [2]*Point{}, BadEdgeError{}
+		return [2]*Vertex{}, BadEdgeError{}
 	}
 	e := d.HalfEdges[i]
 	e2 := e.Twin
 	if e2 == nil {
-		return [2]*Point{}, BadEdgeError{}
+		return [2]*Vertex{}, BadEdgeError{}
 	}
-	return [2]*Point{
+	return [2]*Vertex{
 		e.Origin,
 		e2.Origin}, nil
 }
 
-// Mid returns the midpoint of an Edge
-func (e *Edge) Mid() (*Point, error) {
+// Mid2D returns the midpoint of an Edge
+func (e *Edge) Mid2D() (*Point, error) {
 	if e == nil {
 		return nil, BadEdgeError{}
 	}
@@ -82,7 +81,7 @@ func (e *Edge) Mid() (*Point, error) {
 	if t == nil {
 		return nil, BadEdgeError{}
 	}
-	return e.Origin.Mid(t.Origin), nil
+	return e.Origin.Mid2D(t.Origin), nil
 }
 
 // Compare allows Edge to satisfy search
@@ -119,9 +118,7 @@ func (e *Edge) IsClockwise() (bool, error) {
 		if e == nil || e.Next == nil {
 			return false, BadEdgeError{}
 		}
-		if e.Origin[1] > lowest.Origin[1] ||
-			(e.Origin[1] == lowest.Origin[1] &&
-				e.Origin[0] > lowest.Origin[0]) {
+		if lowest.Origin.Greater2D(e.Origin).Eq(lowest.Origin) {
 			lowest = e
 		}
 		e = e.Next
@@ -129,9 +126,9 @@ func (e *Edge) IsClockwise() (bool, error) {
 	if lowest.Prev == nil {
 		return false, BadEdgeError{}
 	}
-	p := lowest.Prev.Origin
-	c := lowest.Origin
-	n := lowest.Next.Origin
+	p := lowest.Prev.Origin.Point
+	c := lowest.Origin.Point
+	n := lowest.Next.Origin.Point
 
 	cross := (p[0] * c[1]) - (c[0] * p[1]) +
 		(p[1] * n[0]) - (p[0] * n[1]) +
@@ -150,44 +147,43 @@ func (e *Edge) IsClockwise() (bool, error) {
 // Flip converts edge and all that share a
 // face with edge from counterclockwise to clockwise
 // or vice versa
-func (e *Edge) Flip() map[*Point]bool {
+func (e *Edge) Flip() {
 	start := e
-	outEdgesToFix := make(map[*Point]bool)
 	for {
-		fmt.Println("Flipping!")
+		//fmt.Println("Flipping!")
 		e.Next, e.Prev = e.Prev, e.Next
 		e.Twin.Next, e.Twin.Prev = e.Twin.Prev, e.Twin.Next
 		e.Origin, e.Twin.Origin = e.Twin.Origin, e.Origin
-		outEdgesToFix[e.Origin] = true
+		e.Origin.OutEdge = e.Origin.OutEdge.Twin
 		e = e.Prev
 		if e == start {
 			break
 		}
 	}
-	for {
-		fmt.Println("E:", e)
-		fmt.Println("Twin", e.Twin)
-		e = e.Next
-		if e == start {
-			break
-		}
-	}
-	return outEdgesToFix
+	// for {
+	// 	fmt.Println("E:", e)
+	// 	fmt.Println("Twin", e.Twin)
+	// 	e = e.Next
+	// 	if e == start {
+	// 		break
+	// 	}
+	// }
 }
+
 
 // PointAt returns the point at a given position on some
 // d dimension along this edge. I.E. for d = 0, v = 5,
 // if this edge was represented as y = mx + b, this would
 // return y = m*5 + b.
 func (e *Edge) PointAt(d int, v float64) (*Point, error) {
-	e1 := e.Origin
-	e2 := e.Twin.Origin
+	e1 := e.Origin.Point
+	e2 := e.Twin.Origin.Point
 	if e1[d] > e2[d] {
 		e1, e2 = e2, e1
 	}
 	if v < e1[d] || v > e2[d] {
 		fmt.Println(v, e1[d], e2[d])
-		return nil, errors.New("Value given is not on edge")
+		return nil, RangeError{}
 	}
 	v -= e1[d]
 	span := e2[d] - e1[d]
@@ -218,12 +214,16 @@ func (e *Edge) Z() float64 {
 	return e.Origin.Z()
 }
 
-// BadEdgeError is returned from edge-processing functions
-// if an edge is expected to have access to some field, or
-// be initialized, when it does or is not. I.E. an edge has
-// no twin for FullEdge.
-type BadEdgeError struct{}
-
-func (bee BadEdgeError) Error() string {
-	return "The input edge was invalid"
+// AllEdges on an edge is equivalent to e.Origin.AllEdges,
+// which actually calls this instead of the other way
+// around because that involves less code duplciation.
+func (e *Edge) AllEdges() []*Edge {
+	edges := make([]*Edge, 1)
+	edges[0] = e
+	edge := e.Twin.Next
+	for edge != e {
+		edges = append(edges, edge)
+		edge = edge.Twin.Next
+	}
+	return edges
 }

@@ -41,12 +41,11 @@ func Rect(x, y, w, h float64) *DCEL {
 // in order around one face.
 func FourPoint(p1, p2, p3, p4 Point) *DCEL {
 	dc := new(DCEL)
-	dc.Vertices = make([]*Point, 4)
-	dc.Vertices[0] = &p1
-	dc.Vertices[1] = &p2
-	dc.Vertices[2] = &p3
-	dc.Vertices[3] = &p4
-	dc.OutEdges = make([]*Edge, 4)
+	dc.Vertices = make([]*Vertex, 4)
+	dc.Vertices[0] = &Vertex{p1, nil}
+	dc.Vertices[1] = &Vertex{p2, nil}
+	dc.Vertices[2] = &Vertex{p3, nil}
+	dc.Vertices[3] = &Vertex{p4, nil}
 	dc.HalfEdges = make([]*Edge, 8)
 	dc.Faces = make([]*Face, 2)
 	dc.Faces[0] = NewFace()
@@ -55,17 +54,17 @@ func FourPoint(p1, p2, p3, p4 Point) *DCEL {
 		Origin: dc.Vertices[0],
 		Face:   dc.Faces[0],
 	}
-	dc.OutEdges[0] = dc.HalfEdges[0]
+	dc.Vertices[0].OutEdge = dc.HalfEdges[0]
 	dc.HalfEdges[1] = &Edge{
 		Origin: dc.Vertices[3],
 		Face:   dc.Faces[1],
 	}
-	dc.OutEdges[3] = dc.HalfEdges[1]
+	dc.Vertices[3].OutEdge = dc.HalfEdges[1]
 	dc.HalfEdges[2] = &Edge{
 		Origin: dc.Vertices[1],
 		Face:   dc.Faces[0],
 	}
-	dc.OutEdges[1] = dc.HalfEdges[2]
+	dc.Vertices[1].OutEdge = dc.HalfEdges[2]
 	dc.HalfEdges[3] = &Edge{
 		Origin: dc.Vertices[0],
 		Face:   dc.Faces[1],
@@ -74,7 +73,7 @@ func FourPoint(p1, p2, p3, p4 Point) *DCEL {
 		Origin: dc.Vertices[2],
 		Face:   dc.Faces[0],
 	}
-	dc.OutEdges[2] = dc.HalfEdges[4]
+	dc.Vertices[2].OutEdge = dc.HalfEdges[4]
 	dc.HalfEdges[5] = &Edge{
 		Origin: dc.Vertices[1],
 		Face:   dc.Faces[1],

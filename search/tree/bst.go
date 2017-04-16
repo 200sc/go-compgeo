@@ -73,7 +73,7 @@ func (bst *BST) Insert(inNode search.Node) error {
 	//fmt.Println("Inserting ", inNode)
 	n := new(node)
 	n.key = inNode.Key()
-	n.val = []interface{}{inNode.Val()}
+	n.val = []search.Equalable{inNode.Val()}
 	// We can't do this once we have more than RB trees wow
 	n.payload = red
 	var parent *node
@@ -136,19 +136,12 @@ func (bst *BST) Delete(n search.Node) error {
 		return errors.New("Key not found")
 	}
 	if len(curNode.val) != 1 {
-		// Otherwise if no value to delete was specified, delete
-		// the first value in this list.
-		if v == nil {
-			curNode.val = curNode.val[len(curNode.val)-1:]
-			bst.size--
-			return nil
-		}
-		// Otherwise scan to find the value to delete.
+		// Scan to find the value to delete.
 		// If this becomes a performance hit, the user
 		// should consider whether some part of the value
 		// should not be encoded into the key.
 		for vi := 0; vi < len(curNode.val); vi++ {
-			if curNode.val[vi] == v {
+			if v.Equals(curNode.val[vi]) {
 				curNode.val = append(curNode.val[:vi], curNode.val[vi+1:]...)
 				bst.size--
 				return nil

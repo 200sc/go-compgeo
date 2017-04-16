@@ -25,14 +25,25 @@ func NewSpan() Span {
 // Expand on a Span will reduce or increase
 // a span's min and max values if the input point
 // falls outside of the span on any dimension
-func (sp Span) Expand(p *Point) Span {
+func (sp Span) Expand(p Dimensional) Span {
 	for i := range sp.Min {
-		if p[i] < sp.Min[i] {
-			sp.Min[i] = p[i]
+		v := p.Val(i)
+		if v < sp.Min[i] {
+			sp.Min[i] = v
 		}
-		if p[i] > sp.Max[i] {
-			sp.Max[i] = p[i]
+		if v > sp.Max[i] {
+			sp.Max[i] = v
 		}
+	}
+	return sp
+}
+
+// Bounds on a DCEL returns a Span calculated
+// from every point in the DCEL.
+func (dc *DCEL) Bounds() Span {
+	sp := NewSpan()
+	for _, v := range dc.Vertices {
+		sp.Expand(v)
 	}
 	return sp
 }
@@ -62,7 +73,7 @@ func (p *Point) Bounds() Span {
 // on the edge's origin and it's twin's
 // origin.
 func (e *Edge) Bounds() Span {
-	sp := Span{*(e.Origin), *(e.Origin)}
+	sp := Span{e.Origin.Point, e.Origin.Point}
 	sp.Expand(e.Twin.Origin)
 	return sp
 }

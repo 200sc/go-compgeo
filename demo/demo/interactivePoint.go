@@ -14,7 +14,7 @@ import (
 // InteractivePoint is a struct to wrap around dcel points
 // and extend them to be bindable and have collision space.
 type InteractivePoint struct {
-	*dcel.Point
+	*dcel.Vertex
 	s            *collision.Space
 	cID          event.CID
 	index        int
@@ -31,7 +31,7 @@ func (ip *InteractivePoint) Init() event.CID {
 }
 
 // NewInteractivePoint creates a new ip given a dcel point to base it off of.
-func NewInteractivePoint(v *dcel.Point, i int) *InteractivePoint {
+func NewInteractivePoint(v *dcel.Vertex, i int) *InteractivePoint {
 	ip := new(InteractivePoint)
 	ip.Init()
 	ip.s = collision.NewSpace(0, 0, 1, 1, ip.cID)
@@ -39,7 +39,7 @@ func NewInteractivePoint(v *dcel.Point, i int) *InteractivePoint {
 	ip.cID.Bind(vertexStartDrag, "MousePressOn")
 	ip.cID.Bind(vertexShow, "MouseDragOn")
 	ip.index = i
-	ip.Point = v
+	ip.Vertex = v
 	ip.mousedOverCh = make(chan bool)
 	return ip
 }

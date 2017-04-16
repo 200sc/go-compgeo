@@ -7,8 +7,12 @@ import (
 	"github.com/200sc/go-compgeo/search"
 )
 
-// A Point is just a 3-dimensional point.
-type Point [3]float64
+const (
+	POINT_DIM = 3
+)
+
+// A Point is just a N-dimensional point.
+type Point [POINT_DIM]float64
 
 // NewPoint returns a Point initialized at the given position
 func NewPoint(x, y, z float64) *Point {
@@ -22,6 +26,17 @@ func (dp Point) String() string {
 	s += printutil.Stringf64(dp[0], dp[1], dp[2])
 	s += ")"
 	return s
+}
+
+// D returns the number of dimensions supported by
+// a point.
+func (dp Point) D() int {
+	return POINT_DIM
+}
+
+// Val is equivalent to array access on a point.
+func (dp Point) Val(d int) float64 {
+	return dp[d]
 }
 
 // X :
@@ -42,12 +57,25 @@ func (dp Point) Z() float64 {
 	return dp[2]
 }
 
-// Mid returns the point in the middle of
+// Eq returns whether two points are equivalent.
+func (dp Point) Eq(p2 Dimensional) bool {
+	if dp.D() != p2.D() {
+		return false
+	}
+	for i := range dp {
+		if dp[i] != p2.Val(i) {
+			return false
+		}
+	}
+	return true
+}
+
+// Mid2D returns the point in the middle of
 // this point and p2.
-func (dp Point) Mid(p2 *Point) *Point {
+func (dp Point) Mid2D(p2 D2) *Point {
 	p3 := new(Point)
 	for i := range dp {
-		p3[i] = (dp[i] + (*p2)[i]) / 2
+		p3[i] = (dp[i] + p2.Val(i)) / 2
 	}
 	return p3
 }
@@ -56,12 +84,12 @@ func (dp Point) Mid(p2 *Point) *Point {
 // representing whether this point is above
 // equal or below the query edge.
 func (dp Point) VerticalCompare(e *Edge) search.CompareResult {
-	p1 := e.Origin
-	p2 := e.Twin.Origin
+	p1 := e.Origin.Point
+	p2 := e.Twin.Origin.Point
 	if p1[0] < p2[0] {
 		p1, p2 = p2, p1
 	}
-	s := (p2[0]-p1[0])*(dp[1]-p1[1]) - (p2[1]-p1[1])*(dp[0]-p1[0])
+	s := p1.Cross2D(p2, dp)
 	if s == 0 {
 		return search.Equal
 	} else if s < 0 {
@@ -78,33 +106,33 @@ func (dp Point) Dot2D(p2 *Point) float64 {
 
 // Cross2D performs the Cross Product on the three
 // points, in a two-dimensional context.
-func (dp Point) Cross2D(p2, p3 *Point) float64 {
-	return (p2[0]-dp[0])*(p3[1]-dp[1]) -
-		(p2[1]-dp[1])*(p3[0]-dp[0])
+func (dp Point) Cross2D(p2, p3 D2) float64 {
+	return (p2.X()-dp.X())*(p3.Y()-dp.Y()) -
+		(p2.Y()-dp.Y())*(p3.X()-dp.X())
 }
 
 // Lesser2D reports the lower point by y value,
 // or by x value given equal y values. If the
 // two points are equal the latter point is returned.
-func (dp Point) Lesser2D(p2 *Point) Point {
-	if dp[1] < p2[1] {
+func (dp Point) Lesser2D(p2 D2) D2 {
+	if dp[1] < p2.Val(1) {
 		return dp
-	} else if dp[1] > p2[1] {
-		return *p2
+	} else if dp[1] > p2.Val(1) {
+		return p2
 	}
-	if dp[0] < p2[0] {
+	if dp[0] < p2.Val(0) {
 		return dp
 	}
-	return *p2
+	return p2
 }
 
 // Greater2D reports the higher point by y value,
 // or by x value given equal y values. If the
 // two points are equal the latter point is returned.
-func (dp Point) Greater2D(p2 *Point) Point {
+func (dp Point) Greater2D(p2 D2) D2 {
 	p3 := dp.Lesser2D(p2)
-	if p3 == dp {
-		return *p2
+	if p3.Eq(dp) {
+		return p2
 	}
 	return dp
 }

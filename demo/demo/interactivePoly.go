@@ -44,9 +44,9 @@ func (ip *InteractivePolyhedron) UpdateSpaces() {
 		if ip.vs[i] == nil {
 			ip.vs[i] = NewInteractivePoint(v, i)
 		}
-		ip.vs[i].Point = v
-		mouse.UpdateSpace(ip.X+(v[0]-vCollisionDim/2),
-			ip.Y+(v[1]-vCollisionDim/2),
+		ip.vs[i].Vertex = v
+		mouse.UpdateSpace(ip.X+(v.X()-vCollisionDim/2),
+			ip.Y+(v.Y()-vCollisionDim/2),
 			vCollisionDim, vCollisionDim, ip.vs[i].s)
 	}
 }

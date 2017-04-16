@@ -8,31 +8,6 @@ import (
 	"strings"
 )
 
-// TypeError is returned when some input to be
-// read is improperly formatted for the expected type.
-type TypeError struct{}
-
-func (fte TypeError) Error() string {
-	return "The input was not of the expected type, or was malformed"
-}
-
-// EmptyError is returned when some input to be read
-// did not have any contents.
-type EmptyError struct{}
-
-func (ee EmptyError) Error() string {
-	return "The input was empty"
-}
-
-// NotManifoldError is returned when it is detected
-// that the input shape to ReadOFF was not possible
-// Euclidean geometry.
-type NotManifoldError struct{}
-
-func (nme NotManifoldError) Error() string {
-	return "The given shape was not manifold"
-}
-
 // LoadOFF loads Object File Format files. This function
 // is modeled after Ryan Holmes' C++ code, http://www.holmes3d.net/graphics/offfiles/
 func LoadOFF(file string) (*DCEL, error) {
@@ -78,7 +53,7 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 	var edge *Edge
 	var face *Face
 
-	dc.Vertices = make([]*Point, numVertices)
+	dc.Vertices = make([]*Vertex, numVertices)
 
 	// Read numVertices lines as vertices
 	// Each vertex is represented as three numbers,
@@ -88,17 +63,15 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 		if err != nil {
 			return nil, err
 		}
-		dc.Vertices[i] = NewPoint(fs[0], fs[1], fs[2])
+		dc.Vertices[i] = NewVertex(fs[0], fs[1], fs[2])
 	}
 
 	var vi int
 
-	dc.OutEdges = make([]*Edge, numVertices)
-
 	edges := make([]*Edge, numEdges)
 	edgeIndex := 0
 	dc.Faces = make([]*Face, numFaces+1)
-	auxData := make(map[*Point][]*Edge)
+	auxData := make(map[*Vertex][]*Edge)
 
 	// Faces are represented by a count of edges followed
 	// by a list of vertex indices
@@ -125,7 +98,7 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 		vi = fs[0]
 
 		edge.Origin = dc.Vertices[vi]
-		dc.OutEdges[vi] = edge
+		dc.Vertices[vi].OutEdge = edge
 
 		aux := auxData[dc.Vertices[vi]]
 		if aux == nil {
@@ -145,7 +118,7 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 			vi = fs[j]
 
 			edge.Origin = dc.Vertices[vi]
-			dc.OutEdges[vi] = edge
+			dc.Vertices[vi].OutEdge = edge
 
 			aux := auxData[dc.Vertices[vi]]
 			if aux == nil {

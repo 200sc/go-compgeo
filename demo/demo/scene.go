@@ -31,11 +31,11 @@ var (
 	offFile                 = filepath.Join("data", "A.off")
 	mode                    = ROTATE
 	loopDemo        bool
-	firstAddedPoint int
+	firstAddedPoint *dcel.Vertex
 	prev            *dcel.Edge
 	addedFace       *dcel.Face
 	mouseZ          = 0.0
-	faceVertices    = make(map[*dcel.Point]bool)
+	faceVertices    = make(map[*dcel.Vertex]bool)
 	err             error
 	mouseStr        *render.IFText
 	modeStr         *render.Text

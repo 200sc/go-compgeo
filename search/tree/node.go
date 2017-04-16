@@ -12,7 +12,7 @@ type node struct {
 	// eventually key should be a comparable interface
 	// but that would probably poorly effect performance
 	key search.Comparable
-	val []interface{}
+	val []search.Equalable
 	// Each tree type might have a different payload on each node
 	// a good example of this is RED or BLACK on RBtrees.
 	payload interface{}
@@ -24,7 +24,7 @@ func (n *node) Key() search.Comparable {
 	return n.key
 }
 
-func (n *node) Val() interface{} {
+func (n *node) Val() search.Equalable {
 	return n.val[0]
 }
 
