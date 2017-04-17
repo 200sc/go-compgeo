@@ -97,6 +97,28 @@ func (dc *DCEL) ScanFaces(f *Face) int {
 	return -1
 }
 
+// FullEdge returns the ith edge in the form of its
+// two vertices
+func (dc *DCEL) FullEdge(i int) ([2]*Vertex, error) {
+	if i >= len(dc.HalfEdges) {
+		return [2]*Vertex{}, BadEdgeError{}
+	}
+	return dc.HalfEdges[i].FullEdge()
+}
+
+// FullEdges returns the set of all FullEdges in DCEL.
+func (dc *DCEL) FullEdges() ([]FullEdge, error) {
+	var err error
+	fullEdges := make([]FullEdge, len(dc.HalfEdges)/2)
+	for i := 0; i < len(dc.HalfEdges); i += 2 {
+		fullEdges[i], err = dc.HalfEdges[i].FullEdge()
+		if err != nil {
+			return nil, err
+		}
+	}
+	return fullEdges, nil
+}
+
 // CorrectDirectionality (rather innefficently)
 // ensures that a face has the right clockwise/
 // counter-clockwise orientation based on

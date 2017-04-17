@@ -56,13 +56,9 @@ func EdgeTwin(i int) int {
 	return i - 1
 }
 
-// FullEdge returns the ith edge in the form of its
+// FullEdge returns this edge with its twin in the form of its
 // two vertices
-func (d *DCEL) FullEdge(i int) ([2]*Vertex, error) {
-	if i >= len(d.HalfEdges) {
-		return [2]*Vertex{}, BadEdgeError{}
-	}
-	e := d.HalfEdges[i]
+func (e *Edge) FullEdge() ([2]*Vertex, error) {
 	e2 := e.Twin
 	if e2 == nil {
 		return [2]*Vertex{}, BadEdgeError{}
@@ -169,7 +165,6 @@ func (e *Edge) Flip() {
 	// 	}
 	// }
 }
-
 
 // PointAt returns the point at a given position on some
 // d dimension along this edge. I.E. for d = 0, v = 5,
