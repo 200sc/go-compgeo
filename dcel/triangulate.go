@@ -75,34 +75,3 @@ package dcel
 //   nmonpoly = monotonate_trapezoids(n)
 //   triangulate_monotone_polygons(n, nmonpoly, triangles)
 // }
-
-type Trapezoid struct {
-	Left, Right          *Edge
-	MinY, MaxY           float64
-	Valid                bool
-	u0, u1, uSave, uSide int
-	d0, d1               int
-	sink                 *Node
-}
-
-type NodeType int
-
-// NodeType const
-const (
-	T_X NodeType = iota
-	T_Y
-	T_SINK
-)
-
-type Node struct {
-	e                   *Edge
-	t                   *Trapezoid
-	typ                 NodeType
-	yval                Point
-	parent, left, right *Node
-}
-
-type TrapEdge struct {
-	*Edge
-	r0, r1 *Node
-}

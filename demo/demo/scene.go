@@ -2,6 +2,7 @@ package demo
 
 import (
 	"fmt"
+	"image/color"
 	"log"
 	"math"
 	"os"
@@ -76,6 +77,16 @@ func InitScene(prevScene string, data interface{}) {
 		dcel.Point{0, 0, 0}, 3, 465)
 	render.Draw(mouseStr, 3)
 
+	clrBtn := NewButton(clear, font)
+	clrBtn.SetLogicDim(70, 20)
+	clrBtn.SetRenderable(render.NewColorBox(int(clrBtn.W), int(clrBtn.H), color.RGBA{50, 50, 100, 255}))
+	clrBtn.SetPos(560, 450)
+	clrBtn.TxtX = 10
+	clrBtn.TxtY = 5
+	clrBtn.SetString("Clear")
+	fmt.Println(clrBtn.Space)
+
+	event.GlobalBind(clear, "Clear")
 	event.GlobalBind(vertexStopDrag, "MouseRelease")
 	event.GlobalBind(func(no int, nothing interface{}) int {
 		mode = (mode + 1) % LAST_MODE
@@ -129,7 +140,13 @@ func AddCommands() {
 		}
 	})
 	oak.AddCommand("clear", func(strs []string) {
-		offFile = "none"
-		loopDemo = false
+		event.Trigger("Clear", nil)
 	})
+}
+
+func clear(no int, nothing interface{}) int {
+	fmt.Println("Yup")
+	offFile = "none"
+	loopDemo = false
+	return 0
 }

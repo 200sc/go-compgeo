@@ -44,6 +44,9 @@ type LocatesPoints interface {
 // The real difficulties in Slab Decomposition are all in the
 // persistent bst itself, so this is a fairly simple function.
 func (dc *DCEL) SlabDecompose(bstType tree.Type) (LocatesPoints, error) {
+	if dc == nil || len(dc.Vertices) < 3 {
+		return nil, BadDCELError{}
+	}
 	t := tree.New(bstType).ToPersistent()
 	// Sort points in order of X value
 	pts := make([]int, len(dc.Vertices))

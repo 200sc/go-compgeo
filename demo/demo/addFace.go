@@ -127,15 +127,17 @@ func addFace(cID int, ev interface{}) int {
 			sd, err := phd.SlabDecompose(tree.RedBlack)
 			if err != nil {
 				fmt.Println(err)
-			} else {
-				fmt.Println(sd.(*dcel.SlabPointLocator))
+				return 0
 			}
+			fmt.Println(sd.(*dcel.SlabPointLocator))
+
 			f, _ := sd.PointLocate(mx, my)
 			if f == phd.Faces[0] || f == nil {
 				fmt.Println("Outer/No Face")
 			} else {
 				faceIndex := phd.ScanFaces(f)
 				phd.FaceColors[faceIndex] = color.RGBA{255, 0, 0, 255}
+
 				timing.DoAfter(50*time.Millisecond, func() {
 					phd.Update()
 				})

@@ -118,3 +118,55 @@ func (dc *DCEL) CorrectDirectionality(f *Face) {
 
 	}
 }
+
+func (dc *DCEL) Copy() *DCEL {
+	dc2 := new(DCEL)
+	dc2.Faces = make([]*Face, len(dc.Faces))
+	dc2.HalfEdges = make([]*Edge, len(dc.HalfEdges))
+	dc2.Vertices = make([]*Vertex, len(dc.Vertices))
+	ePointerMap := make(map[*Edge]int)
+	fPointerMap := make(map[*Face]int)
+	vPointerMap := make(map[*Vertex]int)
+	for i, e := range dc.HalfEdges {
+		ePointerMap[e] = i
+		dc2.HalfEdges[i] = NewEdge()
+	}
+	for i, f := range dc.Faces {
+		fPointerMap[f] = i
+		f2 := NewFace()
+		dc2.Faces[i] = f2
+		if f.Outer != nil {
+			f2.Outer = dc2.HalfEdges[ePointerMap[f.Outer]]
+			f2.Outer.Face = f2
+		}
+		if f.Inner != nil {
+			f2.Inner = dc2.HalfEdges[ePointerMap[f.Inner]]
+			f2.Inner.Face = f2
+		}
+	}
+	for i, v := range dc.Vertices {
+		vPointerMap[v] = i
+		v2 := NewVertex(v.X(), v.Y(), v.Z())
+		dc2.Vertices[i] = v2
+		if v.OutEdge != nil {
+			v2.OutEdge = dc2.HalfEdges[ePointerMap[v.OutEdge]]
+		}
+	}
+	for i, e := range dc.HalfEdges {
+		e2 := dc2.HalfEdges[i]
+		if e.Prev != nil {
+			e2.Prev = dc2.HalfEdges[ePointerMap[e.Prev]]
+		}
+		if e.Next != nil {
+			e2.Next = dc2.HalfEdges[ePointerMap[e.Next]]
+		}
+		if e.Twin != nil {
+			e2.Twin = dc2.HalfEdges[ePointerMap[e.Twin]]
+		}
+		if e.Origin != nil {
+			e2.Origin = dc2.Vertices[vPointerMap[e.Origin]]
+		}
+	}
+
+	return dc2
+}

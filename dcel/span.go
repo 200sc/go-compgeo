@@ -38,6 +38,19 @@ func (sp Span) Expand(p Dimensional) Span {
 	return sp
 }
 
+func (sp Span) ToTrapezoid() *Trapezoid {
+	return &Trapezoid{
+		nil,
+		nil,
+		sp.Min.Y(),
+		sp.Max.Y(),
+		true,
+		// What even are these
+		0, 0, 0, 0, 0, 0,
+		nil,
+	}
+}
+
 // Bounds on a DCEL returns a Span calculated
 // from every point in the DCEL.
 func (dc *DCEL) Bounds() Span {

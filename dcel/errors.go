@@ -61,3 +61,13 @@ type InsufficientDimensionsError struct{}
 func (ide InsufficientDimensionsError) Error() string {
 	return "Not enough dimensions were supplied to the function"
 }
+
+// BadDCELError is returned when a query needs access to eleemnts
+// of a DCEL that are not defined on a given DCEL. A good example
+// would be that most queries would expect a DCEL to have at least
+// three vertices.
+type BadDCELError struct{}
+
+func (bde BadDCELError) Error() string {
+	return "The input DCEL was not valid"
+}
