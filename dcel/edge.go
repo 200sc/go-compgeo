@@ -58,14 +58,14 @@ func EdgeTwin(i int) int {
 
 // FullEdge returns this edge with its twin in the form of its
 // two vertices
-func (e *Edge) FullEdge() ([2]*Vertex, error) {
+func (e *Edge) FullEdge() (FullEdge, error) {
 	e2 := e.Twin
 	if e2 == nil {
-		return [2]*Vertex{}, BadEdgeError{}
+		return FullEdge{}, BadEdgeError{}
 	}
-	return [2]*Vertex{
-		e.Origin,
-		e2.Origin}, nil
+	return FullEdge{
+		e.Origin.Point,
+		e2.Origin.Point}, nil
 }
 
 // Mid2D returns the midpoint of an Edge
@@ -207,6 +207,16 @@ func (e *Edge) X() float64 {
 // Z redirects to Origin.Z
 func (e *Edge) Z() float64 {
 	return e.Origin.Z()
+}
+
+func (e *Edge) Val(d int) float64 {
+	return e.Origin.Val(d)
+}
+func (e *Edge) D() int {
+	return e.Origin.D()
+}
+func (e *Edge) Eq(e2 Dimensional) bool {
+	return e.Origin.Eq(e2)
 }
 
 // AllEdges on an edge is equivalent to e.Origin.AllEdges,

@@ -107,8 +107,7 @@ func (dp Point) Dot2D(p2 *Point) float64 {
 // Cross2D performs the Cross Product on the three
 // points, in a two-dimensional context.
 func (dp Point) Cross2D(p2, p3 D2) float64 {
-	return (p2.X()-dp.X())*(p3.Y()-dp.Y()) -
-		(p2.Y()-dp.Y())*(p3.X()-dp.X())
+	return Cross2D(dp, p2, p3)
 }
 
 // Lesser2D reports the lower point by y value,

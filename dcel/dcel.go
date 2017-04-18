@@ -99,9 +99,9 @@ func (dc *DCEL) ScanFaces(f *Face) int {
 
 // FullEdge returns the ith edge in the form of its
 // two vertices
-func (dc *DCEL) FullEdge(i int) ([2]*Vertex, error) {
+func (dc *DCEL) FullEdge(i int) (FullEdge, error) {
 	if i >= len(dc.HalfEdges) {
-		return [2]*Vertex{}, BadEdgeError{}
+		return FullEdge{}, BadEdgeError{}
 	}
 	return dc.HalfEdges[i].FullEdge()
 }

@@ -23,32 +23,57 @@ func NewSpan() Span {
 }
 
 // Expand on a Span will reduce or increase
-// a span's min and max values if the input point
+// a span's min and max values if the input points
 // falls outside of the span on any dimension
-func (sp Span) Expand(p Dimensional) Span {
-	for i := range sp.Min {
-		v := p.Val(i)
-		if v < sp.Min[i] {
-			sp.Min[i] = v
-		}
-		if v > sp.Max[i] {
-			sp.Max[i] = v
+func (sp Span) Expand(ps ...Dimensional) Span {
+	for _, p := range ps {
+		for i := range sp.Min {
+			v := p.Val(i)
+			if v < sp.Min[i] {
+				sp.Min[i] = v
+			}
+			if v > sp.Max[i] {
+				sp.Max[i] = v
+			}
 		}
 	}
 	return sp
 }
 
-func (sp Span) ToTrapezoid() *Trapezoid {
-	return &Trapezoid{
-		nil,
-		nil,
-		sp.Min.Y(),
-		sp.Max.Y(),
-		true,
-		// What even are these
-		0, 0, 0, 0, 0, 0,
-		nil,
-	}
+func (sp Span) Trapezoid() *Trapezoid {
+	return nil
+}
+
+func (sp Span) Lesser(d int) Point {
+	return sp.Min
+}
+
+func (sp Span) Greater(d int) Point {
+	return sp.Max
+}
+
+func (sp Span) Left() Point {
+	return sp.Lesser(0)
+}
+
+func (sp Span) Right() Point {
+	return sp.Greater(0)
+}
+
+func (sp Span) Top() Point {
+	return sp.Greater(1)
+}
+
+func (sp Span) Bottom() Point {
+	return sp.Lesser(1)
+}
+
+func (sp Span) Outer() Point {
+	return sp.Lesser(2)
+}
+
+func (sp Span) Inner() Point {
+	return sp.Greater(2)
 }
 
 // Bounds on a DCEL returns a Span calculated
@@ -86,7 +111,7 @@ func (p *Point) Bounds() Span {
 // on the edge's origin and it's twin's
 // origin.
 func (e *Edge) Bounds() Span {
-	sp := Span{e.Origin.Point, e.Origin.Point}
-	sp.Expand(e.Twin.Origin)
+	sp := NewSpan()
+	sp.Expand(e.Origin, e.Twin.Origin)
 	return sp
 }
