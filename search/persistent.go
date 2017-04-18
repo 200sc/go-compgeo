@@ -25,6 +25,7 @@ type DynamicPersistent interface {
 	Persistent
 	Dynamic
 	AtInstant(float64) Dynamic
+	ThisInstant() Dynamic
 	ToStaticPersitent() StaticPersistent
 }
 

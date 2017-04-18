@@ -5,10 +5,6 @@ import (
 	"math"
 )
 
-const (
-	ε = 1.0e-7
-)
-
 // A DCEL is a structure representin arbitrary plane
 // divisions and 3d polytopes. Its values are relatively
 // self-explanatory but constructing it is significantly

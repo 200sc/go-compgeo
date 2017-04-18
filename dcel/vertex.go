@@ -50,12 +50,13 @@ func (v *Vertex) PartitionEdges(d int) (lesser []*Edge,
 		// Potential issue:
 		// Will something bad happen if there are multiple
 		// elements with the same value in this dimension?
-		if e2.Origin.Val(d) < checkAgainst {
+		// Answer: Yes yes yes
+		if f64eq(e2.Origin.Val(d), checkAgainst) {
+			colinear = append(colinear, e1)
+		} else if e2.Origin.Val(d) < checkAgainst {
 			lesser = append(lesser, e1)
 		} else if e2.Origin.Val(d) > checkAgainst {
 			greater = append(greater, e1)
-		} else {
-			colinear = append(colinear, e1)
 		}
 	}
 	return

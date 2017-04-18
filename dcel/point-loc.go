@@ -72,14 +72,14 @@ OUTER:
 		j := i - 1
 		prevX := dc.Vertices[pts[j]].X()
 		thisX := dc.Vertices[pts[i]].X()
-		for thisX == prevX {
+		for f64eq(thisX, prevX) {
 			i++
 			if i == len(pts) {
 				break OUTER
 			}
 			thisX = dc.Vertices[pts[i]].X()
 		}
-		compXMap[prevX] = (prevX + thisX) / 2
+		compXMap[toFixed(prevX, 5)] = (prevX + thisX) / 2
 		i++
 	}
 	compXMap[dc.Vertices[pts[len(pts)-1]].X()] = -1
@@ -100,7 +100,7 @@ OUTER:
 		// attempt to add edges to a tree which contains edges
 		// point to the left of v[0]
 		vs := []*Vertex{v}
-		for (i+1) < len(pts) && dc.Vertices[pts[i+1]].X() == v.X() {
+		for (i+1) < len(pts) && f64eq(dc.Vertices[pts[i+1]].X(), v.X()) {
 			i++
 			p = pts[i]
 			vs = append(vs, dc.Vertices[p])
@@ -124,10 +124,10 @@ OUTER:
 		// Remove all edges from the PersistentBST connecting to the left
 		// of the points
 		for _, e := range le {
-			fmt.Println("Removing", e.Twin)
-			err := t.Delete(shellNode{compEdge{e.Twin, compXMap[e.Twin.Origin.X()]}, search.Nil{}})
+			fmt.Println("Removing", e.Twin, compXMap[e.Twin.Origin.X()], compXMap[toFixed(e.Twin.Origin.X(), 5)])
+			err := t.Delete(shellNode{compEdge{e.Twin, compXMap[toFixed(e.Twin.Origin.X(), 5)]}, search.Nil{}})
 			fmt.Println("Remove result", err)
-			fmt.Println(t)
+			fmt.Println(t.ThisInstant())
 
 		}
 		// Add all edges to the PersistentBST connecting to the right
@@ -139,10 +139,10 @@ OUTER:
 			// locate to the edge above the query point. Returning an
 			// edge for a query represents that the query is below
 			// the edge,
-			fmt.Println("Adding", e, "at", v.X())
-			t.Insert(shellNode{compEdge{e, compXMap[v.X()]},
+			fmt.Println("Adding", e, "at", toFixed(v.X(), 5))
+			t.Insert(shellNode{compEdge{e, compXMap[toFixed(v.X(), 5)]},
 				faces{e.Face, e.Twin.Face}})
-			fmt.Println(t)
+			fmt.Println(t.ThisInstant())
 		}
 
 		i++
@@ -163,10 +163,13 @@ func (ce compEdge) Compare(i interface{}) search.CompareResult {
 	case compEdge:
 		fmt.Println("Comparing", ce, c)
 		if ce.Edge == c.Edge {
+			fmt.Println("Equal1!")
 			return search.Equal
 		}
-		if ce.X() == c.X() && ce.Y() == c.Y() &&
-			ce.Twin.X() == c.Twin.X() && ce.Twin.Y() == c.Twin.Y() {
+
+		if f64eq(ce.X(), c.X()) && f64eq(ce.Y(), c.Y()) &&
+			f64eq(ce.Twin.X(), c.Twin.X()) && f64eq(ce.Twin.Y(), c.Twin.Y()) {
+			fmt.Println("Equal2!")
 			return search.Equal
 		}
 		compX := ce.x
@@ -176,14 +179,18 @@ func (ce compEdge) Compare(i interface{}) search.CompareResult {
 		p1, err := ce.PointAt(0, compX)
 		if err != nil {
 			fmt.Println("compX", compX, "not on point ", ce)
+			return search.Less
 		}
 		p2, err := c.PointAt(0, compX)
 		if err != nil {
 			fmt.Println("compX", compX, "not on point ", c)
-		}
-		if p1[1] < p2[1] {
 			return search.Less
 		}
+		if p1[1] < p2[1] {
+			fmt.Println("Less!")
+			return search.Less
+		}
+		fmt.Println("Greater!")
 		return search.Greater
 	}
 	return ce.Edge.Compare(i)

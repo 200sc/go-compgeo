@@ -1,69 +1,67 @@
 package dcel
 
-import "math/rand"
+// func (dc *DCEL) TrapezoidalMap() (*DCEL, error) {
+// 	bounds := dc.Bounds()
+// 	// Scramble the edges of a new DCEL
+// 	Traps := []*Trapezoid{}
+// 	Traps = append(Traps, bounds.Trapezoid())
 
-func (dc *DCEL) TrapezoidalMap() (*DCEL, error) {
-	bounds := dc.Bounds()
-	// Scramble the edges of a new DCEL
-	Traps := []*Trapezoid{}
-	Traps = append(Traps, bounds.Trapezoid())
+// 	Search := NewRoot()
+// 	Search.left = NewTrapNode(Traps[0])
 
-	Search := NewRoot()
-	Search.left = NewTrapNode(Traps[0])
+// 	dc = dc.Copy()
+// 	fullEdges, err := dc.FullEdges()
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	dc = dc.Copy()
-	fullEdges, err := dc.FullEdges()
-	if err != nil {
-		return nil, err
-	}
+// 	// Scramble the edges
+// 	for i := range fullEdges {
+// 		j := i + rand.Intn(len(fullEdges)-i)
+// 		fullEdges[i], fullEdges[j] = fullEdges[j], fullEdges[i]
+// 	}
+// 	for _, fe := range fullEdges {
+// 		// 1: Find the trapezoids intersected by fe
+// 		trs := Search.Query(fe)
+// 		// 2: Remove those and replace them with what they become
+// 		//    due to the intersection of halfEdges[i]
 
-	// Scramble the edges
-	for i := range fullEdges {
-		j := i + rand.Intn(len(fullEdges)-i)
-		fullEdges[i], fullEdges[j] = fullEdges[j], fullEdges[i]
-	}
-	for _, fe := range fullEdges {
-		// 1: Find the trapezoids intersected by fe
-		trs := Search.Query(fe)
-		// 2: Remove those and replace them with what they become
-		//    due to the intersection of halfEdges[i]
+// 		// Case A: A fe is contained in a single trapezoid tr
+// 		// Then we make (up to) four trapezoids out of tr.
+// 		if len(trs) == 1 {
+// 			mapSingleCase(trs[0], fe)
+// 		} else {
+// 			lp := fe.Left()
+// 			rp := fe.Right()
+// 			// Case B: fe is contained by more than one trapezoid
+// 			// Step 1: if either fe.Left() or fe.Right() is not already
+// 			// in the search structure, we define three new trapezoids by
+// 			// drawing rays up and down from each new point.
+// 			var l, u, b, r *Trapezoid
+// 			var ln, un, bn, rn *TrapezoidNode
+// 			var y *TrapezoidNode
+// 			tr0 := trs[0]
+// 			if !tr0.HasDefinedPoint(lp) {
+// 				x := NewX(lp)
+// 				y = NewY(fe)
+// 				l = tr0.Copy()
+// 				p1, _ := tr0.Edges[top].PointAt(0, lp.X())
+// 				p2, _ := tr0.Edges[bot].PointAt(0, lp.X())
+// 				l.Edges[right] = FullEdge{*p1, *p2}
+// 				ln = NewTrapNode(l)
+// 				tr0.Discard(x)
+// 				x.left = ln
+// 				x.right = y
 
-		// Case A: A fe is contained in a single trapezoid tr
-		// Then we make (up to) four trapezoids out of tr.
-		if len(trs) == 1 {
-			mapSingleCase(trs[0], fe)
-		} else {
-			lp := fe.Left()
-			rp := fe.Right()
-			// Case B: fe is contained by more than one trapezoid
-			// Step 1: if either fe.Left() or fe.Right() is not already
-			// in the search structure, we define three new trapezoids by
-			// drawing rays up and down from each new point.
-			var l, u, b, r *Trapezoid
-			var ln, un, bn, rn *TrapezoidNode
-			var y *TrapezoidNode
-			tr0 := trs[0]
-			if !tr0.HasDefinedPoint(lp) {
-				x := NewX(lp)
-				y = NewY(fe)
-				l = tr0.Copy()
-				p1, _ := tr0.Edges[top].PointAt(0, lp.X())
-				p2, _ := tr0.Edges[bot].PointAt(0, lp.X())
-				l.Edges[right] = FullEdge{*p1, *p2}
-				ln = NewTrapNode(l)
-				tr0.Discard(x)
-				x.left = ln
-				x.right = y
+// 			}
+// 			trn := trs[len(trs)-1]
+// 			if !trn.HasDefinedPoint(fe.Right()) {
 
-			}
-			trn := trs[len(trs)-1]
-			if !trn.HasDefinedPoint(fe.Right()) {
-
-			}
-		}
-	}
-	return dc, nil
-}
+// 			}
+// 		}
+// 	}
+// 	return dc, nil
+// }
 
 func mapSingleCase(tr *Trapezoid, fe FullEdge) {
 	lp := fe.Left()

@@ -19,6 +19,10 @@ type BSTInstant struct {
 	instant float64
 }
 
+func (pbst *PersistentBST) ThisInstant() search.Dynamic {
+	return pbst.instants[pbst.index]
+}
+
 func (pbst *PersistentBST) AtInstant(ins float64) search.Dynamic {
 	// binary search
 	bot := 0
