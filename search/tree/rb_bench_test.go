@@ -59,7 +59,7 @@ func randomInput() []testNode {
 	for i := range randomInput {
 		randomInput[i] = testNode{
 			compFloat(float64(rand.Intn(randomInputRange))),
-			float64(rand.Intn(randomInputRange)),
+			compFloat(float64(rand.Intn(randomInputRange))),
 		}
 	}
 	return randomInput
@@ -70,7 +70,7 @@ func randomInputNoDupes() []testNode {
 	for i := range randomInput {
 		randomInput[i] = testNode{
 			compFloat(float64(i)),
-			float64(i),
+			compFloat(float64(i)),
 		}
 	}
 	return randomInput
@@ -108,10 +108,10 @@ func benchmarkRBStatic(b *testing.B, input []testNode, inputLimit int) {
 }
 
 func benchmarkMap(b *testing.B, input []testNode, inputLimit int) {
-	m := make(map[search.Comparable]map[float64]bool)
+	m := make(map[search.Comparable]map[search.Equalable]bool)
 	for _, v := range input {
 		if _, ok := m[v.key]; !ok {
-			m[v.key] = make(map[float64]bool)
+			m[v.key] = make(map[search.Equalable]bool)
 		}
 		m[v.key][v.val] = true
 	}

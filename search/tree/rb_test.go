@@ -17,8 +17,8 @@ func (n nilValNode) Key() search.Comparable {
 	return n.key
 }
 
-func (n nilValNode) Val() interface{} {
-	return nil
+func (n nilValNode) Val() search.Equalable {
+	return search.Nil{}
 }
 
 type compFloat float64
@@ -45,16 +45,24 @@ func (f compFloat) String() string {
 	return printutil.Stringf64(float64(f))
 }
 
+func (f compFloat) Equals(e search.Equalable) bool {
+	switch f2 := e.(type) {
+	case compFloat:
+		return f == f2
+	}
+	return false
+}
+
 type testNode struct {
 	key compFloat
-	val float64
+	val compFloat
 }
 
 func (t testNode) Key() search.Comparable {
 	return t.key
 }
 
-func (t testNode) Val() interface{} {
+func (t testNode) Val() search.Equalable {
 	return t.val
 }
 
@@ -181,17 +189,17 @@ func TestPredSucc(t *testing.T) {
 		tree.Insert(v)
 	}
 
-	v := tree.SearchUp(9.5)
-	assert.Equal(t, v, float64(1))
-	v = tree.SearchDown(9.5)
-	assert.Equal(t, v, float64(2))
+	_, v := tree.SearchUp(9.5)
+	assert.Equal(t, v, compFloat(1))
+	_, v = tree.SearchDown(9.5)
+	assert.Equal(t, v, compFloat(2))
 
 	t2 := tree.ToStatic()
 
-	v = t2.SearchUp(9.5)
-	assert.Equal(t, v, float64(1))
-	v = t2.SearchDown(9.5)
-	assert.Equal(t, v, float64(2))
+	_, v = t2.SearchUp(9.5)
+	assert.Equal(t, v, compFloat(1))
+	_, v = t2.SearchDown(9.5)
+	assert.Equal(t, v, compFloat(2))
 
 }
 
@@ -201,7 +209,7 @@ func TestRBRandomInput(t *testing.T) {
 	for i := 0; i < randomInputCt; i++ {
 		n := testNode{
 			compFloat(float64(rand.Intn(randomInputRange))),
-			float64(rand.Intn(randomInputRange)),
+			compFloat(float64(rand.Intn(randomInputRange))),
 		}
 		t.Log("Inserting", n)
 		tree.Insert(n)
@@ -232,7 +240,7 @@ func TestRBToStatic(t *testing.T) {
 	for i := 0; i < randomInputCt; i++ {
 		n := testNode{
 			compFloat(float64(rand.Intn(randomInputRange))),
-			float64(rand.Intn(randomInputRange)),
+			compFloat(float64(rand.Intn(randomInputRange))),
 		}
 		inserted[n.key] = true
 		tree.Insert(n)

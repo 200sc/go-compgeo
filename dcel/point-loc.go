@@ -173,18 +173,32 @@ func (ce compEdge) Compare(i interface{}) search.CompareResult {
 			return search.Equal
 		}
 		compX := ce.x
+		compXbackup := c.x
 		if c.x > compX {
 			compX = c.x
+			compXbackup = ce.x
 		}
+		tryBackup := false
 		p1, err := ce.PointAt(0, compX)
 		if err != nil {
 			fmt.Println("compX", compX, "not on point ", ce)
-			return search.Less
+			tryBackup = true
 		}
 		p2, err := c.PointAt(0, compX)
 		if err != nil {
 			fmt.Println("compX", compX, "not on point ", c)
-			return search.Less
+			tryBackup = true
+		}
+		if tryBackup {
+			compX = compXbackup
+			p1, err = ce.PointAt(0, compX)
+			if err != nil {
+				fmt.Println("Backup", compX, "not on point ", ce)
+			}
+			p2, err = c.PointAt(0, compX)
+			if err != nil {
+				fmt.Println("Backup", compX, "not on point ", c)
+			}
 		}
 		if p1[1] < p2[1] {
 			fmt.Println("Less!")
