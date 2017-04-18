@@ -3,10 +3,11 @@ package demo
 import (
 	"fmt"
 	"image/color"
-	"log"
 	"math"
 	"os"
 	"path/filepath"
+
+	"golang.org/x/sync/syncmap"
 
 	"bitbucket.org/oakmoundstudio/oak"
 	"bitbucket.org/oakmoundstudio/oak/event"
@@ -36,7 +37,7 @@ var (
 	prev            *dcel.Edge
 	addedFace       *dcel.Face
 	mouseZ          = 0.0
-	faceVertices    = make(map[*dcel.Vertex]bool)
+	faceVertices    = &syncmap.Map{}
 	err             error
 	mouseStr        *render.IFText
 	modeStr         *render.Text
@@ -55,7 +56,8 @@ func InitScene(prevScene string, data interface{}) {
 	} else {
 		dc, err = dcel.LoadOFF(offFile)
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println("Unable to load", offFile, ":", err)
+			dc = dcel.New()
 		}
 	}
 	phd := new(InteractivePolyhedron)
@@ -67,7 +69,6 @@ func InitScene(prevScene string, data interface{}) {
 	render.Draw(phd, 2)
 
 	fg := render.FontGenerator{File: "luxisr.ttf", Color: render.FontColor("white"), Size: 12}
-	fmt.Println("Making the totally not default font")
 	font = fg.Generate()
 
 	modeStr = font.NewText(mode.String(), 3, 40)

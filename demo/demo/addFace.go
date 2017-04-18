@@ -5,6 +5,8 @@ import (
 	"image/color"
 	"time"
 
+	"golang.org/x/sync/syncmap"
+
 	"bitbucket.org/oakmoundstudio/oak/event"
 	"bitbucket.org/oakmoundstudio/oak/mouse"
 	"bitbucket.org/oakmoundstudio/oak/timing"
@@ -25,19 +27,19 @@ func addFace(cID int, ev interface{}) int {
 			// Need a real copy function
 			//undoPhd = append(undoPhd, *phd)
 
-			faceVertices = make(map[*dcel.Vertex]bool)
+			faceVertices = &syncmap.Map{}
 			// Add Case A: The first point of the face
 			// already exists.
 			hits := mouse.Hits(me.ToSpace())
 			if len(hits) > 0 {
 				ip := event.GetEntity(int(hits[0].CID)).(*InteractivePoint)
 				firstAddedPoint = ip.Vertex
-				faceVertices[firstAddedPoint] = true
+				faceVertices.Store(firstAddedPoint, true)
 				mouseZ = firstAddedPoint.Z()
 			} else {
 				firstAddedPoint = dcel.NewVertex(mx, my, mouseZ)
 				phd.Vertices = append(phd.Vertices, firstAddedPoint)
-				faceVertices[phd.Vertices[len(phd.Vertices)-1]] = true
+				faceVertices.Store(phd.Vertices[len(phd.Vertices)-1], true)
 			}
 			phd.HalfEdges = append(phd.HalfEdges, dcel.NewEdge())
 			prev = phd.HalfEdges[len(phd.HalfEdges)-1]
@@ -75,15 +77,16 @@ func addFace(cID int, ev interface{}) int {
 				p = ip.Vertex
 				// Add Case F: this point already exists in this
 				// face. Reject it.
-				if _, ok := faceVertices[p]; ok {
+				_, ok := faceVertices.Load(p)
+				if ok {
 					return 0
 				}
-				faceVertices[p] = true
+				faceVertices.Store(p, true)
 				mouseZ = p.Z()
 			} else {
 				p = dcel.NewVertex(mx, my, mouseZ)
 				phd.Vertices = append(phd.Vertices, p)
-				faceVertices[p] = true
+				faceVertices.Store(p, true)
 			}
 			// This twin points from the new point to the previous point.
 			phd.HalfEdges = append(phd.HalfEdges, dcel.NewEdge())

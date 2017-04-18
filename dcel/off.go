@@ -88,7 +88,13 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 		dc.Faces[i] = face
 
 		edge = new(Edge)
-		edges[edgeIndex] = edge
+		if edgeIndex >= len(edges) {
+			// Some jerk gave us an incorrect definition of their
+			// edge count, or we interpreted it wrong.
+			edges = append(edges, edge)
+		} else {
+			edges[edgeIndex] = edge
+		}
 		edgeIndex++
 
 		// This model does not use Outer faces.
@@ -111,7 +117,13 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 			edge.Next.Prev = edge
 			edge = edge.Next
 
-			edges[edgeIndex] = edge
+			if edgeIndex >= len(edges) {
+				// Some jerk gave us an incorrect definition of their
+				// edge count, or we interpreted it wrong.
+				edges = append(edges, edge)
+			} else {
+				edges[edgeIndex] = edge
+			}
 			edgeIndex++
 			edge.Face = face
 
@@ -151,7 +163,7 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 			}
 			if numFound == 0 {
 				twin = new(Edge)
-				edgeList[edgeIndex] = twin
+				edgeList = append(edgeList, twin)
 				twin.Twin = edge
 				edge.Twin = twin
 				edge.Face = dc.Faces[OUTER_FACE]
