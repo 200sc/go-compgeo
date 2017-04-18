@@ -65,6 +65,9 @@ func (pbst *PersistentBST) SetInstant(ins float64) {
 	}
 	bsti := BSTInstant{}
 	bsti.BST = pbst.instants[len(pbst.instants)-1].copy()
+	fmt.Println("Copy!")
+	fmt.Println(pbst.instants[len(pbst.instants)-1])
+	fmt.Println(bsti.BST)
 	bsti.instant = ins
 	pbst.instants = append(pbst.instants, bsti)
 	pbst.instant = ins

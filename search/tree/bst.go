@@ -233,7 +233,6 @@ func (bst *BST) updateRoot(n *node) {
 	}
 	if n != nil {
 		bst.root = n
-		//fmt.Println("Setting root to", n)
 		return
 	}
 	if bst.root == nil {

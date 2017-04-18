@@ -95,6 +95,7 @@ OUTER:
 		// Set the BST's instant to the x value of this point
 		fmt.Println("Setting Instant to", v.X())
 		t.SetInstant(v.X())
+		ct := t.ThisInstant()
 
 		// Aggregate all points at this x value so we do not
 		// attempt to add edges to a tree which contains edges
@@ -125,10 +126,9 @@ OUTER:
 		// of the points
 		for _, e := range le {
 			fmt.Println("Removing", e.Twin, compXMap[e.Twin.Origin.X()], compXMap[toFixed(e.Twin.Origin.X(), 5)])
-			err := t.Delete(shellNode{compEdge{e.Twin, compXMap[toFixed(e.Twin.Origin.X(), 5)]}, search.Nil{}})
+			err := ct.Delete(shellNode{compEdge{e.Twin, compXMap[toFixed(e.Twin.Origin.X(), 5)]}, search.Nil{}})
 			fmt.Println("Remove result", err)
-			fmt.Println(t.ThisInstant())
-
+			fmt.Println(ct)
 		}
 		// Add all edges to the PersistentBST connecting to the right
 		// of the point
@@ -140,9 +140,9 @@ OUTER:
 			// edge for a query represents that the query is below
 			// the edge,
 			fmt.Println("Adding", e, "at", toFixed(v.X(), 5))
-			t.Insert(shellNode{compEdge{e, compXMap[toFixed(v.X(), 5)]},
+			ct.Insert(shellNode{compEdge{e, compXMap[toFixed(v.X(), 5)]},
 				faces{e.Face, e.Twin.Face}})
-			fmt.Println(t.ThisInstant())
+			fmt.Println(ct)
 		}
 
 		i++
@@ -249,35 +249,20 @@ func (spl *SlabPointLocator) PointLocate(vs ...float64) (*Face, error) {
 		fmt.Println(p, "is below edge", e2)
 		return nil, nil
 	}
-	// Case Happy:
-	// f2 and f1 have one face in common. Return it.
-	f1 := f.(faces)
-	f3 := f2.(faces)
-	if f1.f1 != f3.f1 && f1.f1 != f3.f2 {
-		return f1.f2, nil
-	} else if f1.f2 != f3.f1 && f1.f2 != f3.f2 {
-		return f1.f1, nil
-	}
-	// Case unhappy:
-	// f2 and f1 have both faces in common.
-	// We then do PIP on each face, and return
-	// whichever is true, if either.
-	f4 := f1.f2
-	f5 := f1.f1
 
-	fmt.Println("Checking if face contains", p)
-	if f5 != spl.outerFace && f5.Contains(p) {
-		fmt.Println("P was contained")
-		return f5, nil
+	// We then do PIP on each face, and return
+	// whichever is true, if any.
+	f3 := f.(faces)
+	f4 := f2.(faces)
+	faces := []*Face{f3.f1, f3.f2, f4.f1, f4.f2}
+
+	for _, f5 := range faces {
+		fmt.Println("Checking if face contains", p)
+		if f5 != spl.outerFace && f5.Contains(p) {
+			fmt.Println("P was contained")
+			return f5, nil
+		}
 	}
-	fmt.Println("Checking if other face contains", p)
-	if f4 != spl.outerFace && f4.Contains(p) {
-		fmt.Println("P was contained")
-		return f4, nil
-	}
+
 	return nil, nil
-	// Case VERY unhappy:
-	// f2 and f1 have neither face in common, which
-	// means something went very wrong and we don't even
-	// check for this. This will return in case 1.
 }

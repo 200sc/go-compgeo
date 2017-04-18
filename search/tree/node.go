@@ -61,6 +61,7 @@ func (n *node) copy() *node {
 	cp := new(node)
 	cp.left = n.left.copy()
 	cp.right = n.right.copy()
+
 	cp.key = n.key
 	cp.val = n.val
 
@@ -71,7 +72,6 @@ func (n *node) copy() *node {
 		cp.right.parent = cp
 	}
 	cp.payload = n.payload
-	cp.parent = n.parent
 
 	return cp
 }

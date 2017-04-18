@@ -1,6 +1,9 @@
 package tree
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 const (
 	red   = false
@@ -132,6 +135,7 @@ func rbInsert(n *node) *node {
 		}
 	}
 }
+
 func rbDelete(n *node) *node {
 
 	var c bool
@@ -155,6 +159,33 @@ func rbDelete(n *node) *node {
 
 		// if rand.Float64() < 0.5 {
 		n2 := n.right.minKey()
+		// This case is not properly being captured or tested.
+		if n2 == n.right && p == nil {
+			if n.right != nil && n.right.isBlack() &&
+				n.left != nil && n.left.isBlack() && n.right.left == nil &&
+				n.right.right == nil {
+
+				lc := n.left.left
+				if lc == nil {
+					lc = n.left.right
+				}
+				if lc == nil || lc.isRed() {
+					fmt.Println("Weird special case hit")
+					// For this specific structure we aren't doing the right thing
+					newRight := n.right
+					newRoot := n.left
+					newRoot.left = lc
+					newRoot.right = newRight
+					newRoot.parent = nil
+					if lc != nil {
+						lc.parent = newRoot
+					}
+					newRight.parent = newRoot
+					newRight.payload = red
+					return newRoot
+				}
+			}
+		}
 		c = n2.payload.(bool)
 		//} else {
 		// n2 := n.left.maxKey()
@@ -164,6 +195,8 @@ func rbDelete(n *node) *node {
 		if n2.parent == n {
 			if r != nil {
 				r.parent = n2
+			} else {
+				p = n2
 			}
 		} else {
 			newRoot = n2.parentReplace(r)

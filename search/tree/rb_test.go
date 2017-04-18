@@ -123,7 +123,7 @@ var (
 	}
 	notInInput1      = 12
 	notInInput2      = 2000
-	randomInputCt    = 1000000
+	randomInputCt    = 10000
 	randomInputRange = 1000
 )
 
