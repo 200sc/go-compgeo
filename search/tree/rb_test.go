@@ -123,7 +123,7 @@ var (
 	}
 	notInInput1      = 12
 	notInInput2      = 2000
-	randomInputCt    = 10000
+	randomInputCt    = 1000000
 	randomInputRange = 1000
 )
 
@@ -220,13 +220,18 @@ func TestRBRandomInput(t *testing.T) {
 		}
 	}
 	t.Log("Insert Complete")
+	totalSize := tree.Size()
 	// These values might not be in the bst.
 	for i := 0; i < randomInputCt; i++ {
 		n := nilValNode{compFloat(float64(rand.Intn(randomInputRange)))}
 
 		t.Log("Deleting", n)
-		tree.Delete(n)
+		err := tree.Delete(n)
+		if err == nil {
+			totalSize--
+		}
 		valid, err := RBValid(tree.(*BST))
+		assert.Equal(t, totalSize, tree.Size())
 		assert.True(t, valid)
 		if !assert.Nil(t, err) {
 			t.FailNow()
