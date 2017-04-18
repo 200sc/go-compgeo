@@ -172,13 +172,23 @@ func rbDelete(n *node) *node {
 				if lc == nil || lc.isRed() {
 					fmt.Println("Weird special case hit")
 					// For this specific structure we aren't doing the right thing
+					var newRoot, newLeft *node
+					if lc == n.left.right && lc != nil {
+						newRoot = lc
+						newLeft = n.left
+					} else {
+						newRoot = n.left
+						newLeft = lc
+					}
+
 					newRight := n.right
-					newRoot := n.left
-					newRoot.left = lc
+					newRoot.left = newLeft
 					newRoot.right = newRight
 					newRoot.parent = nil
-					if lc != nil {
-						lc.parent = newRoot
+					if newLeft != nil {
+						newLeft.parent = newRoot
+						newLeft.left = nil
+						newLeft.right = nil
 					}
 					newRight.parent = newRoot
 					newRight.payload = red
