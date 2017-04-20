@@ -20,6 +20,13 @@ type node struct {
 	left, right, parent *node
 }
 
+func (n *node) calcSize() int {
+	if n == nil {
+		return 0
+	}
+	return n.left.calcSize() + n.right.calcSize() + len(n.val)
+}
+
 func (n *node) Key() search.Comparable {
 	return n.key
 }
@@ -63,7 +70,8 @@ func (n *node) copy() *node {
 	cp.right = n.right.copy()
 
 	cp.key = n.key
-	cp.val = n.val
+	cp.val = make([]search.Equalable, len(n.val))
+	copy(cp.val, n.val)
 
 	if cp.left != nil {
 		cp.left.parent = cp
@@ -177,7 +185,7 @@ func (n *node) parentReplace(n2 *node) *node {
 	return toReturn
 }
 
-func (n *node) leftRotate() {
+func (n *node) leftRotate() (newRoot *node) {
 	r := n.right
 	n.right = r.left
 	if r.left != nil {
@@ -190,12 +198,15 @@ func (n *node) leftRotate() {
 		} else {
 			n.parent.right = r
 		}
+	} else {
+		newRoot = r
 	}
 	r.left = n
 	n.parent = r
+	return
 }
 
-func (n *node) rightRotate() {
+func (n *node) rightRotate() (newRoot *node) {
 	l := n.left
 	n.left = l.right
 	if l.right != nil {
@@ -208,9 +219,12 @@ func (n *node) rightRotate() {
 		} else {
 			n.parent.right = l
 		}
+	} else {
+		newRoot = l
 	}
 	l.right = n
 	n.parent = l
+	return
 }
 
 func (n *node) staticTree(m map[int]*static.Node, i int) (map[int]*static.Node, int) {

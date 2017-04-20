@@ -68,6 +68,10 @@ func (bst *BST) Size() int {
 	return bst.size
 }
 
+func (bst *BST) calcSize() int {
+	return bst.root.calcSize()
+}
+
 // Insert :
 func (bst *BST) Insert(inNode search.Node) error {
 	//fmt.Println("Inserting ", inNode)

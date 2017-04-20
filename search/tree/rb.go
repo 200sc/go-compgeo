@@ -86,17 +86,17 @@ func (n *node) RBValid(mustBeBlack bool) (bool, int, error) {
 	return true, 1, nil
 }
 
-func rbInsert(n *node) *node {
+func rbInsert(n *node) (newRoot *node) {
 	for {
 		p := n.parent
 		if p == nil {
 			n.payload = black
-			return nil
+			return
 		}
 		// i's parent must exist, as i is not the root ---
 		// If i's parent is black
 		if p.isBlack() {
-			return nil
+			return
 		}
 
 		// i's grandparent must exist, as i's parent is red. ---
@@ -114,10 +114,10 @@ func rbInsert(n *node) *node {
 			// Recurse
 		} else {
 			if p.right == n && p == gp.left {
-				p.leftRotate()
+				newRoot = root(newRoot, p.leftRotate())
 				n = n.left
 			} else if p.left == n && p == gp.right {
-				p.rightRotate()
+				newRoot = root(newRoot, p.rightRotate())
 				n = n.right
 			}
 			p = n.parent
@@ -127,21 +127,20 @@ func rbInsert(n *node) *node {
 			gp.payload = red
 
 			if p.left == n {
-				gp.rightRotate()
+				newRoot = root(newRoot, gp.rightRotate())
 			} else {
-				gp.leftRotate()
+				newRoot = root(newRoot, gp.leftRotate())
 			}
-			return nil
+			return
 		}
 	}
 }
 
-func rbDelete(n *node) *node {
+func rbDelete(n *node) (newRoot *node) {
 
 	var c bool
 	c = n.payload.(bool)
 	var r *node
-	var newRoot *node
 	//var newRoot *node
 	p := n.parent
 	if n.right == nil {
@@ -172,7 +171,7 @@ func rbDelete(n *node) *node {
 				if lc == nil || lc.isRed() {
 					fmt.Println("Weird special case hit")
 					// For this specific structure we aren't doing the right thing
-					var newRoot, newLeft *node
+					var newLeft *node
 					if lc == n.left.right && lc != nil {
 						newRoot = lc
 						newLeft = n.left
@@ -192,7 +191,7 @@ func rbDelete(n *node) *node {
 					}
 					newRight.parent = newRoot
 					newRight.payload = red
-					return newRoot
+					return
 				}
 			}
 		}
@@ -213,10 +212,7 @@ func rbDelete(n *node) *node {
 			n2.right = n.right
 			n2.right.parent = n2
 		}
-		newRootMaybe := n.parentReplace(n2)
-		if newRootMaybe != nil {
-			newRoot = newRootMaybe
-		}
+		newRoot = root(newRoot, n.parentReplace(n2))
 		n2.left = n.left
 		n2.left.parent = n2
 		n2.payload = n.payload
@@ -225,12 +221,9 @@ func rbDelete(n *node) *node {
 		}
 	}
 	if c == black {
-		newRootMaybe := rbDeleteFixup(r, p)
-		if newRootMaybe != nil {
-			newRoot = newRootMaybe
-		}
+		newRoot = root(newRoot, rbDeleteFixup(r, p))
 	}
-	return newRoot
+	return
 }
 
 // DeleteFixup takes n and p, as nil nodes do
@@ -241,8 +234,8 @@ func rbDelete(n *node) *node {
 // Instead of making a bunch of numbered functions,
 // this implementation prefers to keep everything together
 // (as is common).
-func rbDeleteFixup(n, p *node) *node {
-	var s, newRoot *node
+func rbDeleteFixup(n, p *node) (newRoot *node) {
+	var s *node
 	for n.isBlack() {
 		if n != nil {
 			p = n.parent
@@ -265,10 +258,10 @@ func rbDeleteFixup(n, p *node) *node {
 			p.payload = red
 			s.payload = black
 			if s == p.right {
-				p.leftRotate()
+				newRoot = p.leftRotate()
 				s = p.right
 			} else {
-				p.rightRotate()
+				newRoot = p.rightRotate()
 				s = p.left
 			}
 			// Now P->N = P->NewS - 1, still,
@@ -310,14 +303,14 @@ func rbDeleteFixup(n, p *node) *node {
 		if n == p.left && s.right.isBlack() && s.left.isRed() {
 			s.payload = red
 			s.left.payload = black
-			s.rightRotate()
+			newRoot = s.rightRotate()
 			s = p.right
 			// Case 5.2:
 			// As 5.1, but flipped
 		} else if n == p.right && s.left.isBlack() && s.right.isRed() {
 			s.payload = red
 			s.right.payload = black
-			s.leftRotate()
+			newRoot = s.leftRotate()
 			s = p.left
 		}
 		// Case 6:
@@ -327,15 +320,22 @@ func rbDeleteFixup(n, p *node) *node {
 		p.payload = black
 		if n == p.left {
 			s.right.payload = black
-			p.leftRotate()
+			newRoot = p.leftRotate()
 		} else {
 			s.left.payload = black
-			p.rightRotate()
+			newRoot = p.rightRotate()
 		}
 		break
 	}
 	if n != nil {
 		n.payload = black
 	}
-	return newRoot
+	return
+}
+
+func root(n1, n2 *node) *node {
+	if n1 == nil {
+		return n2
+	}
+	return n1
 }

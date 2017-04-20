@@ -123,8 +123,8 @@ var (
 	}
 	notInInput1      = 12
 	notInInput2      = 2000
-	randomInputCt    = 10000
-	randomInputRange = 1000
+	randomInputCt    = 20000
+	randomInputRange = 5000
 )
 
 func TestRBInOrder(t *testing.T) {
@@ -145,6 +145,7 @@ func TestRBDefinedInput1(t *testing.T) {
 	tree := New(RedBlack)
 	for _, v := range test1Input {
 		tree.Insert(v)
+		assert.Equal(t, tree.Size(), tree.(*BST).calcSize())
 	}
 
 	valid, err := RBValid(tree.(*BST))
@@ -168,7 +169,9 @@ func TestRBDefinedInput1(t *testing.T) {
 	}
 
 	for _, v := range test1Input {
-		tree.Delete(v)
+		err = tree.Delete(v)
+		assert.Nil(t, err)
+		assert.Equal(t, tree.Size(), tree.(*BST).calcSize())
 		b, found := tree.Search(v.key)
 		assert.False(t, b)
 		assert.Nil(t, found)
@@ -205,7 +208,6 @@ func TestPredSucc(t *testing.T) {
 
 func TestRBRandomInput(t *testing.T) {
 	tree := New(RedBlack)
-	t.Log("Uh")
 	for i := 0; i < randomInputCt; i++ {
 		n := testNode{
 			compFloat(float64(rand.Intn(randomInputRange))),
@@ -215,6 +217,7 @@ func TestRBRandomInput(t *testing.T) {
 		tree.Insert(n)
 		valid, err := RBValid(tree.(*BST))
 		assert.True(t, valid)
+		assert.Equal(t, tree.Size(), tree.(*BST).calcSize())
 		if !assert.Nil(t, err) {
 			t.FailNow()
 		}
@@ -232,6 +235,7 @@ func TestRBRandomInput(t *testing.T) {
 		}
 		valid, err := RBValid(tree.(*BST))
 		assert.Equal(t, totalSize, tree.Size())
+		assert.Equal(t, tree.Size(), tree.(*BST).calcSize())
 		assert.True(t, valid)
 		if !assert.Nil(t, err) {
 			t.FailNow()
