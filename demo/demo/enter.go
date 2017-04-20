@@ -35,12 +35,18 @@ func phdEnter(cID int, nothing interface{}) int {
 		}
 	}
 	nme := mouse.LastMouseEvent
-	mouseStr.SetText(dcel.Point{float64(nme.X) - phd.X,
-		float64(nme.Y) - phd.Y, mouseZ})
+	mX := float64(nme.X)
+	mY := float64(nme.Y)
+	mouseStr.SetText(dcel.Point{mX - phd.X, mY - phd.Y, mouseZ})
+	if mX < 0 || mY < 0 || (mX > 515 && mY > 440) {
+		dragX = -1
+		dragY = -1
+		return 0
+	}
 	if mode == ROTATE || ((mode == ADD_DCEL || mode == ADDING_DCEL) && shft) {
 		if dragX != -1 {
-			dx := float64(nme.X - dragX)
-			dy := float64(nme.Y - dragY)
+			dx := mX - dragX
+			dy := mY - dragY
 			if dx != 0 {
 				if shft {
 					phd.RotZ(rotSpeed * dx)
@@ -86,8 +92,8 @@ func phdEnter(cID int, nothing interface{}) int {
 		}
 	}
 	if oak.IsDown("LeftMouse") {
-		dragX = nme.X
-		dragY = nme.Y
+		dragX = mX
+		dragY = mY
 	} else {
 		dragX = -1
 		dragY = -1

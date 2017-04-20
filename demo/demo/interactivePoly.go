@@ -3,7 +3,6 @@ package demo
 import (
 	"bitbucket.org/oakmoundstudio/oak/event"
 	"bitbucket.org/oakmoundstudio/oak/mouse"
-	"bitbucket.org/oakmoundstudio/oak/render"
 )
 
 // An InteractivePolyhedron is a wrapper around
@@ -11,7 +10,7 @@ import (
 // areas to interact with parts of the underlying DCEL
 // structure.
 type InteractivePolyhedron struct {
-	*render.Polyhedron
+	*Polyhedron
 	vs []*InteractivePoint
 	// This is more than a little impractical
 	// until collision spaces can contain internal
@@ -36,6 +35,7 @@ func (ip *InteractivePolyhedron) Init() event.CID {
 // through space. In this case the large job here is making sure
 // all of the vertex collision areas stay in the right spots.
 func (ip *InteractivePolyhedron) UpdateSpaces() {
+	slabDecomposition = nil
 	if len(ip.vs) < len(ip.Vertices) {
 		diff := len(ip.Vertices) - len(ip.vs)
 		ip.vs = append(ip.vs, make([]*InteractivePoint, diff)...)

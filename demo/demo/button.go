@@ -2,6 +2,7 @@ package demo
 
 import (
 	"fmt"
+	"strconv"
 
 	"bitbucket.org/oakmoundstudio/oak/collision"
 	"bitbucket.org/oakmoundstudio/oak/entities"
@@ -66,8 +67,17 @@ func (b *Button) SetString(txt string) {
 
 func (b *Button) SetText(txt fmt.Stringer) {
 	if b.Text != nil {
+		//fmt.Println("Undrawing!")
 		b.Text.UnDraw()
 	}
 	b.Text = b.Font.NewInterfaceText(txt, b.X+b.TxtX, b.Y-b.TxtY+b.H)
 	render.Draw(b.Text, b.Layer+1)
+}
+
+type starIntString struct {
+	val *int
+}
+
+func (sis starIntString) String() string {
+	return strconv.Itoa(*sis.val)
 }

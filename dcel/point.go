@@ -3,6 +3,7 @@ package dcel
 import (
 	"math"
 
+	"github.com/200sc/go-compgeo/geom"
 	"github.com/200sc/go-compgeo/printutil"
 	"github.com/200sc/go-compgeo/search"
 )
@@ -58,7 +59,7 @@ func (dp Point) Z() float64 {
 }
 
 // Eq returns whether two points are equivalent.
-func (dp Point) Eq(p2 Dimensional) bool {
+func (dp Point) Eq(p2 geom.Dimensional) bool {
 	if dp.D() != p2.D() {
 		return false
 	}
@@ -72,7 +73,7 @@ func (dp Point) Eq(p2 Dimensional) bool {
 
 // Mid2D returns the point in the middle of
 // this point and p2.
-func (dp Point) Mid2D(p2 D2) *Point {
+func (dp Point) Mid2D(p2 geom.D2) *Point {
 	p3 := new(Point)
 	for i := range dp {
 		p3[i] = (dp[i] + p2.Val(i)) / 2
@@ -106,14 +107,14 @@ func (dp Point) Dot2D(p2 *Point) float64 {
 
 // Cross2D performs the Cross Product on the three
 // points, in a two-dimensional context.
-func (dp Point) Cross2D(p2, p3 D2) float64 {
+func (dp Point) Cross2D(p2, p3 geom.D2) float64 {
 	return Cross2D(dp, p2, p3)
 }
 
 // Lesser2D reports the lower point by y value,
 // or by x value given equal y values. If the
 // two points are equal the latter point is returned.
-func (dp Point) Lesser2D(p2 D2) D2 {
+func (dp Point) Lesser2D(p2 geom.D2) geom.D2 {
 	if dp[1] < p2.Val(1) {
 		return dp
 	} else if dp[1] > p2.Val(1) {
@@ -128,7 +129,7 @@ func (dp Point) Lesser2D(p2 D2) D2 {
 // Greater2D reports the higher point by y value,
 // or by x value given equal y values. If the
 // two points are equal the latter point is returned.
-func (dp Point) Greater2D(p2 D2) D2 {
+func (dp Point) Greater2D(p2 geom.D2) geom.D2 {
 	p3 := dp.Lesser2D(p2)
 	if p3.Eq(dp) {
 		return p2

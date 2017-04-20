@@ -1,4 +1,4 @@
-package dcel
+package geom
 
 // Dimensional values can be queried at a
 // given dimension for a positional value

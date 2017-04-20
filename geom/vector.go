@@ -1,4 +1,4 @@
-package dcel
+package geom
 
 type Vector interface {
 	Lesser(dimension int) D3

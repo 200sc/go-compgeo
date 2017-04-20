@@ -2,10 +2,18 @@ package dcel
 
 import (
 	"fmt"
+	"image/color"
 	"sort"
 
+	"bitbucket.org/oakmoundstudio/oak/physics"
+
+	"github.com/200sc/go-compgeo/dcel/visualize"
 	"github.com/200sc/go-compgeo/search"
 	"github.com/200sc/go-compgeo/search/tree"
+)
+
+var (
+	VisualCh chan *visualize.Visual
 )
 
 type faces struct {
@@ -124,6 +132,9 @@ OUTER:
 		fmt.Println("Right Edges", re)
 		// Remove all edges from the PersistentBST connecting to the left
 		// of the points
+		if VisualCh != nil {
+			visualize.HighlightColor = color.RGBA{255, 0, 0, 255}
+		}
 		for _, e := range le {
 			fmt.Println("Removing", e.Twin, compXMap[e.Twin.Origin.X()], compXMap[toFixed(e.Twin.Origin.X(), 5)])
 			err := ct.Delete(shellNode{compEdge{e.Twin, compXMap[toFixed(e.Twin.Origin.X(), 5)]}, search.Nil{}})
@@ -132,6 +143,9 @@ OUTER:
 		}
 		// Add all edges to the PersistentBST connecting to the right
 		// of the point
+		if VisualCh != nil {
+			visualize.HighlightColor = color.RGBA{0, 255, 0, 255}
+		}
 		for _, e := range re {
 			// We always want the half edge that points to the right,
 			// and between the two faces this edge is on we want the
@@ -148,6 +162,9 @@ OUTER:
 		i++
 	}
 	fmt.Println("END CONSTRUCTION")
+	if VisualCh != nil {
+		visualize.HighlightColor = color.RGBA{255, 255, 255, 255}
+	}
 	return &SlabPointLocator{t, dc.Faces[OUTER_FACE]}, nil
 }
 
@@ -161,6 +178,10 @@ type compEdge struct {
 func (ce compEdge) Compare(i interface{}) search.CompareResult {
 	switch c := i.(type) {
 	case compEdge:
+		if VisualCh != nil {
+			visualize.DrawLine(VisualCh, ce.Edge.Origin, ce.Edge.Twin.Origin)
+			visualize.DrawLine(VisualCh, c.Edge.Origin, c.Edge.Twin.Origin)
+		}
 		fmt.Println("Comparing", ce, c)
 		if ce.Edge == c.Edge {
 			fmt.Println("Equal1!")
@@ -257,10 +278,20 @@ func (spl *SlabPointLocator) PointLocate(vs ...float64) (*Face, error) {
 	faces := []*Face{f3.f1, f3.f2, f4.f1, f4.f2}
 
 	for _, f5 := range faces {
-		fmt.Println("Checking if face contains", p)
-		if f5 != spl.outerFace && f5.Contains(p) {
-			fmt.Println("P was contained")
-			return f5, nil
+		if f5 != spl.outerFace {
+			fmt.Println("Checking if face contains", p)
+			if VisualCh != nil {
+				ps := f5.Vertices()
+				phys_verts := make([]physics.Vector, len(ps))
+				for i, v := range ps {
+					phys_verts[i] = physics.NewVector(v.X(), v.Y())
+				}
+				visualize.DrawPoly(VisualCh, phys_verts)
+			}
+			if f5.Contains(p) {
+				fmt.Println("P was contained")
+				return f5, nil
+			}
 		}
 	}
 

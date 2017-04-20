@@ -15,6 +15,9 @@ import (
 )
 
 func addFace(cID int, ev interface{}) int {
+	if sliding {
+		return 0
+	}
 	phd := event.GetEntity(cID).(*InteractivePolyhedron)
 	me := ev.(mouse.MouseEvent)
 	mx := float64(me.X) - phd.X
@@ -127,14 +130,16 @@ func addFace(cID int, ev interface{}) int {
 			phd.Update()
 			phd.UpdateSpaces()
 		} else if mode == POINT_LOCATE {
-			sd, err := phd.SlabDecompose(tree.RedBlack)
-			if err != nil {
-				fmt.Println(err)
-				return 0
+			if slabDecomposition == nil {
+				var err error
+				slabDecomposition, err = phd.SlabDecompose(tree.RedBlack)
+				if err != nil {
+					fmt.Println(err)
+					return 0
+				}
 			}
-			fmt.Println(sd.(*dcel.SlabPointLocator))
 
-			f, _ := sd.PointLocate(mx, my)
+			f, _ := slabDecomposition.PointLocate(mx, my)
 			if f == phd.Faces[0] || f == nil {
 				fmt.Println("Outer/No Face")
 			} else {

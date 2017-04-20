@@ -1,6 +1,10 @@
 package dcel
 
-import "math"
+import (
+	"math"
+
+	"github.com/200sc/go-compgeo/geom"
+)
 
 // A Span represents n-dimensions of
 // span from one point to another
@@ -25,9 +29,13 @@ func NewSpan() Span {
 // Expand on a Span will reduce or increase
 // a span's min and max values if the input points
 // falls outside of the span on any dimension
-func (sp Span) Expand(ps ...Dimensional) Span {
+func (sp Span) Expand(ps ...geom.Dimensional) Span {
 	for _, p := range ps {
+		j := p.D()
 		for i := range sp.Min {
+			if i > j {
+				break
+			}
 			v := p.Val(i)
 			if v < sp.Min[i] {
 				sp.Min[i] = v

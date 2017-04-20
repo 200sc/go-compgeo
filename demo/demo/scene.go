@@ -6,6 +6,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"time"
 
 	"golang.org/x/sync/syncmap"
 
@@ -13,6 +14,7 @@ import (
 	"bitbucket.org/oakmoundstudio/oak/event"
 	"bitbucket.org/oakmoundstudio/oak/render"
 	"github.com/200sc/go-compgeo/dcel"
+	"github.com/200sc/go-compgeo/dcel/visualize"
 )
 
 const (
@@ -27,22 +29,27 @@ const (
 )
 
 var (
-	dragX           float32 = -1
-	dragY           float32 = -1
-	dragging                = -1
-	offFile                 = filepath.Join("data", "A.off")
-	mode                    = ROTATE
-	loopDemo        bool
-	firstAddedPoint *dcel.Vertex
-	prev            *dcel.Edge
-	addedFace       *dcel.Face
-	mouseZ          = 0.0
-	faceVertices    = &syncmap.Map{}
-	err             error
-	mouseStr        *render.IFText
-	modeStr         *render.Text
-	font            *render.Font
-	undoPhd         []InteractivePolyhedron
+	dragX             float64 = -1
+	dragY             float64 = -1
+	dragging                  = -1
+	offFile                   = filepath.Join("data", "A.off")
+	mode                      = ROTATE
+	loopDemo          bool
+	firstAddedPoint   *dcel.Vertex
+	prev              *dcel.Edge
+	addedFace         *dcel.Face
+	mouseZ            = 0.0
+	faceVertices      = &syncmap.Map{}
+	err               error
+	mouseStr          *render.IFText
+	modeStr           *render.Text
+	font              *render.Font
+	phd               *InteractivePolyhedron
+	undoPhd           []InteractivePolyhedron
+	ticker            *time.Ticker
+	stopTickerCh      = make(chan bool)
+	sliding           bool
+	slabDecomposition dcel.LocatesPoints
 )
 
 // InitScene is called whenever the scene 'demo' starts.
@@ -60,8 +67,8 @@ func InitScene(prevScene string, data interface{}) {
 			dc = dcel.New()
 		}
 	}
-	phd := new(InteractivePolyhedron)
-	phd.Polyhedron = render.NewPolyhedronFromDCEL(dc, 100, 100)
+	phd = new(InteractivePolyhedron)
+	phd.Polyhedron = NewPolyhedronFromDCEL(dc, 100, 100)
 	phd.Polyhedron.Scale(defScale)
 	phd.Polyhedron.RotZ(defRotZ)
 	phd.Polyhedron.RotY(defRotY)
@@ -81,13 +88,22 @@ func InitScene(prevScene string, data interface{}) {
 	clrBtn := NewButton(clear, font)
 	clrBtn.SetLogicDim(70, 20)
 	clrBtn.SetRenderable(render.NewColorBox(int(clrBtn.W), int(clrBtn.H), color.RGBA{50, 50, 100, 255}))
-	clrBtn.SetPos(560, 450)
+	clrBtn.SetPos(560, 410)
 	clrBtn.TxtX = 10
 	clrBtn.TxtY = 5
 	clrBtn.SetString("Clear")
-	fmt.Println(clrBtn.Space)
+
+	visSlider := NewSlider(font)
+	visSlider.SetDim(115, 35)
+	visSlider.SetRenderable(
+		render.NewColorBox(int(visSlider.W), int(visSlider.H), color.RGBA{50, 50, 100, 255}))
+	visSlider.SetPos(515, 440)
+	visSlider.TxtX = 10
+	visSlider.TxtY = 20
+	visSlider.SetString("No Visualization")
 
 	event.GlobalBind(clear, "Clear")
+	event.GlobalBind(visuals, "Visualize")
 	event.GlobalBind(vertexStopDrag, "MouseRelease")
 	event.GlobalBind(func(no int, nothing interface{}) int {
 		mode = (mode + 1) % LAST_MODE
@@ -143,11 +159,72 @@ func AddCommands() {
 	oak.AddCommand("clear", func(strs []string) {
 		event.Trigger("Clear", nil)
 	})
+	oak.AddCommand("visualize", func(strs []string) {
+		if len(strs) > 1 {
+			rate, _ := time.ParseDuration(strs[1])
+			event.Trigger("Visualize", rate)
+		}
+	})
 }
 
 func clear(no int, nothing interface{}) int {
 	fmt.Println("Yup")
 	offFile = "none"
 	loopDemo = false
+	return 0
+}
+
+func visuals(no int, rt interface{}) int {
+	rate := rt.(time.Duration)
+	if rate != 0 {
+		if ticker != nil {
+			close(dcel.VisualCh)
+			select {
+			case stopTickerCh <- true:
+			default:
+			}
+			ticker.Stop()
+		}
+		dcel.VisualCh = make(chan *visualize.Visual)
+		ticker = time.NewTicker(rate)
+		go func() {
+			var visual *visualize.Visual
+			for {
+				select {
+				case <-stopTickerCh:
+					return
+				case <-ticker.C:
+					if visual != nil {
+						render.UndrawAfter(visual, 100*time.Millisecond)
+					}
+					visual = <-dcel.VisualCh
+					if visual == nil {
+						fmt.Println("Nil visual recieved")
+						return
+					} else {
+						fmt.Println("Drawing visual")
+					}
+					visual.ShiftX(phd.X)
+					visual.ShiftY(phd.Y)
+
+					fmt.Println(visual.GetX(), visual.GetY())
+
+					render.Draw(visual.Renderable, visual.Layer)
+				}
+			}
+		}()
+	} else {
+		if ticker != nil {
+			close(dcel.VisualCh)
+			select {
+			case stopTickerCh <- true:
+			default:
+			}
+			ticker.Stop()
+			ticker = nil
+		}
+		dcel.VisualCh = nil
+	}
+
 	return 0
 }

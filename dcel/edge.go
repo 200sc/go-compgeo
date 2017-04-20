@@ -3,6 +3,7 @@ package dcel
 import (
 	"fmt"
 
+	"github.com/200sc/go-compgeo/geom"
 	"github.com/200sc/go-compgeo/search"
 )
 
@@ -215,7 +216,7 @@ func (e *Edge) Val(d int) float64 {
 func (e *Edge) D() int {
 	return e.Origin.D()
 }
-func (e *Edge) Eq(e2 Dimensional) bool {
+func (e *Edge) Eq(e2 geom.Dimensional) bool {
 	return e.Origin.Eq(e2)
 }
 
