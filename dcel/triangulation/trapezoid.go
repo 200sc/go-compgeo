@@ -29,10 +29,11 @@ const (
 // the edges that border it.
 type Trapezoid struct {
 	// See above indices
-	Edges     [4]geom.FullEdge
-	Neighbors [4]*Trapezoid
-	node      *TrapezoidNode
-	face      *dcel.Face
+	Edges       [2]geom.FullEdge
+	left, right float64
+	Neighbors   [4]*Trapezoid
+	node        *TrapezoidNode
+	face        *dcel.Face
 }
 
 // DCELEdges evaluates and returns the edges of
@@ -135,10 +136,11 @@ func newTrapezoid(sp geom.Span) *Trapezoid {
 	max := sp.At(1).(geom.Point)
 	p1 := geom.NewPoint(min.X(), max.Y(), min.Z())
 	p2 := geom.NewPoint(max.X(), min.Y(), min.Z())
+	// These might need to flip
 	t.Edges[top] = geom.FullEdge{min, p2}
 	t.Edges[bot] = geom.FullEdge{max, p1}
-	t.Edges[left] = geom.FullEdge{min, p1}
-	t.Edges[right] = geom.FullEdge{max, p2}
+	t.left = min.X()
+	t.right = max.X()
 	t.Neighbors = [4]*Trapezoid{}
 	return t
 }

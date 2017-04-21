@@ -251,8 +251,7 @@ func trapQuery(fe geom.FullEdge, n *TrapezoidNode) []*Trapezoid {
 	tr := n.payload.(*Trapezoid)
 	traps := []*Trapezoid{tr}
 	r := fe.Right()
-	for geom.IsRightOf(r, tr.Edges[right].Left(), tr.Edges[right].Right()) {
-
+	for tr != nil && r.X() > tr.right {
 		// We perform this check here is it is less expensive
 		// than the cross product in the latter case, even
 		// though the latter case would suffice to do this.
@@ -273,8 +272,9 @@ func trapQuery(fe geom.FullEdge, n *TrapezoidNode) []*Trapezoid {
 				tr = tr.Neighbors[upright]
 			}
 		}
-
-		traps = append(traps, tr)
+		if tr != nil {
+			traps = append(traps, tr)
+		}
 	}
 	return traps
 }
