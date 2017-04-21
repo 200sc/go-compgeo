@@ -282,6 +282,7 @@ func rbDeleteFixup(n, p *node) (newRoot *node) {
 		// In this case, Because S's children are black we can turn it red.
 		// This means P->S = P->N, but GP->P = GP->P's sibling - 1,
 		// so we recurse with n = p, p = gp.
+		// --we crashed here once!!!?
 		if p.isBlack() && s.isBlack() && s.left.isBlack() && s.right.isBlack() {
 			s.payload = red
 			n = p

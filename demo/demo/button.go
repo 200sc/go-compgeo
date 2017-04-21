@@ -2,7 +2,6 @@ package demo
 
 import (
 	"fmt"
-	"strconv"
 
 	"bitbucket.org/oakmoundstudio/oak/collision"
 	"bitbucket.org/oakmoundstudio/oak/entities"
@@ -22,6 +21,8 @@ type Button struct {
 	Layer      int
 }
 
+// NewButton returns a new button rendering with a given font,
+// bound to a given bindable function on being clicked.
 func NewButton(bndb event.Bindable, f *render.Font) *Button {
 	b := new(Button)
 	CID := b.Init()
@@ -36,6 +37,9 @@ func NewButton(bndb event.Bindable, f *render.Font) *Button {
 	return b
 }
 
+// SetSpace overwrites entities.Solid,
+// pointing this button to use the mouse collision Rtree
+// instead of the entity collision space.
 func (b *Button) SetSpace(sp *collision.Space) {
 	if b.Space != nil {
 		mouse.Remove(b.Space)
@@ -44,6 +48,7 @@ func (b *Button) SetSpace(sp *collision.Space) {
 	mouse.Add(b.Space)
 }
 
+// SetPos acts as SetSpace does, overwriting entities.Solid.
 func (b *Button) SetPos(x float64, y float64) {
 	b.SetLogicPos(x, y)
 	if b.R != nil {
@@ -55,16 +60,20 @@ func (b *Button) SetPos(x float64, y float64) {
 	}
 }
 
+// a stringer is just a string with a function to convert it to
+// a string which lets it satisfy the fmt.Stringer interface.
 type stringer string
 
 func (s stringer) String() string {
 	return string(s)
 }
 
+// SetString converts input strings into stringers.
 func (b *Button) SetString(txt string) {
 	b.SetText(stringer(txt))
 }
 
+// SetText changes the text on this button to be the input txt.
 func (b *Button) SetText(txt fmt.Stringer) {
 	if b.Text != nil {
 		//fmt.Println("Undrawing!")
@@ -72,12 +81,4 @@ func (b *Button) SetText(txt fmt.Stringer) {
 	}
 	b.Text = b.Font.NewInterfaceText(txt, b.X+b.TxtX, b.Y-b.TxtY+b.H)
 	render.Draw(b.Text, b.Layer+1)
-}
-
-type starIntString struct {
-	val *int
-}
-
-func (sis starIntString) String() string {
-	return strconv.Itoa(*sis.val)
 }

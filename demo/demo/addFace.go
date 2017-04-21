@@ -12,6 +12,7 @@ import (
 	"bitbucket.org/oakmoundstudio/oak/timing"
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/dcel/slab"
+	"github.com/200sc/go-compgeo/dcel/triangulation"
 	"github.com/200sc/go-compgeo/search/tree"
 )
 
@@ -131,16 +132,20 @@ func addFace(cID int, ev interface{}) int {
 			phd.Update()
 			phd.UpdateSpaces()
 		} else if mode == POINT_LOCATE {
-			if slabDecomposition == nil {
+			if locator == nil {
 				var err error
-				slabDecomposition, err = slab.Decompose(&phd.DCEL, tree.RedBlack)
+				if pointLocationMode == SLAB_DECOMPOSITION {
+					locator, err = slab.Decompose(&phd.DCEL, tree.RedBlack)
+				} else if pointLocationMode == TRAPEZOID_MAP {
+					_, _, locator, err = triangulation.TrapezoidalMap(&phd.DCEL)
+				}
 				if err != nil {
 					fmt.Println(err)
 					return 0
 				}
 			}
 
-			f, _ := slabDecomposition.PointLocate(mx, my)
+			f, _ := locator.PointLocate(mx, my)
 			if f == phd.Faces[0] || f == nil {
 				fmt.Println("Outer/No Face")
 			} else {

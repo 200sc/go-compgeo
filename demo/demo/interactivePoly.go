@@ -35,7 +35,7 @@ func (ip *InteractivePolyhedron) Init() event.CID {
 // through space. In this case the large job here is making sure
 // all of the vertex collision areas stay in the right spots.
 func (ip *InteractivePolyhedron) UpdateSpaces() {
-	slabDecomposition = nil
+	locator = nil
 	if len(ip.vs) < len(ip.Vertices) {
 		diff := len(ip.Vertices) - len(ip.vs)
 		ip.vs = append(ip.vs, make([]*InteractivePoint, diff)...)

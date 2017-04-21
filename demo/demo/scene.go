@@ -30,6 +30,11 @@ const (
 	defRotY       = math.Pi
 )
 
+const (
+	SLAB_DECOMPOSITION = iota
+	TRAPEZOID_MAP
+)
+
 var (
 	dragX             float64 = -1
 	dragY             float64 = -1
@@ -51,7 +56,9 @@ var (
 	ticker            *time.Ticker
 	stopTickerCh      = make(chan bool)
 	sliding           bool
-	slabDecomposition dcel.LocatesPoints
+	locator           dcel.LocatesPoints
+	pointLocationMode = SLAB_DECOMPOSITION
+	modeBtn           *Button
 )
 
 // InitScene is called whenever the scene 'demo' starts.
@@ -90,10 +97,18 @@ func InitScene(prevScene string, data interface{}) {
 	clrBtn := NewButton(clear, font)
 	clrBtn.SetLogicDim(70, 20)
 	clrBtn.SetRenderable(render.NewColorBox(int(clrBtn.W), int(clrBtn.H), color.RGBA{50, 50, 100, 255}))
-	clrBtn.SetPos(560, 410)
+	clrBtn.SetPos(560, 10)
 	clrBtn.TxtX = 10
 	clrBtn.TxtY = 5
 	clrBtn.SetString("Clear")
+
+	modeBtn = NewButton(changeMode, font)
+	modeBtn.SetLogicDim(115, 20)
+	modeBtn.SetRenderable(render.NewColorBox(int(modeBtn.W), int(modeBtn.H), color.RGBA{50, 50, 100, 255}))
+	modeBtn.SetPos(515, 410)
+	modeBtn.TxtX = 5
+	modeBtn.TxtY = 5
+	modeBtn.SetString("Slab Decomposition")
 
 	visSlider := NewSlider(font)
 	visSlider.SetDim(115, 35)
@@ -227,5 +242,17 @@ func visuals(no int, rt interface{}) int {
 		slab.VisualCh = nil
 	}
 
+	return 0
+}
+
+func changeMode(no int, nothing interface{}) int {
+	if pointLocationMode == SLAB_DECOMPOSITION {
+		pointLocationMode = TRAPEZOID_MAP
+		modeBtn.SetString("Trapezoidal Map")
+	} else {
+		pointLocationMode = SLAB_DECOMPOSITION
+		modeBtn.SetString("Slab Decomposition")
+	}
+	locator = nil
 	return 0
 }
