@@ -42,6 +42,11 @@ func (e *Edge) String() string {
 	return s
 }
 
+func (e *Edge) SetTwin(e2 *Edge) {
+	e.Twin = e2
+	e2.Twin = e
+}
+
 // EdgeTwin can obtain a given edge index's twin
 // without accessing the edge itself, for index
 // manipulation, or for initially setting the Twins

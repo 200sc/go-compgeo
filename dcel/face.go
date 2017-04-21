@@ -1,6 +1,10 @@
 package dcel
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/200sc/go-compgeo/geom"
+)
 
 // A Face points to the edges on its inner and
 // outer portions. Any given face may have either
@@ -34,19 +38,11 @@ func (f *Face) Vertices() []Vertex {
 	return pts
 }
 
-// Contains2D is an interface which satisfies
-// the functions needed to determine if
-// a one-dimensional element exists on a face
-type Contains2D interface {
-	X() float64
-	Y() float64
-}
-
 // Contains returns whether a point lies inside f.
 // We cannot assume that f is convex, or anything
 // besides some polygon. That leaves us with a rather
 // complex form of PIP--
-func (f *Face) Contains(p Contains2D) bool {
+func (f *Face) Contains(p geom.D2) bool {
 	x := p.X()
 	y := p.Y()
 	contains := false

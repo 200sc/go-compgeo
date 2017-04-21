@@ -20,6 +20,10 @@ func NewPoint(x, y, z float64) *Point {
 	return &Point{x, y, z}
 }
 
+func (dp Point) Vertex() *Vertex {
+	return NewVertex(dp[0], dp[1], dp[2])
+}
+
 // String converts dp into a string.
 func (dp Point) String() string {
 	s := ""

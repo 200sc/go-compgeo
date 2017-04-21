@@ -103,16 +103,26 @@ func (dc *DCEL) FullEdge(i int) (FullEdge, error) {
 }
 
 // FullEdges returns the set of all FullEdges in DCEL.
-func (dc *DCEL) FullEdges() ([]FullEdge, error) {
+func (dc *DCEL) FullEdges() ([]FullEdge, [][2]*Face, error) {
 	var err error
 	fullEdges := make([]FullEdge, len(dc.HalfEdges)/2)
+	faces := make([][2]*Face, len(fullEdges))
 	for i := 0; i < len(dc.HalfEdges); i += 2 {
 		fullEdges[i], err = dc.HalfEdges[i].FullEdge()
 		if err != nil {
-			return nil, err
+			return nil, nil, err
+		}
+		faces[i] = [2]*Face{dc.HalfEdges[i].Face,
+			dc.HalfEdges[i+1].Face}
+
+		// Correct the edges so that the 0th indexed face
+		// is below this edge, and vice versa.
+		clkwz, _ := faces[i][0].Inner.IsClockwise()
+		if clkwz && dc.HalfEdges[i].X() > dc.HalfEdges[i+1].X() {
+			faces[i][0], faces[i][1] = faces[i][1], faces[i][0]
 		}
 	}
-	return fullEdges, nil
+	return fullEdges, faces, nil
 }
 
 // CorrectDirectionality (rather innefficently)

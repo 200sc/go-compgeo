@@ -48,10 +48,6 @@ func (sp Span) Expand(ps ...geom.Dimensional) Span {
 	return sp
 }
 
-func (sp Span) Trapezoid() *Trapezoid {
-	return nil
-}
-
 func (sp Span) Lesser(d int) Point {
 	return sp.Min
 }

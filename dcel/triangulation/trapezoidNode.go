@@ -12,16 +12,89 @@ import (
 type TrapezoidNode struct {
 	left, right *TrapezoidNode
 	parents     []*TrapezoidNode
-	query       func(FullEdge, *TrapezoidNode) []*Trapezoid
+	query       func(dcel.FullEdge, *TrapezoidNode) []*Trapezoid
 	payload     interface{}
 }
 
-// Query is shorthand for n.query(fe, n)
-func (tn *TrapezoidNode) Query(fe FullEdge) []*Trapezoid {
+// DCEL converts the trapezoids in the node search structure
+// into a DCEL.
+func (tn *TrapezoidNode) DCEL() (*dcel.DCEL, map[*dcel.Face]*dcel.Face) {
+	dc := new(dcel.DCEL)
+	trs := tn.inOrder()
+	// This maps from faces in the output of this algorithm
+	// to faces in the input of the TrapezoidMap.
+	fMap := make(map[*dcel.Face]*dcel.Face)
+	vMap := make(map[dcel.Point]*dcel.Edge)
+	dc.Faces = make([]*dcel.Face, len(trs))
+	// Todo: benchmark if it is faster to initially set this
+	// at len(trs) because we know that's a minimum,
+	// and then make if checks down the line for whether we append
+	// or set.
+	dc.Vertices = make([]*dcel.Vertex, 0)
+	for i, tr := range trs {
+		// Each trapezoid becomes a face
+		dc.Faces[i] = dcel.NewFace()
+		fMap[dc.Faces[i]] = tr.face
+		// each of the up to four edges in a trapezoid
+		// has an edge associated with it, the first of which is the face's
+		// inner (going with the broken convention of always using inner)
+		edges := tr.DCELEdges()
+		dc.Faces[i].Inner = edges[0]
+		dc.HalfEdges = append(dc.HalfEdges, edges...)
+		// each vertex in each trapezoid, if it has not been seen before,
+		// is added to the dcel and added to a map connected to it's edge
+		// but if it is in the map,
+		// it defines that the edge it is mapped to is the twin of the
+		// current edge's previous, and vice versa.
+		for _, e := range edges {
+			e.Face = dc.Faces[i]
+			if e2, ok := vMap[e.Origin.Point]; ok {
+				e.SetTwin(e2.Prev)
+				delete(vMap, e.Origin.Point)
+			} else {
+				vMap[e.Origin.Point] = e
+				dc.Vertices = append(dc.Vertices, e.Origin)
+			}
+		}
+	}
+	return dc, fMap
+}
+
+func (tn *TrapezoidNode) inOrder() []*Trapezoid {
+	if tn == nil {
+		// error, unless this is root,
+		// I think
+		return []*Trapezoid{}
+	}
+	if tn.left == nil && tn.right == nil {
+		// This is a trapezoid (or should be)
+		return []*Trapezoid{tn.payload.(*Trapezoid)}
+	}
+	trs := tn.left.inOrder()
+	return append(trs, tn.right.inOrder()...)
+}
+
+// PointLocate returns, from a given complex structure,
+// which substructure that point falls into, if any.
+func (tn *TrapezoidNode) PointLocate(vs ...float64) (*dcel.Face, error) {
+	if len(vs) < 2 {
+		return nil, dcel.InsufficientDimensionsError{}
+	}
+	// A point query on the structure is equivalent to an
+	// edge query where both edges are the same.
+	trs := tn.Query(dcel.FullEdge{dcel.Point{vs[0], vs[1], 0}, dcel.Point{vs[0], vs[1], 0}})
+	if len(trs) == 0 {
+		return nil, nil
+	}
+	return trs[0].face, nil
+}
+
+// Query is shorthand for tn.query(fe, tn)
+func (tn *TrapezoidNode) Query(fe dcel.FullEdge) []*Trapezoid {
 	return tn.query(fe, tn)
 }
 
-func (tn *TrapezoidNode) Discard(n *TrapezoidNode) {
+func (tn *TrapezoidNode) discard(n *TrapezoidNode) {
 	for _, p := range tn.parents {
 		if p.left == tn {
 			p.left = n
@@ -33,7 +106,7 @@ func (tn *TrapezoidNode) Discard(n *TrapezoidNode) {
 	n.parents = []*TrapezoidNode{}
 }
 
-func (tn *TrapezoidNode) Set(v int, n *TrapezoidNode) {
+func (tn *TrapezoidNode) set(v int, n *TrapezoidNode) {
 	switch v {
 	case top:
 		fallthrough
@@ -57,43 +130,43 @@ func NewRoot() *TrapezoidNode {
 	}
 }
 
-func rootQuery(fe FullEdge, n *TrapezoidNode) []*Trapezoid {
+func rootQuery(fe dcel.FullEdge, n *TrapezoidNode) []*Trapezoid {
 	return n.left.Query(fe)
 }
 
 // NewX returns an X-Node at point P
-func NewX(p Point) *TrapezoidNode {
+func NewX(p dcel.Point) *TrapezoidNode {
 	return &TrapezoidNode{
 		query:   xQuery,
 		payload: p,
 	}
 }
 
-func xQuery(fe FullEdge, n *TrapezoidNode) []*Trapezoid {
+func xQuery(fe dcel.FullEdge, n *TrapezoidNode) []*Trapezoid {
 	p := n.payload.(dcel.Point)
 	p2 := p
 	p2[1]++
-	if IsLeftOf(fe.Left(), p, p2) {
+	if geom.IsLeftOf(fe.Left(), p, p2) {
 		return n.left.Query(fe)
 	}
 	return n.right.Query(fe)
 }
 
 // NewY returns a Y-Node at edge e
-func NewY(e FullEdge) *TrapezoidNode {
+func NewY(e dcel.FullEdge) *TrapezoidNode {
 	return &TrapezoidNode{
 		query:   yQuery,
 		payload: e,
 	}
 }
 
-func yQuery(fe FullEdge, n *TrapezoidNode) []*Trapezoid {
+func yQuery(fe dcel.FullEdge, n *TrapezoidNode) []*Trapezoid {
 	// This query asks if fe.Left() is above or below
 	// yn.FullEdge.
 	// If they are colinear, however, we need to check
 	// which slope is larger. If fe is larger, we go above,
 	// else we go below.
-	yn := n.payload.(FullEdge)
+	yn := n.payload.(dcel.FullEdge)
 	cp := geom.HzCross2D(fe.Left(), yn.Left(), yn.Right())
 	if cp > 0 {
 		return n.left.Query(fe)
@@ -119,11 +192,11 @@ func NewTrapNode(tr *Trapezoid) *TrapezoidNode {
 	return node
 }
 
-func trapQuery(fe FullEdge, n *TrapezoidNode) []*Trapezoid {
+func trapQuery(fe dcel.FullEdge, n *TrapezoidNode) []*Trapezoid {
 	tr := n.payload.(*Trapezoid)
 	traps := []*Trapezoid{tr}
 	r := fe.Right()
-	for IsRightOf(r, tr.Edges[right].Left(), tr.Edges[right].Right()) {
+	for geom.IsRightOf(r, tr.Edges[right].Left(), tr.Edges[right].Right()) {
 
 		// We perform this check here is it is less expensive
 		// than the cross product in the latter case, even
@@ -138,7 +211,7 @@ func trapQuery(fe FullEdge, n *TrapezoidNode) []*Trapezoid {
 			// For this aboveness check we just use the left endpoint
 			// of the separating edge, as we know that is within fe's
 			// horizontal span.
-			if IsAbove(
+			if geom.IsAbove(
 				tr.Neighbors[upright].Edges[bot].Left(), fe.Left(), fe.Right()) {
 				tr = tr.Neighbors[botright]
 			} else {

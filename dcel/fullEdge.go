@@ -48,17 +48,17 @@ func (fe FullEdge) Slope() float64 {
 	return (p2.Y() - p1.Y()) / (p2.X() - p2.X())
 }
 
-func (fe FullEdge) PointAt(d int, v float64) (*Point, error) {
+func (fe FullEdge) PointAt(d int, v float64) (Point, error) {
 	e1 := fe.Lesser(d)
 	e2 := fe.Greater(d)
 	if v < e1[d] || v > e2[d] {
 		fmt.Println(v, e1[d], e2[d])
-		return nil, RangeError{}
+		return Point{}, RangeError{}
 	}
 	v -= e1[d]
 	span := e2[d] - e1[d]
 	portion := v / span
-	p := new(Point)
+	p := Point{}
 	for i := 0; i < len(p); i++ {
 		if i == d {
 			p[i] = v
@@ -78,5 +78,5 @@ func (fe FullEdge) SubEdge(d int, v1, v2 float64) (FullEdge, error) {
 	if err != nil {
 		return FullEdge{}, err
 	}
-	return FullEdge{*p1, *p2}, nil
+	return FullEdge{p1, p2}, nil
 }
