@@ -1,4 +1,9 @@
-package dcel
+package triangulation
+
+import (
+	"github.com/200sc/go-compgeo/dcel"
+	"github.com/200sc/go-compgeo/geom"
+)
 
 // A TrapezoidNode is a node in a tree structure
 // for trapezoid map queries. It is structured so that
@@ -25,6 +30,21 @@ func (tn *TrapezoidNode) Discard(n *TrapezoidNode) {
 		}
 	}
 	n.parents = tn.parents
+	n.parents = []*TrapezoidNode{}
+}
+
+func (tn *TrapezoidNode) Set(v int, n *TrapezoidNode) {
+	switch v {
+	case top:
+		fallthrough
+	case left:
+		tn.left = n
+	case bot:
+		fallthrough
+	case right:
+		tn.right = n
+	}
+	n.parents = append(n.parents, tn)
 }
 
 // NewRoot returns a root node.
@@ -50,7 +70,7 @@ func NewX(p Point) *TrapezoidNode {
 }
 
 func xQuery(fe FullEdge, n *TrapezoidNode) []*Trapezoid {
-	p := n.payload.(Point)
+	p := n.payload.(dcel.Point)
 	p2 := p
 	p2[1]++
 	if IsLeftOf(fe.Left(), p, p2) {
@@ -74,7 +94,7 @@ func yQuery(fe FullEdge, n *TrapezoidNode) []*Trapezoid {
 	// which slope is larger. If fe is larger, we go above,
 	// else we go below.
 	yn := n.payload.(FullEdge)
-	cp := HzCross2D(fe.Left(), yn.Left(), yn.Right())
+	cp := geom.HzCross2D(fe.Left(), yn.Left(), yn.Right())
 	if cp > 0 {
 		return n.left.Query(fe)
 	} else if cp < 0 {
@@ -91,10 +111,12 @@ func yQuery(fe FullEdge, n *TrapezoidNode) []*Trapezoid {
 
 // NewTrapNode returns a leaf node holding a trapezoid
 func NewTrapNode(tr *Trapezoid) *TrapezoidNode {
-	return &TrapezoidNode{
+	node := &TrapezoidNode{
 		payload: tr,
 		query:   trapQuery,
 	}
+	tr.node = node
+	return node
 }
 
 func trapQuery(fe FullEdge, n *TrapezoidNode) []*Trapezoid {

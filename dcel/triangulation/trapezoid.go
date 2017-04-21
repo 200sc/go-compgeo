@@ -1,4 +1,4 @@
-package dcel
+package triangulation
 
 // These constants refer to indices
 // within trapezoids' Edges
@@ -25,18 +25,7 @@ type Trapezoid struct {
 	// See above indices
 	Edges     [4]FullEdge
 	Neighbors [4]*Trapezoid
-	parents   []*TrapezoidNode
-}
-
-func (tr *Trapezoid) Discard(n *TrapezoidNode) {
-	for _, p := range tr.parents {
-		if p.left.payload == tr {
-			p.left = n
-		} else {
-			p.right = n
-		}
-	}
-	n.parents = tr.parents
+	node      *TrapezoidNode
 }
 
 // Copy returns a trapezoid with identical edges

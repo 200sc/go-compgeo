@@ -68,3 +68,15 @@ func (fe FullEdge) PointAt(d int, v float64) (*Point, error) {
 	}
 	return p, nil
 }
+
+func (fe FullEdge) SubEdge(d int, v1, v2 float64) (FullEdge, error) {
+	p1, err := fe.PointAt(d, v1)
+	if err != nil {
+		return FullEdge{}, err
+	}
+	p2, err := fe.PointAt(d, v2)
+	if err != nil {
+		return FullEdge{}, err
+	}
+	return FullEdge{*p1, *p2}, nil
+}
