@@ -154,11 +154,16 @@ func (p *Polyhedron) Update() {
 
 	// Sort the elements of zOrder by their Z values.
 	sort.Slice(zOrder, func(i, j int) bool {
+		if zOrder[i] == nil || zOrder[j] == nil {
+			return false
+		}
 		return zOrder[i].Z() < zOrder[j].Z()
 	})
 
 	for _, item := range zOrder {
-		item.draw(rgba)
+		if item != nil {
+			item.draw(rgba)
+		}
 	}
 
 	p.SetRGBA(rgba)

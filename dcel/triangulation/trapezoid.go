@@ -137,8 +137,8 @@ func newTrapezoid(sp geom.Span) *Trapezoid {
 	p1 := geom.NewPoint(min.X(), max.Y(), min.Z())
 	p2 := geom.NewPoint(max.X(), min.Y(), min.Z())
 	// These might need to flip
-	t.Edges[top] = geom.FullEdge{min, p2}
-	t.Edges[bot] = geom.FullEdge{max, p1}
+	t.Edges[top] = geom.FullEdge{max, p1}
+	t.Edges[bot] = geom.FullEdge{min, p2}
 	t.left = min.X()
 	t.right = max.X()
 	t.Neighbors = [4]*Trapezoid{}

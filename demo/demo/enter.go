@@ -38,7 +38,7 @@ func phdEnter(cID int, nothing interface{}) int {
 	mX := float64(nme.X)
 	mY := float64(nme.Y)
 	mouseStr.SetText(geom.Point{mX - phd.X, mY - phd.Y, mouseZ})
-	if mX < 0 || mY < 0 || (mX > 515 && mY > 440) {
+	if mX < 0 || mY < 0 || (mX > 515 && mY > 410) {
 		dragX = -1
 		dragY = -1
 		return 0

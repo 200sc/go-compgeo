@@ -61,7 +61,7 @@ func (tn *TrapezoidNode) DCEL() (*dcel.DCEL, map[*dcel.Face]*dcel.Face) {
 			}
 		}
 	}
-	dc.CorrectTwins()
+	//dc.CorrectTwins()
 	return dc, fMap
 }
 
@@ -196,13 +196,11 @@ func NewX(p geom.D3) *TrapezoidNode {
 
 func xQuery(fe geom.FullEdge, n *TrapezoidNode) []*Trapezoid {
 	p := n.payload.(geom.Point)
-	p2 := p
-	p2[1]++
-	if geom.IsLeftOf(fe.Left(), p, p2) {
-		fmt.Println("X compare:", fe, p, true)
+	if fe.Left().X() < p.X() {
+		fmt.Println("X compare:", fe.Left().X(), p.X(), true)
 		return n.left.Query(fe)
 	}
-	fmt.Println("X compare:", fe, p, false)
+	fmt.Println("X compare:", fe.Left().X(), p.X(), false)
 	return n.right.Query(fe)
 }
 
