@@ -1,9 +1,12 @@
 package triangulation
 
 import (
+	"fmt"
+
 	compgeo "github.com/200sc/go-compgeo"
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/geom"
+	"github.com/200sc/go-compgeo/printutil"
 )
 
 // A TrapezoidNode is a node in a tree structure
@@ -93,6 +96,10 @@ func (tn *TrapezoidNode) PointLocate(vs ...float64) (*dcel.Face, error) {
 
 // Query is shorthand for tn.query(fe, tn)
 func (tn *TrapezoidNode) Query(fe geom.FullEdge) []*Trapezoid {
+	if tn == nil {
+		fmt.Println("Off the edge")
+		return []*Trapezoid{}
+	}
 	return tn.query(fe, tn)
 }
 
@@ -105,7 +112,6 @@ func (tn *TrapezoidNode) discard(n *TrapezoidNode) {
 		}
 	}
 	n.parents = tn.parents
-	n.parents = []*TrapezoidNode{}
 }
 
 func (tn *TrapezoidNode) set(v int, n *TrapezoidNode) {
@@ -120,6 +126,50 @@ func (tn *TrapezoidNode) set(v int, n *TrapezoidNode) {
 		tn.right = n
 	}
 	n.parents = append(n.parents, tn)
+}
+
+func (tn *TrapezoidNode) String() string {
+	return tn.string("", true)
+}
+
+func (tn *TrapezoidNode) string(prefix string, isTail bool) string {
+	if tn == nil || len(prefix) > 64 {
+		return ""
+	}
+	s := prefix
+	if isTail {
+		s += "└──"
+		prefix += "    "
+	} else {
+		s += "├──"
+		prefix += "│   "
+	}
+	// Add identifier here
+	// if n.isBlack() {
+	// 	s += "B:"
+	// } else {
+	// 	s += "R:"
+	// }
+	// if n.parent != nil {
+	// 	s += n.parent.keyString() + "->"
+	// }
+	s += tn.payloadString() + "\n"
+	s += tn.right.string(prefix, false)
+	s += tn.left.string(prefix, true)
+
+	return s
+}
+
+func (tn *TrapezoidNode) payloadString() string {
+	switch v := tn.payload.(type) {
+	case *Trapezoid:
+		return "T" + v.String()
+	case geom.D3:
+		return "X" + "(" + printutil.Stringf64(v.Val(0), v.Val(1)) + ")"
+	case geom.FullEdge:
+		return "Y" + "(" + printutil.Stringf64(v[0][0], v[0][1], v[1][0], v[1][1]) + ")"
+	}
+	return "Root"
 }
 
 // NewRoot returns a root node.
@@ -149,8 +199,10 @@ func xQuery(fe geom.FullEdge, n *TrapezoidNode) []*Trapezoid {
 	p2 := p
 	p2[1]++
 	if geom.IsLeftOf(fe.Left(), p, p2) {
+		fmt.Println("X compare:", fe, p, true)
 		return n.left.Query(fe)
 	}
+	fmt.Println("X compare:", fe, p, false)
 	return n.right.Query(fe)
 }
 
@@ -170,6 +222,7 @@ func yQuery(fe geom.FullEdge, n *TrapezoidNode) []*Trapezoid {
 	// else we go below.
 	yn := n.payload.(geom.FullEdge)
 	cp := geom.HzCross2D(fe.Left(), yn.Left(), yn.Right())
+	fmt.Println("Y compare:", cp, fe, yn)
 	if cp > 0 {
 		return n.left.Query(fe)
 	} else if cp < 0 {

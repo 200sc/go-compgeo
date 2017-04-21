@@ -1,6 +1,7 @@
 package triangulation
 
 import (
+	"fmt"
 	"math/rand"
 
 	"github.com/200sc/go-compgeo/dcel"
@@ -14,15 +15,30 @@ func TrapezoidalMap(dc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, *Trap
 	bounds := dc.Bounds()
 
 	Search := NewRoot()
-	Search.left = NewTrapNode(newTrapezoid(bounds))
+	Search.set(left, NewTrapNode(newTrapezoid(bounds)))
+	fmt.Println(Search)
 
 	fullEdges, faces, err := dc.FullEdges()
 	if err != nil {
 		return nil, nil, nil, err
 	}
-
+	// Get rid of bad edges
+	i := 0
+	for i < len(fullEdges) {
+		fe := fullEdges[i]
+		l := fe.Left()
+		r := fe.Right()
+		if geom.F64eq(l.X(), r.X()) && geom.F64eq(l.Y(), r.Y()) {
+			fullEdges = append(fullEdges[0:i], fullEdges[i+1:]...)
+			faces = append(faces[0:i], faces[i+1:]...)
+			i--
+		}
+		i++
+	}
+	fmt.Println("FullEdges")
 	// Scramble the edges
 	for i := range fullEdges {
+		fmt.Println(fullEdges[i])
 		j := i + rand.Intn(len(fullEdges)-i)
 		fullEdges[i], fullEdges[j] = fullEdges[j], fullEdges[i]
 	}
@@ -36,7 +52,12 @@ func TrapezoidalMap(dc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, *Trap
 
 		// Case A: A fe is contained in a single trapezoid tr
 		// Then we make (up to) four trapezoids out of tr.
+		if len(trs) == 0 {
+			fmt.Println(fe, "intersected nothing?")
+			fmt.Println(Search)
+		}
 		if len(trs) == 1 {
+			fmt.Println(fe, "intersected one trapezoid", trs[0])
 			mapSingleCase(trs[0], fe)
 		} else {
 			lp := fe.Left()
@@ -331,6 +352,7 @@ func TrapezoidalMap(dc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, *Trap
 			}
 		}
 	}
+	fmt.Println("Search:\n", Search)
 	dc, m := Search.DCEL()
 	return dc, m, Search, nil
 }
@@ -348,6 +370,10 @@ func mapSingleCase(tr *Trapezoid, fe geom.FullEdge) {
 	// Case 2A.2
 	// If fe.left or fe.right lies ON tr's left and right
 	// edges, we don't make new trapezoids for them.
+	fmt.Println(lp, tr.Edges[left])
+	fmt.Println("Is colinear", geom.IsColinear(lp, tr.Edges[left].Left(), tr.Edges[left].Right()))
+	fmt.Println(lp.X(), lp.Y(), tr.Edges[left].Left().X(), tr.Edges[left].Left().Y(),
+		tr.Edges[left].Right().X(), tr.Edges[left].Right().Y())
 	if !geom.IsColinear(lp, tr.Edges[left].Left(), tr.Edges[left].Right()) {
 		l = tr.Copy()
 		p1, _ := tr.Edges[top].PointAt(0, lp.X())
@@ -364,11 +390,14 @@ func mapSingleCase(tr *Trapezoid, fe geom.FullEdge) {
 	u := tr.Copy()
 	d := tr.Copy()
 
-	l.Neighbors[upright] = u
-	l.Neighbors[botright] = d
-
-	r.Neighbors[upleft] = u
-	r.Neighbors[botleft] = d
+	if l != nil {
+		l.Neighbors[upright] = u
+		l.Neighbors[botright] = d
+	}
+	if r != nil {
+		r.Neighbors[upleft] = u
+		r.Neighbors[botleft] = d
+	}
 
 	u.Neighbors[upleft] = l
 	u.Neighbors[botleft] = l
@@ -405,10 +434,14 @@ func mapSingleCase(tr *Trapezoid, fe geom.FullEdge) {
 
 	tr.node.discard(a)
 
-	a.set(left, NewTrapNode(l))
+	if l != nil {
+		a.set(left, NewTrapNode(l))
+	}
 	a.set(right, b)
 	b.set(left, c)
-	b.set(right, NewTrapNode(r))
+	if r != nil {
+		b.set(right, NewTrapNode(r))
+	}
 	c.set(left, NewTrapNode(u))
 	c.set(right, NewTrapNode(d))
 }

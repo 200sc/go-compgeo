@@ -7,7 +7,7 @@ import "github.com/200sc/go-compgeo/geom"
 func (dc *DCEL) Bounds() geom.Span {
 	sp := geom.NewSpan()
 	for _, v := range dc.Vertices {
-		sp.Expand(v)
+		sp = sp.Expand(v)
 	}
 	return sp
 }
@@ -32,6 +32,6 @@ func (f *Face) Bounds() geom.Span {
 // origin.
 func (e *Edge) Bounds() geom.Span {
 	sp := geom.NewSpan()
-	sp.Expand(e.Origin, e.Twin.Origin)
+	sp = sp.Expand(e.Origin, e.Twin.Origin)
 	return sp
 }

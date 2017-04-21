@@ -1,10 +1,6 @@
 package geom
 
-import (
-	"fmt"
-
-	compgeo "github.com/200sc/go-compgeo"
-)
+import compgeo "github.com/200sc/go-compgeo"
 
 // FullEdge is (eventually) a span
 // across two arbitrary points
@@ -34,7 +30,6 @@ func (fe FullEdge) PointAt(d int, v float64) (Point, error) {
 	e1 := fe.Low(d)
 	e2 := fe.High(d)
 	if v < e1.Val(d) || v > e2.Val(d) {
-		fmt.Println(v, e1.Val(d), e2.Val(d))
 		return Point{}, compgeo.RangeError{}
 	}
 	v -= e1.Val(d)
@@ -86,7 +81,7 @@ func (fe FullEdge) At(i int) Dimensional {
 // Low returns whatever value is lower at dimension d
 // on this edge
 func (fe FullEdge) Low(d int) Dimensional {
-	if fe[0].Val(d) < fe[1].Val(d) {
+	if fe[0].Val(d) <= fe[1].Val(d) {
 		return fe[0]
 	}
 	return fe[1]

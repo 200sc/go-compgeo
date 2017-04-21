@@ -227,7 +227,6 @@ func (e *Edge) IsClockwise() (bool, error) {
 func (e *Edge) Flip() {
 	start := e
 	for {
-		//fmt.Println("Flipping!")
 		e.Next, e.Prev = e.Prev, e.Next
 		e.Twin.Next, e.Twin.Prev = e.Twin.Prev, e.Twin.Next
 		e.Origin, e.Twin.Origin = e.Twin.Origin, e.Origin
@@ -237,14 +236,6 @@ func (e *Edge) Flip() {
 			break
 		}
 	}
-	// for {
-	// 	fmt.Println("E:", e)
-	// 	fmt.Println("Twin", e.Twin)
-	// 	e = e.Next
-	// 	if e == start {
-	// 		break
-	// 	}
-	// }
 }
 
 // PointAt returns the point at a given position on some
@@ -258,7 +249,6 @@ func (e *Edge) PointAt(d int, v float64) (geom.Point, error) {
 		e1, e2 = e2, e1
 	}
 	if v < e1[d] || v > e2[d] {
-		fmt.Println(v, e1[d], e2[d])
 		return geom.Point{}, compgeo.RangeError{}
 	}
 	v -= e1[d]

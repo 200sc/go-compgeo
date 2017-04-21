@@ -102,15 +102,15 @@ func (dp Point) Cross2D(p2, p3 D2) float64 {
 // Lesser2D reports the lower point by y value,
 // or by x value given equal y values. If the
 // two points are equal the latter point is returned.
-func (dp Point) Lesser2D(p2 D2) Point {
-	return Lesser2D(dp, p2).(Point)
+func (dp Point) Lesser2D(p2 D2) D2 {
+	return Lesser2D(dp, p2)
 }
 
 // Greater2D reports the higher point by y value,
 // or by x value given equal y values. If the
 // two points are equal the latter point is returned.
-func (dp Point) Greater2D(p2 D2) Point {
-	return Greater2D(dp, p2).(Point)
+func (dp Point) Greater2D(p2 D2) D2 {
+	return Greater2D(dp, p2)
 }
 
 // Magnitude2D reports the magnitude of the point

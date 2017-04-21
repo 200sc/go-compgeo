@@ -3,6 +3,7 @@ package triangulation
 import (
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/geom"
+	"github.com/200sc/go-compgeo/printutil"
 )
 
 // These constants refer to indices
@@ -117,6 +118,17 @@ func (tr *Trapezoid) HasDefinedPoint(p geom.D3) bool {
 	return false
 }
 
+func (tr *Trapezoid) String() string {
+	s := ""
+	for i := 0; i < len(tr.Edges); i++ {
+		s += "("
+		s += printutil.Stringf64(tr.Edges[i][0][0], tr.Edges[i][0][1],
+			tr.Edges[i][1][0], tr.Edges[i][1][1])
+		s += ")"
+	}
+	return s
+}
+
 func newTrapezoid(sp geom.Span) *Trapezoid {
 	t := new(Trapezoid)
 	min := sp.At(0).(geom.Point)
@@ -127,5 +139,6 @@ func newTrapezoid(sp geom.Span) *Trapezoid {
 	t.Edges[bot] = geom.FullEdge{max, p1}
 	t.Edges[left] = geom.FullEdge{min, p1}
 	t.Edges[right] = geom.FullEdge{max, p2}
+	t.Neighbors = [4]*Trapezoid{}
 	return t
 }
