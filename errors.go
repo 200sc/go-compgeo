@@ -1,4 +1,4 @@
-package dcel
+package compgeo
 
 // TypeError is returned when some input to be
 // read is improperly formatted for the expected type.
@@ -70,4 +70,11 @@ type BadDCELError struct{}
 
 func (bde BadDCELError) Error() string {
 	return "The input DCEL was not valid"
+}
+
+// DivideByZero is returned by functions that attempt to Divide by zero.
+type DivideByZero struct{}
+
+func (dbz DivideByZero) Error() string {
+	return "Division by zero. Default value to Infinity if unavoidable"
 }

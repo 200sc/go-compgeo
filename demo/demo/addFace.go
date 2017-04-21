@@ -11,6 +11,7 @@ import (
 	"bitbucket.org/oakmoundstudio/oak/mouse"
 	"bitbucket.org/oakmoundstudio/oak/timing"
 	"github.com/200sc/go-compgeo/dcel"
+	"github.com/200sc/go-compgeo/dcel/slab"
 	"github.com/200sc/go-compgeo/search/tree"
 )
 
@@ -132,7 +133,7 @@ func addFace(cID int, ev interface{}) int {
 		} else if mode == POINT_LOCATE {
 			if slabDecomposition == nil {
 				var err error
-				slabDecomposition, err = phd.SlabDecompose(tree.RedBlack)
+				slabDecomposition, err = slab.Decompose(&phd.DCEL, tree.RedBlack)
 				if err != nil {
 					fmt.Println(err)
 					return 0

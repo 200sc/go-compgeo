@@ -3,6 +3,9 @@ package dcel
 import (
 	"fmt"
 	"math"
+
+	compgeo "github.com/200sc/go-compgeo"
+	"github.com/200sc/go-compgeo/geom"
 )
 
 // A DCEL is a structure representin arbitrary plane
@@ -95,17 +98,17 @@ func (dc *DCEL) ScanFaces(f *Face) int {
 
 // FullEdge returns the ith edge in the form of its
 // two vertices
-func (dc *DCEL) FullEdge(i int) (FullEdge, error) {
+func (dc *DCEL) FullEdge(i int) (geom.FullEdge, error) {
 	if i >= len(dc.HalfEdges) {
-		return FullEdge{}, BadEdgeError{}
+		return geom.FullEdge{}, compgeo.BadEdgeError{}
 	}
 	return dc.HalfEdges[i].FullEdge()
 }
 
 // FullEdges returns the set of all FullEdges in DCEL.
-func (dc *DCEL) FullEdges() ([]FullEdge, [][2]*Face, error) {
+func (dc *DCEL) FullEdges() ([]geom.FullEdge, [][2]*Face, error) {
 	var err error
-	fullEdges := make([]FullEdge, len(dc.HalfEdges)/2)
+	fullEdges := make([]geom.FullEdge, len(dc.HalfEdges)/2)
 	faces := make([][2]*Face, len(fullEdges))
 	for i := 0; i < len(dc.HalfEdges); i += 2 {
 		fullEdges[i], err = dc.HalfEdges[i].FullEdge()
@@ -147,6 +150,26 @@ func (dc *DCEL) CorrectDirectionality(f *Face) {
 	}
 }
 
+// CorrectTwins modifies the ordering on twins
+// inside the DCEL such that dc.HalfEdges[i] is
+// the twin of dc.HalfEdges[i+1] for all even
+// i values.
+func (dc *DCEL) CorrectTwins() {
+	newEdges := make([]*Edge, len(dc.HalfEdges))
+	seen := make(map[*Edge]bool)
+	for i := 0; i < len(dc.HalfEdges); i++ {
+		if _, ok := seen[dc.HalfEdges[i]]; !ok {
+			newEdges[i] = dc.HalfEdges[i]
+			newEdges[i+1] = newEdges[i].Twin
+			seen[newEdges[i]] = true
+			seen[newEdges[i+1]] = true
+		}
+	}
+	dc.HalfEdges = newEdges
+}
+
+// Copy duplicates a DCEL's internal values
+// in a new DCEL.
 func (dc *DCEL) Copy() *DCEL {
 	dc2 := new(DCEL)
 	dc2.Faces = make([]*Face, len(dc.Faces))

@@ -6,6 +6,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	compgeo "github.com/200sc/go-compgeo"
 )
 
 // LoadOFF loads Object File Format files. This function
@@ -30,10 +32,10 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 
 	if scanner.Scan() {
 		if scanner.Text() != "OFF" {
-			return nil, TypeError{}
+			return nil, compgeo.TypeError{}
 		}
 	} else {
-		return nil, EmptyError{}
+		return nil, compgeo.EmptyError{}
 	}
 
 	counts, err := readIntLine(scanner, 3)
@@ -210,7 +212,7 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 	// }
 
 	if !isManifold {
-		return nil, NotManifoldError{}
+		return nil, compgeo.NotManifoldError{}
 	}
 	var prev *Edge
 	for i := 0; i < len(edges); i++ {
@@ -247,18 +249,18 @@ func readIntLine(s *bufio.Scanner, l int) ([]int, error) {
 	out := make([]int, l)
 
 	if !s.Scan() {
-		return out, TypeError{}
+		return out, compgeo.TypeError{}
 	}
 
 	ints := strings.Split(s.Text(), " ")
 	if len(ints) < l {
-		return nil, TypeError{}
+		return nil, compgeo.TypeError{}
 	}
 
 	for i := 0; i < l; i++ {
 		out[i], err = strconv.Atoi(ints[i])
 		if err != nil {
-			return nil, TypeError{}
+			return nil, compgeo.TypeError{}
 		}
 	}
 
@@ -270,18 +272,18 @@ func readFloat64Line(s *bufio.Scanner, l int) ([]float64, error) {
 	out := make([]float64, l)
 
 	if !s.Scan() {
-		return out, TypeError{}
+		return out, compgeo.TypeError{}
 	}
 
 	ints := strings.Split(s.Text(), " ")
 	if len(ints) < l {
-		return nil, TypeError{}
+		return nil, compgeo.TypeError{}
 	}
 
 	for i := 0; i < l; i++ {
 		out[i], err = strconv.ParseFloat(ints[i], 64)
 		if err != nil {
-			return nil, TypeError{}
+			return nil, compgeo.TypeError{}
 		}
 	}
 
@@ -292,26 +294,26 @@ func readFloat64Line(s *bufio.Scanner, l int) ([]float64, error) {
 func readIntsLineNoLength(s *bufio.Scanner) (int, []int, error) {
 	var err error
 	if !s.Scan() {
-		return 0, make([]int, 0), TypeError{}
+		return 0, make([]int, 0), compgeo.TypeError{}
 	}
 
 	ints := strings.Split(s.Text(), " ")
 
 	length, err := strconv.Atoi(ints[0])
 	if err != nil {
-		return 0, nil, TypeError{}
+		return 0, nil, compgeo.TypeError{}
 	}
 
 	out := make([]int, length)
 
 	if len(ints) < (length + 1) {
-		return 0, nil, TypeError{}
+		return 0, nil, compgeo.TypeError{}
 	}
 
 	for i := 0; i < length; i++ {
 		out[i], err = strconv.Atoi(ints[i+1])
 		if err != nil {
-			return 0, nil, TypeError{}
+			return 0, nil, compgeo.TypeError{}
 		}
 	}
 

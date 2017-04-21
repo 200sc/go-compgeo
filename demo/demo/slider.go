@@ -13,6 +13,10 @@ import (
 	"bitbucket.org/oakmoundstudio/oak/render"
 )
 
+// Slider is a little UI element with a movable slider
+// representing a range. It has a specific purpose of
+// setting visualization delay, but eventually it might
+// be expanded to a more generalized structure.
 type Slider struct {
 	*Button
 	min, val, max float64
@@ -21,11 +25,27 @@ type Slider struct {
 	knubLine      render.Renderable
 }
 
+// Init returns a CID for the Slider.
+//
+// Note on engine internals:
+// All entities as defined by the engine
+// need to have this function defined on them.
+// this is because an entity is only a meaningful
+// concept in terms of the engine for an entity's
+// ability to have events bound to it and triggered
+// on it, which this CID (caller ID) represents.
+//
+// Its literal meaning is, in our event bus, the value
+// passed into NextID (which is the only way to get a
+// legitimate CID), is stored at the array index of the
+// returned CID.
 func (sl *Slider) Init() event.CID {
 	cID := event.NextID(sl)
 	return cID
 }
 
+// NewSlider returns a slider with initialized values
+// using the given font to render its text.
 func NewSlider(f *render.Font) *Slider {
 	sl := new(Slider)
 	sl.Button = new(Button)
@@ -48,6 +68,9 @@ func NewSlider(f *render.Font) *Slider {
 	return sl
 }
 
+// SetPos is an overwrite of a lower-tiered function
+// which sets this slider's position and the position
+// of it's attached entities
 func (sl *Slider) SetPos(x float64, y float64) {
 	sl.SetLogicPos(x, y)
 	if sl.R != nil {
@@ -68,19 +91,24 @@ func (sl *Slider) SetPos(x float64, y float64) {
 	}
 }
 
+// sliderDragStart tells this demo to ignore some mouse events
+// until sliding = false, and binds to every frame sliderDrag.
 func sliderDragStart(sl int, nothing interface{}) int {
 	sliding = true
 	event.CID(sl).Bind(sliderDrag, "EnterFrame")
 	return 0
 }
 
+// sliderDrag updates the position and value of this slider's
+// knub, within a defined range. Once the mouse is let go,
+// it allows other mouse operations to resume and updates
+// the visualizaton delay to the value it was left at.
 func sliderDrag(sl int, nothing interface{}) int {
 	slider := event.GetEntity(sl).(*Slider)
 	me := mouse.LastMouseEvent
 	if me.Event == "MouseRelease" {
 		event.Trigger("Visualize", slider.interval)
 		sliding = false
-		fmt.Println("WHat")
 		return event.UNBIND_SINGLE
 	}
 	x := float64(me.X) - (slider.X + 5)
@@ -102,6 +130,7 @@ func sliderDrag(sl int, nothing interface{}) int {
 	return 0
 }
 
+// valText updates slider's text given it's knub position.
 func (sl *Slider) valText() fmt.Stringer {
 	if sl.val == 2 {
 		sl.interval = time.Duration(0)

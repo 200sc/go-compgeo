@@ -1,89 +1,11 @@
 package dcel
 
-import (
-	"math"
-
-	"github.com/200sc/go-compgeo/geom"
-)
-
-// A Span represents n-dimensions of
-// span from one point to another
-// for however many dimensions a point
-// has (3 at time or writing)
-type Span struct {
-	Min Point
-	Max Point
-}
-
-// NewSpan returns a span with its values
-// set to appropriate infinities
-func NewSpan() Span {
-	sp := Span{}
-	for i := range sp.Min {
-		sp.Min[i] = math.MaxFloat64
-		sp.Max[i] = math.MaxFloat64 * -1
-	}
-	return sp
-}
-
-// Expand on a Span will reduce or increase
-// a span's min and max values if the input points
-// falls outside of the span on any dimension
-func (sp Span) Expand(ps ...geom.Dimensional) Span {
-	for _, p := range ps {
-		j := p.D()
-		for i := range sp.Min {
-			if i > j {
-				break
-			}
-			v := p.Val(i)
-			if v < sp.Min[i] {
-				sp.Min[i] = v
-			}
-			if v > sp.Max[i] {
-				sp.Max[i] = v
-			}
-		}
-	}
-	return sp
-}
-
-func (sp Span) Lesser(d int) Point {
-	return sp.Min
-}
-
-func (sp Span) Greater(d int) Point {
-	return sp.Max
-}
-
-func (sp Span) Left() Point {
-	return sp.Lesser(0)
-}
-
-func (sp Span) Right() Point {
-	return sp.Greater(0)
-}
-
-func (sp Span) Top() Point {
-	return sp.Greater(1)
-}
-
-func (sp Span) Bottom() Point {
-	return sp.Lesser(1)
-}
-
-func (sp Span) Outer() Point {
-	return sp.Lesser(2)
-}
-
-func (sp Span) Inner() Point {
-	return sp.Greater(2)
-}
+import "github.com/200sc/go-compgeo/geom"
 
 // Bounds on a DCEL returns a Span calculated
 // from every point in the DCEL.
-func (dc *DCEL) Bounds() Span {
-	sp := NewSpan()
+func (dc *DCEL) Bounds() geom.Span {
+	sp := geom.NewSpan()
 	for _, v := range dc.Vertices {
 		sp.Expand(v)
 	}
@@ -94,8 +16,8 @@ func (dc *DCEL) Bounds() Span {
 // every point on the Inner of this face
 // because at time of writing we don't
 // populate Outer
-func (f *Face) Bounds() Span {
-	sp := NewSpan()
+func (f *Face) Bounds() geom.Span {
+	sp := geom.NewSpan()
 	e := f.Inner
 	sp = sp.Expand(e.Origin)
 	for e.Next != f.Inner {
@@ -105,17 +27,11 @@ func (f *Face) Bounds() Span {
 	return sp
 }
 
-// Bounds on a Point will return
-// the point itself.
-func (p *Point) Bounds() Span {
-	return Span{*p, *p}
-}
-
 // Bounds on an Edge returns a Span
 // on the edge's origin and it's twin's
 // origin.
-func (e *Edge) Bounds() Span {
-	sp := NewSpan()
+func (e *Edge) Bounds() geom.Span {
+	sp := geom.NewSpan()
 	sp.Expand(e.Origin, e.Twin.Origin)
 	return sp
 }

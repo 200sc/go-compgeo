@@ -1,5 +1,13 @@
 package geom
 
+import "github.com/200sc/go-compgeo/search"
+
+// Dot2D returns the dot product
+// of two 2d elements.
+func Dot2D(p1, p2 D2) float64 {
+	return p1.X()*p2.X() + p1.Y()*p2.Y()
+}
+
 // Cross2D preforms the cross product on three points
 // in two dimensions.
 func Cross2D(a, b, c D2) float64 {
@@ -21,7 +29,7 @@ func VertCross2D(a, b, c D2) float64 {
 	return cp
 }
 
-// HorzCross2D is equivalent to VertCross2D
+// HzCross2D is equivalent to VertCross2D
 // for horizontal queries.
 func HzCross2D(a, b, c D2) float64 {
 	cp := Cross2D(a, b, c)
@@ -81,4 +89,22 @@ func IsColinearOrLeft(a, b, c D2) bool {
 // without redoing the cross product calculation
 func IsColinearOrRight(a, b, c D2) bool {
 	return VertCross2D(a, b, c) <= 0
+}
+
+// VerticalCompare returns a search result
+// representing whether this point is above
+// equal or below the query edge.
+func VerticalCompare(dp D2, e Spanning) search.CompareResult {
+	p1 := e.At(0).(D2)
+	p2 := e.At(1).(D2)
+	if p1.X() < p2.X() {
+		p1, p2 = p2, p1
+	}
+	s := Cross2D(p1, p2, dp)
+	if s == 0 {
+		return search.Equal
+	} else if s < 0 {
+		return search.Less
+	}
+	return search.Greater
 }

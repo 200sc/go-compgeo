@@ -1,6 +1,7 @@
 package triangulation
 
 import (
+	compgeo "github.com/200sc/go-compgeo"
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/geom"
 )
@@ -12,7 +13,7 @@ import (
 type TrapezoidNode struct {
 	left, right *TrapezoidNode
 	parents     []*TrapezoidNode
-	query       func(dcel.FullEdge, *TrapezoidNode) []*Trapezoid
+	query       func(geom.FullEdge, *TrapezoidNode) []*Trapezoid
 	payload     interface{}
 }
 
@@ -24,7 +25,7 @@ func (tn *TrapezoidNode) DCEL() (*dcel.DCEL, map[*dcel.Face]*dcel.Face) {
 	// This maps from faces in the output of this algorithm
 	// to faces in the input of the TrapezoidMap.
 	fMap := make(map[*dcel.Face]*dcel.Face)
-	vMap := make(map[dcel.Point]*dcel.Edge)
+	vMap := make(map[geom.Point]*dcel.Edge)
 	dc.Faces = make([]*dcel.Face, len(trs))
 	// Todo: benchmark if it is faster to initially set this
 	// at len(trs) because we know that's a minimum,
@@ -57,6 +58,7 @@ func (tn *TrapezoidNode) DCEL() (*dcel.DCEL, map[*dcel.Face]*dcel.Face) {
 			}
 		}
 	}
+	dc.CorrectTwins()
 	return dc, fMap
 }
 
@@ -78,11 +80,11 @@ func (tn *TrapezoidNode) inOrder() []*Trapezoid {
 // which substructure that point falls into, if any.
 func (tn *TrapezoidNode) PointLocate(vs ...float64) (*dcel.Face, error) {
 	if len(vs) < 2 {
-		return nil, dcel.InsufficientDimensionsError{}
+		return nil, compgeo.InsufficientDimensionsError{}
 	}
 	// A point query on the structure is equivalent to an
 	// edge query where both edges are the same.
-	trs := tn.Query(dcel.FullEdge{dcel.Point{vs[0], vs[1], 0}, dcel.Point{vs[0], vs[1], 0}})
+	trs := tn.Query(geom.FullEdge{geom.Point{vs[0], vs[1], 0}, geom.Point{vs[0], vs[1], 0}})
 	if len(trs) == 0 {
 		return nil, nil
 	}
@@ -90,7 +92,7 @@ func (tn *TrapezoidNode) PointLocate(vs ...float64) (*dcel.Face, error) {
 }
 
 // Query is shorthand for tn.query(fe, tn)
-func (tn *TrapezoidNode) Query(fe dcel.FullEdge) []*Trapezoid {
+func (tn *TrapezoidNode) Query(fe geom.FullEdge) []*Trapezoid {
 	return tn.query(fe, tn)
 }
 
@@ -130,20 +132,20 @@ func NewRoot() *TrapezoidNode {
 	}
 }
 
-func rootQuery(fe dcel.FullEdge, n *TrapezoidNode) []*Trapezoid {
+func rootQuery(fe geom.FullEdge, n *TrapezoidNode) []*Trapezoid {
 	return n.left.Query(fe)
 }
 
 // NewX returns an X-Node at point P
-func NewX(p dcel.Point) *TrapezoidNode {
+func NewX(p geom.D3) *TrapezoidNode {
 	return &TrapezoidNode{
 		query:   xQuery,
 		payload: p,
 	}
 }
 
-func xQuery(fe dcel.FullEdge, n *TrapezoidNode) []*Trapezoid {
-	p := n.payload.(dcel.Point)
+func xQuery(fe geom.FullEdge, n *TrapezoidNode) []*Trapezoid {
+	p := n.payload.(geom.Point)
 	p2 := p
 	p2[1]++
 	if geom.IsLeftOf(fe.Left(), p, p2) {
@@ -153,20 +155,20 @@ func xQuery(fe dcel.FullEdge, n *TrapezoidNode) []*Trapezoid {
 }
 
 // NewY returns a Y-Node at edge e
-func NewY(e dcel.FullEdge) *TrapezoidNode {
+func NewY(e geom.FullEdge) *TrapezoidNode {
 	return &TrapezoidNode{
 		query:   yQuery,
 		payload: e,
 	}
 }
 
-func yQuery(fe dcel.FullEdge, n *TrapezoidNode) []*Trapezoid {
+func yQuery(fe geom.FullEdge, n *TrapezoidNode) []*Trapezoid {
 	// This query asks if fe.Left() is above or below
 	// yn.FullEdge.
 	// If they are colinear, however, we need to check
 	// which slope is larger. If fe is larger, we go above,
 	// else we go below.
-	yn := n.payload.(dcel.FullEdge)
+	yn := n.payload.(geom.FullEdge)
 	cp := geom.HzCross2D(fe.Left(), yn.Left(), yn.Right())
 	if cp > 0 {
 		return n.left.Query(fe)
@@ -192,7 +194,7 @@ func NewTrapNode(tr *Trapezoid) *TrapezoidNode {
 	return node
 }
 
-func trapQuery(fe dcel.FullEdge, n *TrapezoidNode) []*Trapezoid {
+func trapQuery(fe geom.FullEdge, n *TrapezoidNode) []*Trapezoid {
 	tr := n.payload.(*Trapezoid)
 	traps := []*Trapezoid{tr}
 	r := fe.Right()

@@ -8,12 +8,14 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/200sc/go-compgeo/geom"
 	"golang.org/x/sync/syncmap"
 
 	"bitbucket.org/oakmoundstudio/oak"
 	"bitbucket.org/oakmoundstudio/oak/event"
 	"bitbucket.org/oakmoundstudio/oak/render"
 	"github.com/200sc/go-compgeo/dcel"
+	"github.com/200sc/go-compgeo/dcel/slab"
 	"github.com/200sc/go-compgeo/dcel/visualize"
 )
 
@@ -82,7 +84,7 @@ func InitScene(prevScene string, data interface{}) {
 	render.Draw(modeStr, 3)
 
 	mouseStr = font.NewInterfaceText(
-		dcel.Point{0, 0, 0}, 3, 465)
+		geom.Point{0, 0, 0}, 3, 465)
 	render.Draw(mouseStr, 3)
 
 	clrBtn := NewButton(clear, font)
@@ -178,14 +180,14 @@ func visuals(no int, rt interface{}) int {
 	rate := rt.(time.Duration)
 	if rate != 0 {
 		if ticker != nil {
-			close(dcel.VisualCh)
+			close(slab.VisualCh)
 			select {
 			case stopTickerCh <- true:
 			default:
 			}
 			ticker.Stop()
 		}
-		dcel.VisualCh = make(chan *visualize.Visual)
+		slab.VisualCh = make(chan *visualize.Visual)
 		ticker = time.NewTicker(rate)
 		go func() {
 			var visual *visualize.Visual
@@ -197,13 +199,12 @@ func visuals(no int, rt interface{}) int {
 					if visual != nil {
 						render.UndrawAfter(visual, 100*time.Millisecond)
 					}
-					visual = <-dcel.VisualCh
+					visual = <-slab.VisualCh
 					if visual == nil {
 						fmt.Println("Nil visual recieved")
 						return
-					} else {
-						fmt.Println("Drawing visual")
 					}
+					fmt.Println("Drawing visual")
 					visual.ShiftX(phd.X)
 					visual.ShiftY(phd.Y)
 
@@ -215,7 +216,7 @@ func visuals(no int, rt interface{}) int {
 		}()
 	} else {
 		if ticker != nil {
-			close(dcel.VisualCh)
+			close(slab.VisualCh)
 			select {
 			case stopTickerCh <- true:
 			default:
@@ -223,7 +224,7 @@ func visuals(no int, rt interface{}) int {
 			ticker.Stop()
 			ticker = nil
 		}
-		dcel.VisualCh = nil
+		slab.VisualCh = nil
 	}
 
 	return 0

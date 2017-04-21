@@ -118,6 +118,7 @@ func rbInsert(n *node) (newRoot *node) {
 				n = n.left
 			} else if p.left == n && p == gp.right {
 				newRoot = root(newRoot, p.rightRotate())
+
 				n = n.right
 			}
 			p = n.parent

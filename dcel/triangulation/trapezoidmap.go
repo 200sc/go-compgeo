@@ -58,7 +58,7 @@ func TrapezoidalMap(dc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, *Trap
 				x = NewX(lp)
 				// and two below the previous y node
 				l = tr0.Copy()
-				l.Edges[right] = dcel.FullEdge{p1, p2}
+				l.Edges[right] = geom.NewFullEdge(p1, p2)
 
 				ln = NewTrapNode(l)
 				tr0.node.discard(x)
@@ -78,8 +78,8 @@ func TrapezoidalMap(dc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, *Trap
 			b = tr0.Copy()
 			u.face = highFace
 			b.face = lowFace
-			u.Edges[left] = dcel.FullEdge{p1, lp}
-			b.Edges[left] = dcel.FullEdge{p2, lp}
+			u.Edges[left] = geom.NewFullEdge(p1, lp)
+			b.Edges[left] = geom.NewFullEdge(p2, lp)
 
 			u.Edges[bot], _ = fe.SubEdge(0, u.Edges[left].Left().X(),
 				u.Edges[right].Right().X())
@@ -158,9 +158,9 @@ func TrapezoidalMap(dc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, *Trap
 				p1 := u.Edges[top].Left()
 				p2 := tr.Edges[top].Right()
 				if geom.IsColinear(p1, u.Edges[top].Right(), p2) {
-					u.Edges[top] = dcel.FullEdge{p1, p2}
-					u.Edges[bot] = dcel.FullEdge{u.Edges[bot].Left(),
-						tr.Edges[bot].Right()}
+					u.Edges[top] = geom.NewFullEdge(p1, p2)
+					u.Edges[bot] = geom.NewFullEdge(u.Edges[bot].Left(),
+						tr.Edges[bot].Right())
 				} else {
 					u2 := tr.Copy()
 					//
@@ -186,7 +186,7 @@ func TrapezoidalMap(dc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, *Trap
 						// fe.
 						p1 = utr
 						p2, _ = fe.PointAt(0, p1.X())
-						e := dcel.FullEdge{p1, p2}
+						e := geom.NewFullEdge(p1, p2)
 						u2.Edges[left] = e
 						u.Edges[right] = e
 						// the search structure is updated later.
@@ -204,11 +204,11 @@ func TrapezoidalMap(dc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, *Trap
 						// u's top.
 						p1 = utr
 						p2, _ = fe.PointAt(0, p1.X())
-						u.Edges[right] = dcel.FullEdge{p1, p2}
+						u.Edges[right] = geom.NewFullEdge(p1, p2)
 						// u2's left edge is the segment from fe to u2's
 						// top.
 						p3, _ := u.Edges[top].PointAt(0, p1.X())
-						u2.Edges[left] = dcel.FullEdge{p2, p3}
+						u2.Edges[left] = geom.NewFullEdge(p2, p3)
 					}
 					// the bottom edge is now this shard of fe.
 					// if this trapezoid is merged with another,
@@ -226,9 +226,9 @@ func TrapezoidalMap(dc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, *Trap
 				p2 = tr.Edges[bot].Right()
 				// Behavior is similar for the lower trapezoid
 				if geom.IsColinear(p1, b.Edges[bot].Right(), p2) {
-					b.Edges[bot] = dcel.FullEdge{p1, p2}
-					b.Edges[top] = dcel.FullEdge{b.Edges[top].Left(),
-						tr.Edges[top].Right()}
+					b.Edges[bot] = geom.NewFullEdge(p1, p2)
+					b.Edges[top] = geom.NewFullEdge(b.Edges[top].Left(),
+						tr.Edges[top].Right())
 				} else {
 					b2 := tr.Copy()
 					b.Neighbors[upright] = b2
@@ -240,7 +240,7 @@ func TrapezoidalMap(dc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, *Trap
 						b2.Neighbors[botleft] = b
 						p1 = bbr
 						p2, _ = fe.PointAt(0, p1.X())
-						e := dcel.FullEdge{p1, p2}
+						e := geom.NewFullEdge(p1, p2)
 						b2.Edges[left] = e
 						b.Edges[right] = e
 					} else {
@@ -251,9 +251,9 @@ func TrapezoidalMap(dc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, *Trap
 						}
 						p1 = bbr
 						p2, _ = fe.PointAt(0, p1.X())
-						b.Edges[right] = dcel.FullEdge{p1, p2}
+						b.Edges[right] = geom.NewFullEdge(p1, p2)
 						p3, _ := u.Edges[bot].PointAt(0, p1.X())
-						b2.Edges[left] = dcel.FullEdge{p2, p3}
+						b2.Edges[left] = geom.NewFullEdge(p2, p3)
 					}
 					b2.Edges[top], _ = fe.SubEdge(0, b2.Edges[left].Left().X(),
 						b2.Edges[right].Right().X())
@@ -272,14 +272,14 @@ func TrapezoidalMap(dc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, *Trap
 			rp := fe.Right()
 			p2, _ = u.Edges[top].PointAt(0, rp.X())
 			p3, _ := b.Edges[bot].PointAt(0, rp.X())
-			u.Edges[right] = dcel.FullEdge{rp, p2}
-			b.Edges[right] = dcel.FullEdge{rp, p3}
+			u.Edges[right] = geom.NewFullEdge(rp, p2)
+			b.Edges[right] = geom.NewFullEdge(rp, p3)
 
 			var r, ur, br *Trapezoid
 			trn := trs[len(trs)-1]
 			if !trn.HasDefinedPoint(fe.Right()) {
 				r = trn.Copy()
-				r.Edges[left] = dcel.FullEdge{p2, p3}
+				r.Edges[left] = geom.NewFullEdge(p2, p3)
 				// other edges don't change
 				//
 				r.Neighbors[upleft] = u
@@ -335,7 +335,7 @@ func TrapezoidalMap(dc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, *Trap
 	return dc, m, Search, nil
 }
 
-func mapSingleCase(tr *Trapezoid, fe dcel.FullEdge) {
+func mapSingleCase(tr *Trapezoid, fe geom.FullEdge) {
 	lp := fe.Left()
 	rp := fe.Right()
 	// Most pointers on the following trapezoids are
@@ -352,13 +352,13 @@ func mapSingleCase(tr *Trapezoid, fe dcel.FullEdge) {
 		l = tr.Copy()
 		p1, _ := tr.Edges[top].PointAt(0, lp.X())
 		p2, _ := tr.Edges[bot].PointAt(0, lp.X())
-		l.Edges[right] = dcel.FullEdge{p1, p2}
+		l.Edges[right] = geom.NewFullEdge(p1, p2)
 	}
 	if !geom.IsColinear(rp, tr.Edges[right].Left(), tr.Edges[right].Right()) {
 		r = tr.Copy()
 		p1, _ := tr.Edges[top].PointAt(0, rp.X())
 		p2, _ := tr.Edges[bot].PointAt(0, rp.X())
-		r.Edges[left] = dcel.FullEdge{p1, p2}
+		r.Edges[left] = geom.NewFullEdge(p1, p2)
 	}
 
 	u := tr.Copy()
@@ -384,13 +384,13 @@ func mapSingleCase(tr *Trapezoid, fe dcel.FullEdge) {
 	u.Edges[bot] = fe
 
 	p, _ := tr.Edges[top].PointAt(0, lp.X())
-	u.Edges[left] = dcel.FullEdge{lp, p}
+	u.Edges[left] = geom.NewFullEdge(lp, p)
 	p, _ = tr.Edges[bot].PointAt(0, lp.X())
-	d.Edges[left] = dcel.FullEdge{lp, p}
+	d.Edges[left] = geom.NewFullEdge(lp, p)
 	p, _ = tr.Edges[top].PointAt(0, rp.X())
-	u.Edges[right] = dcel.FullEdge{rp, p}
+	u.Edges[right] = geom.NewFullEdge(rp, p)
 	p, _ = tr.Edges[bot].PointAt(0, rp.X())
-	d.Edges[right] = dcel.FullEdge{rp, p}
+	d.Edges[right] = geom.NewFullEdge(rp, p)
 	// 3: From the query structure, remove the leaves of the
 	//    removed trapezoids and add new leaves for the new
 	//    trapezoids, with additional inner nodes as necessary.

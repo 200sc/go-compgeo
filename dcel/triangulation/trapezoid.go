@@ -1,6 +1,9 @@
 package triangulation
 
-import "github.com/200sc/go-compgeo/dcel"
+import (
+	"github.com/200sc/go-compgeo/dcel"
+	"github.com/200sc/go-compgeo/geom"
+)
 
 // These constants refer to indices
 // within trapezoids' Edges
@@ -25,7 +28,7 @@ const (
 // the edges that border it.
 type Trapezoid struct {
 	// See above indices
-	Edges     [4]dcel.FullEdge
+	Edges     [4]geom.FullEdge
 	Neighbors [4]*Trapezoid
 	node      *TrapezoidNode
 	face      *dcel.Face
@@ -51,12 +54,12 @@ func (tr *Trapezoid) DCELEdges() []*dcel.Edge {
 	edges := make([]*dcel.Edge, 1)
 	i := 0
 	edges[i] = dcel.NewEdge()
-	edges[i].Origin = tr.Edges[top].Left().Vertex()
+	edges[i].Origin = dcel.PointToVertex(tr.Edges[top].Left())
 	edges[i].Origin.OutEdge = edges[i]
 	if !tr.Edges[top].Right().Eq(edges[i].Origin) {
 		i++
 		edges = append(edges, dcel.NewEdge())
-		edges[i].Origin = tr.Edges[top].Right().Vertex()
+		edges[i].Origin = dcel.PointToVertex(tr.Edges[top].Right())
 		edges[i].Origin.OutEdge = edges[i]
 		edges[i-1].Next = edges[i]
 		edges[i].Prev = edges[i-1]
@@ -64,7 +67,7 @@ func (tr *Trapezoid) DCELEdges() []*dcel.Edge {
 	if !tr.Edges[bot].Right().Eq(edges[i].Origin) {
 		i++
 		edges = append(edges, dcel.NewEdge())
-		edges[i].Origin = tr.Edges[bot].Right().Vertex()
+		edges[i].Origin = dcel.PointToVertex(tr.Edges[bot].Right())
 		edges[i].Origin.OutEdge = edges[i]
 		edges[i-1].Next = edges[i]
 		edges[i].Prev = edges[i-1]
@@ -73,7 +76,7 @@ func (tr *Trapezoid) DCELEdges() []*dcel.Edge {
 		!tr.Edges[bot].Left().Eq(edges[0].Origin) {
 		i++
 		edges = append(edges, dcel.NewEdge())
-		edges[i].Origin = tr.Edges[bot].Left().Vertex()
+		edges[i].Origin = dcel.PointToVertex(tr.Edges[bot].Left())
 		edges[i].Origin.OutEdge = edges[i]
 		edges[i-1].Next = edges[i]
 		edges[i].Prev = edges[i-1]
@@ -103,10 +106,10 @@ func (tr *Trapezoid) Copy() *Trapezoid {
 // edges who have vertices defined on other edges, aka
 // that all intersections are represented through
 // vertices.
-func (tr *Trapezoid) HasDefinedPoint(p dcel.Point) bool {
+func (tr *Trapezoid) HasDefinedPoint(p geom.D3) bool {
 	for _, e := range tr.Edges {
 		for _, p2 := range e {
-			if p2 == p {
+			if p2.Eq(p) {
 				return true
 			}
 		}
@@ -114,13 +117,15 @@ func (tr *Trapezoid) HasDefinedPoint(p dcel.Point) bool {
 	return false
 }
 
-func newTrapezoid(sp dcel.Span) *Trapezoid {
+func newTrapezoid(sp geom.Span) *Trapezoid {
 	t := new(Trapezoid)
-	p1 := *dcel.NewPoint(sp.Min.X(), sp.Max.Y(), sp.Min.Z())
-	p2 := *dcel.NewPoint(sp.Max.X(), sp.Min.Y(), sp.Min.Z())
-	t.Edges[top] = dcel.FullEdge{sp.Min, p2}
-	t.Edges[bot] = dcel.FullEdge{sp.Max, p1}
-	t.Edges[left] = dcel.FullEdge{sp.Min, p1}
-	t.Edges[right] = dcel.FullEdge{sp.Max, p2}
+	min := sp.At(0).(geom.Point)
+	max := sp.At(1).(geom.Point)
+	p1 := geom.NewPoint(min.X(), max.Y(), min.Z())
+	p2 := geom.NewPoint(max.X(), min.Y(), min.Z())
+	t.Edges[top] = geom.FullEdge{min, p2}
+	t.Edges[bot] = geom.FullEdge{max, p1}
+	t.Edges[left] = geom.FullEdge{min, p1}
+	t.Edges[right] = geom.FullEdge{max, p2}
 	return t
 }

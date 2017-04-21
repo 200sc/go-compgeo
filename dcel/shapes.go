@@ -1,5 +1,7 @@
 package dcel
 
+import "github.com/200sc/go-compgeo/geom"
+
 // Result:
 //
 // Vertices
@@ -30,16 +32,16 @@ package dcel
 // a rectangle with top left position and dimensions.
 func Rect(x, y, w, h float64) *DCEL {
 	return FourPoint(
-		Point{x, y, 0},
-		Point{x + w, y, 0},
-		Point{x + w, y + h, 0},
-		Point{x, y + h, 0},
+		geom.Point{x, y, 0},
+		geom.Point{x + w, y, 0},
+		geom.Point{x + w, y + h, 0},
+		geom.Point{x, y + h, 0},
 	)
 }
 
 // FourPoint creates a dcel from four points, connected
 // in order around one face.
-func FourPoint(p1, p2, p3, p4 Point) *DCEL {
+func FourPoint(p1, p2, p3, p4 geom.Point) *DCEL {
 	dc := new(DCEL)
 	dc.Vertices = make([]*Vertex, 4)
 	dc.Vertices[0] = &Vertex{p1, nil}

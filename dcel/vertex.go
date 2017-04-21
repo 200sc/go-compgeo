@@ -1,8 +1,13 @@
 package dcel
 
+import (
+	compgeo "github.com/200sc/go-compgeo"
+	"github.com/200sc/go-compgeo/geom"
+)
+
 // A Vertex is a Point which knows its outEdge.
 type Vertex struct {
-	Point
+	geom.Point
 	OutEdge *Edge
 }
 
@@ -10,19 +15,17 @@ type Vertex struct {
 // outEdge
 func NewVertex(x, y, z float64) *Vertex {
 	return &Vertex{
-		Point{x, y, z},
+		geom.Point{x, y, z},
 		nil,
 	}
 }
 
-func (v *Vertex) Set(d int, f float64) {
-	v.Point[d] = f
-}
-
+// Add adds to the point behind a vertex
 func (v *Vertex) Add(d int, f float64) {
 	v.Point[d] += f
 }
 
+// Mult multiplies the point behind a vertex
 func (v *Vertex) Mult(d int, f float64) {
 	v.Point[d] *= f
 }
@@ -40,7 +43,7 @@ func (v *Vertex) PartitionEdges(d int) (lesser []*Edge,
 	greater []*Edge, colinear []*Edge, err error) {
 
 	if len(v.Point) <= d {
-		err = BadDimensionError{}
+		err = compgeo.BadDimensionError{}
 		return
 	}
 	allEdges := v.AllEdges()
@@ -51,7 +54,7 @@ func (v *Vertex) PartitionEdges(d int) (lesser []*Edge,
 		// Will something bad happen if there are multiple
 		// elements with the same value in this dimension?
 		// Answer: Yes yes yes
-		if f64eq(e2.Origin.Val(d), checkAgainst) {
+		if geom.F64eq(e2.Origin.Val(d), checkAgainst) {
 			colinear = append(colinear, e1)
 		} else if e2.Origin.Val(d) < checkAgainst {
 			lesser = append(lesser, e1)
@@ -60,4 +63,9 @@ func (v *Vertex) PartitionEdges(d int) (lesser []*Edge,
 		}
 	}
 	return
+}
+
+// PointToVertex converts a point into a vertex
+func PointToVertex(dp geom.D3) *Vertex {
+	return NewVertex(dp.Val(0), dp.Val(1), dp.Val(2))
 }

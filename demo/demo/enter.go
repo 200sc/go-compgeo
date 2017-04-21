@@ -4,7 +4,7 @@ import (
 	"bitbucket.org/oakmoundstudio/oak"
 	"bitbucket.org/oakmoundstudio/oak/event"
 	"bitbucket.org/oakmoundstudio/oak/mouse"
-	"github.com/200sc/go-compgeo/dcel"
+	"github.com/200sc/go-compgeo/geom"
 )
 
 func phdEnter(cID int, nothing interface{}) int {
@@ -37,7 +37,7 @@ func phdEnter(cID int, nothing interface{}) int {
 	nme := mouse.LastMouseEvent
 	mX := float64(nme.X)
 	mY := float64(nme.Y)
-	mouseStr.SetText(dcel.Point{mX - phd.X, mY - phd.Y, mouseZ})
+	mouseStr.SetText(geom.Point{mX - phd.X, mY - phd.Y, mouseZ})
 	if mX < 0 || mY < 0 || (mX > 515 && mY > 440) {
 		dragX = -1
 		dragY = -1

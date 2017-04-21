@@ -3,6 +3,7 @@ package dcel
 import (
 	"fmt"
 
+	compgeo "github.com/200sc/go-compgeo"
 	"github.com/200sc/go-compgeo/geom"
 	"github.com/200sc/go-compgeo/search"
 )
@@ -35,6 +36,40 @@ func NewEdge() *Edge {
 	return &Edge{}
 }
 
+// Len returns the number of discrete points
+// defined on an edge, in normal cases, 2
+func (e *Edge) Len() int {
+	if e == nil {
+		return 0
+	}
+	if e.Twin == nil {
+		return 1
+	}
+	return 2
+}
+
+// At returns either e.Origin or e.Twin.Origin
+// for 0 or 1
+func (e *Edge) At(i int) geom.Dimensional {
+	if i == 0 {
+		return e.Origin
+	} else if i == 1 {
+		return e.Twin.Origin
+	}
+	panic("At exceeded dimensions on edge")
+}
+
+// Set sets the value behind a point on e
+// to a given point
+func (e *Edge) Set(i int, d geom.Dimensional) geom.Spanning {
+	if i == 0 {
+		e.Origin.Point = d.(geom.Point)
+	} else if i == 1 {
+		e.Twin.Origin.Point = d.(geom.Point)
+	}
+	return e
+}
+
 // String converts an edge into a string.
 func (e *Edge) String() string {
 	s := ""
@@ -42,9 +77,21 @@ func (e *Edge) String() string {
 	return s
 }
 
+// SetTwin is shorthand for two twin assignments.
 func (e *Edge) SetTwin(e2 *Edge) {
 	e.Twin = e2
 	e2.Twin = e
+}
+
+// SetPrev is shorthand for a prev and next assignment.
+func (e *Edge) SetPrev(e2 *Edge) {
+	e.Prev = e2
+	e2.Next = e
+}
+
+// SetNext is shorthand for a next and prev assignment.
+func (e *Edge) SetNext(e2 *Edge) {
+	e2.SetPrev(e)
 }
 
 // EdgeTwin can obtain a given edge index's twin
@@ -64,24 +111,54 @@ func EdgeTwin(i int) int {
 
 // FullEdge returns this edge with its twin in the form of its
 // two vertices
-func (e *Edge) FullEdge() (FullEdge, error) {
+func (e *Edge) FullEdge() (geom.FullEdge, error) {
 	e2 := e.Twin
 	if e2 == nil {
-		return FullEdge{}, BadEdgeError{}
+		return geom.FullEdge{}, compgeo.BadEdgeError{}
 	}
-	return FullEdge{
+	return geom.FullEdge{
 		e.Origin.Point,
 		e2.Origin.Point}, nil
 }
 
-// Mid2D returns the midpoint of an Edge
-func (e *Edge) Mid2D() (*Point, error) {
+// High returns whichever point on e is higher
+// in dimension d
+func (e *Edge) High(d int) geom.Dimensional {
 	if e == nil {
-		return nil, BadEdgeError{}
+		return nil
+	}
+	if e.Twin == nil {
+		return e.Origin
+	}
+	if e.Twin.Val(d) < e.Origin.Val(d) {
+		return e.Origin
+	}
+	return e.Twin.Origin
+}
+
+// Low returns whichever point on e is lower
+// in dimension d
+func (e *Edge) Low(d int) geom.Dimensional {
+	if e == nil {
+		return nil
+	}
+	if e.Twin == nil {
+		return e.Origin
+	}
+	if e.Twin.Val(d) < e.Origin.Val(d) {
+		return e.Twin.Origin
+	}
+	return e.Origin
+}
+
+// Mid2D returns the midpoint of an Edge
+func (e *Edge) Mid2D() (geom.Point, error) {
+	if e == nil {
+		return geom.Point{}, compgeo.BadEdgeError{}
 	}
 	t := e.Twin
 	if t == nil {
-		return nil, BadEdgeError{}
+		return geom.Point{}, compgeo.BadEdgeError{}
 	}
 	return e.Origin.Mid2D(t.Origin), nil
 }
@@ -90,10 +167,8 @@ func (e *Edge) Mid2D() (*Point, error) {
 // interfaces for placement in BSTs.
 func (e *Edge) Compare(i interface{}) search.CompareResult {
 	switch c := i.(type) {
-	case Point:
-		return c.VerticalCompare(e)
-	case *Point:
-		return c.VerticalCompare(e)
+	case geom.Point:
+		return geom.VerticalCompare(c, e)
 	default:
 		return search.Invalid
 	}
@@ -105,7 +180,7 @@ func (e *Edge) Compare(i interface{}) search.CompareResult {
 // https://math.stackexchange.com/questions/340830
 func (e *Edge) IsClockwise() (bool, error) {
 	if e == nil {
-		return false, BadEdgeError{}
+		return false, compgeo.BadEdgeError{}
 	}
 	start := e
 	lowest := e
@@ -118,7 +193,7 @@ func (e *Edge) IsClockwise() (bool, error) {
 	e = e.Next
 	for e != start {
 		if e == nil || e.Next == nil {
-			return false, BadEdgeError{}
+			return false, compgeo.BadEdgeError{}
 		}
 		if lowest.Origin.Greater2D(e.Origin).Eq(lowest.Origin) {
 			lowest = e
@@ -126,7 +201,7 @@ func (e *Edge) IsClockwise() (bool, error) {
 		e = e.Next
 	}
 	if lowest.Prev == nil {
-		return false, BadEdgeError{}
+		return false, compgeo.BadEdgeError{}
 	}
 	p := lowest.Prev.Origin.Point
 	c := lowest.Origin.Point
@@ -176,7 +251,7 @@ func (e *Edge) Flip() {
 // d dimension along this edge. I.E. for d = 0, v = 5,
 // if this edge was represented as y = mx + b, this would
 // return y = m*5 + b.
-func (e *Edge) PointAt(d int, v float64) (*Point, error) {
+func (e *Edge) PointAt(d int, v float64) (geom.Point, error) {
 	e1 := e.Origin.Point
 	e2 := e.Twin.Origin.Point
 	if e1[d] > e2[d] {
@@ -184,12 +259,12 @@ func (e *Edge) PointAt(d int, v float64) (*Point, error) {
 	}
 	if v < e1[d] || v > e2[d] {
 		fmt.Println(v, e1[d], e2[d])
-		return nil, RangeError{}
+		return geom.Point{}, compgeo.RangeError{}
 	}
 	v -= e1[d]
 	span := e2[d] - e1[d]
 	portion := v / span
-	p := new(Point)
+	p := geom.Point{}
 	for i := 0; i < len(p); i++ {
 		if i == d {
 			p[i] = v
@@ -215,14 +290,27 @@ func (e *Edge) Z() float64 {
 	return e.Origin.Z()
 }
 
+// Val redirects to Origin.Val
 func (e *Edge) Val(d int) float64 {
 	return e.Origin.Val(d)
 }
+
+// D redirects to Origin.D
 func (e *Edge) D() int {
 	return e.Origin.D()
 }
-func (e *Edge) Eq(e2 geom.Dimensional) bool {
-	return e.Origin.Eq(e2)
+
+// Eq redirects to Origin.Eq
+func (e *Edge) Eq(e2 geom.Spanning) bool {
+	if e2.Len() != e.Len() {
+		return false
+	}
+	for i := 0; i < e.Len(); i++ {
+		if !e.At(i).Eq(e2.At(i)) {
+			return false
+		}
+	}
+	return true
 }
 
 // AllEdges on an edge is equivalent to e.Origin.AllEdges,
