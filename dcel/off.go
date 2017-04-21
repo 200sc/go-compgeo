@@ -44,7 +44,6 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 	}
 	numVertices := counts[0]
 	numFaces := counts[1]
-	numEdges := counts[2]
 
 	dc := new(DCEL)
 
@@ -70,8 +69,7 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 
 	var vi int
 
-	edges := make([]*Edge, numEdges)
-	edgeIndex := 0
+	edges := make([]*Edge, 0)
 	dc.Faces = make([]*Face, numFaces+1)
 	auxData := make(map[*Vertex][]*Edge)
 
@@ -90,14 +88,7 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 		dc.Faces[i] = face
 
 		edge = new(Edge)
-		if edgeIndex >= len(edges) {
-			// Some jerk gave us an incorrect definition of their
-			// edge count, or we interpreted it wrong.
-			edges = append(edges, edge)
-		} else {
-			edges[edgeIndex] = edge
-		}
-		edgeIndex++
+		edges = append(edges, edge)
 
 		// This model does not use Outer faces.
 		face.Inner = edge
@@ -119,14 +110,7 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 			edge.Next.Prev = edge
 			edge = edge.Next
 
-			if edgeIndex >= len(edges) {
-				// Some jerk gave us an incorrect definition of their
-				// edge count, or we interpreted it wrong.
-				edges = append(edges, edge)
-			} else {
-				edges[edgeIndex] = edge
-			}
-			edgeIndex++
+			edges = append(edges, edge)
 			edge.Face = face
 
 			vi = fs[j]
@@ -148,6 +132,7 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 	var twin *Edge
 
 	// Create twins
+	outerFaceList := make([]*Edge, 0)
 	for j := 0; j < len(edges); j++ {
 		edge = edges[j]
 		if edge.Twin == nil {
@@ -165,10 +150,10 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 			}
 			if numFound == 0 {
 				twin = new(Edge)
-				edgeList = append(edgeList, twin)
 				twin.Twin = edge
 				edge.Twin = twin
-				edge.Face = dc.Faces[OUTER_FACE]
+				twin.Face = dc.Faces[OUTER_FACE]
+				outerFaceList = append(outerFaceList, twin)
 				twin.Origin = edge.Next.Origin
 			} else if numFound == 1 {
 				edgeList[foundIndex] = nil
@@ -189,6 +174,7 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 			auxData[edge.Origin] = edgeList
 		}
 	}
+	edges = append(edges, outerFaceList...)
 
 	// The original algorithm here had auxData attached to each vertex,
 	// and called this step "cleaning up" those pointers, when all it was
@@ -215,28 +201,25 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 		return nil, compgeo.NotManifoldError{}
 	}
 	var prev *Edge
-	for i := 0; i < len(edges); i++ {
-		edge = edges[i]
-		if edge.Face == dc.Faces[OUTER_FACE] {
-			prev = edge.Twin.Next.Twin
-			for prev.Next != nil { // Could infinite loop, apparently??
-				prev = prev.Next.Twin
-			}
-			prev.Next = edge
+	for _, edge := range outerFaceList {
+		if edge.Twin.Next == nil {
+			continue //?
 		}
+		prev = edge.Twin.Next.Twin
+		for prev.Next != nil { // Could infinite loop, apparently??
+			prev = prev.Next.Twin
+		}
+		prev.Next = edge
 	}
-	dc.HalfEdges = make([]*Edge, len(edges))
+	dc.HalfEdges = make([]*Edge, 0)
 	ei := 0
-	hei := 0
 	marked := make(map[*Edge]bool)
 
 	// Our internal DCEL format expects edges[i].Twin to be edges[i+1].
-	for hei < len(dc.HalfEdges) {
+	for ei < len(edges) {
 		if _, ok := marked[edges[ei]]; !ok {
-			dc.HalfEdges[hei] = edges[ei]
-			dc.HalfEdges[hei+1] = edges[ei].Twin
+			dc.HalfEdges = append(dc.HalfEdges, edges[ei], edges[ei].Twin)
 			marked[edges[ei].Twin] = true
-			hei += 2
 		}
 		ei++
 	}

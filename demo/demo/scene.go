@@ -39,7 +39,7 @@ var (
 	dragX             float64 = -1
 	dragY             float64 = -1
 	dragging                  = -1
-	offFile                   = filepath.Join("data", "A.off")
+	offFile                   = filepath.Join("data", "test.off")
 	mode                      = ROTATE
 	loopDemo          bool
 	firstAddedPoint   *dcel.Vertex
@@ -76,6 +76,7 @@ func InitScene(prevScene string, data interface{}) {
 			dc = dcel.New()
 		}
 	}
+	pointLocationMode = SLAB_DECOMPOSITION
 	phd = new(InteractivePolyhedron)
 	phd.Polyhedron = NewPolyhedronFromDCEL(dc, 100, 100)
 	phd.Polyhedron.Scale(defScale)
@@ -185,7 +186,6 @@ func AddCommands() {
 }
 
 func clear(no int, nothing interface{}) int {
-	fmt.Println("Yup")
 	offFile = "none"
 	loopDemo = false
 	return 0
