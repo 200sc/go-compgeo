@@ -140,8 +140,12 @@ func addFace(cID int, ev interface{}) int {
 					var dc *dcel.DCEL
 					dc, _, locator, err = triangulation.TrapezoidalMap(&phd.DCEL)
 					// for now
-					phd.DCEL = *dc
-					phd.Update()
+					if err == nil {
+						phd.DCEL = *dc
+						phd.Update()
+					} else {
+						fmt.Println("error", err)
+					}
 				}
 				if err != nil {
 					fmt.Println(err)

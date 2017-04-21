@@ -33,7 +33,7 @@ type Trapezoid struct {
 	left, right float64
 	Neighbors   [4]*Trapezoid
 	node        *TrapezoidNode
-	face        *dcel.Face
+	faces       [2]*dcel.Face
 }
 
 // DCELEdges evaluates and returns the edges of
@@ -92,6 +92,60 @@ func (tr *Trapezoid) DCELEdges() []*dcel.Edge {
 	return edges
 }
 
+func (tr *Trapezoid) Rights(tr2 *Trapezoid) {
+	tr.Neighbors[upright] = tr2
+	tr.Neighbors[botright] = tr2
+}
+
+func (tr *Trapezoid) Lefts(tr2 *Trapezoid) {
+	tr.Neighbors[upleft] = tr2
+	tr.Neighbors[botleft] = tr2
+}
+
+func (tr *Trapezoid) setRight(x float64) {
+	tr.right = x
+	e1 := tr.Edges[top].Left()
+	e2 := tr.Edges[top].Right()
+	e3 := tr.Edges[bot].Left()
+	e4 := tr.Edges[bot].Right()
+	if e1.X() > tr.right {
+		e1 = e1.Set(0, tr.right).(geom.D3)
+	}
+	if e2.X() > tr.right {
+		e2 = e2.Set(0, tr.right).(geom.D3)
+	}
+	if e3.X() > tr.right {
+		e3 = e3.Set(0, tr.right).(geom.D3)
+	}
+	if e4.X() > tr.right {
+		e4 = e4.Set(0, tr.right).(geom.D3)
+	}
+	tr.Edges[top] = geom.NewFullEdge(e1, e2)
+	tr.Edges[bot] = geom.NewFullEdge(e3, e4)
+}
+
+func (tr *Trapezoid) setLeft(x float64) {
+	tr.left = x
+	e1 := tr.Edges[top].Left()
+	e2 := tr.Edges[top].Right()
+	e3 := tr.Edges[bot].Left()
+	e4 := tr.Edges[bot].Right()
+	if e1.X() < tr.left {
+		e1 = e1.Set(0, tr.left).(geom.D3)
+	}
+	if e2.X() < tr.left {
+		e2 = e2.Set(0, tr.left).(geom.D3)
+	}
+	if e3.X() < tr.left {
+		e3 = e3.Set(0, tr.left).(geom.D3)
+	}
+	if e4.X() < tr.left {
+		e4 = e4.Set(0, tr.left).(geom.D3)
+	}
+	tr.Edges[top] = geom.NewFullEdge(e1, e2)
+	tr.Edges[bot] = geom.NewFullEdge(e3, e4)
+}
+
 // Copy returns a trapezoid with identical edges
 // and neighbors.
 func (tr *Trapezoid) Copy() *Trapezoid {
@@ -134,8 +188,8 @@ func newTrapezoid(sp geom.Span) *Trapezoid {
 	t := new(Trapezoid)
 	min := sp.At(0).(geom.Point)
 	max := sp.At(1).(geom.Point)
-	p1 := geom.NewPoint(min.X(), max.Y(), min.Z())
-	p2 := geom.NewPoint(max.X(), min.Y(), min.Z())
+	p1 := geom.NewPoint(min.X(), max.Y(), 0)
+	p2 := geom.NewPoint(max.X(), min.Y(), 0)
 	// These might need to flip
 	t.Edges[top] = geom.FullEdge{max, p1}
 	t.Edges[bot] = geom.FullEdge{min, p2}

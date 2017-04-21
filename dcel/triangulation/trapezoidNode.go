@@ -38,7 +38,7 @@ func (tn *TrapezoidNode) DCEL() (*dcel.DCEL, map[*dcel.Face]*dcel.Face) {
 	for i, tr := range trs {
 		// Each trapezoid becomes a face
 		dc.Faces[i] = dcel.NewFace()
-		fMap[dc.Faces[i]] = tr.face
+		fMap[dc.Faces[i]] = tr.faces[0]
 		// each of the up to four edges in a trapezoid
 		// has an edge associated with it, the first of which is the face's
 		// inner (going with the broken convention of always using inner)
@@ -91,7 +91,15 @@ func (tn *TrapezoidNode) PointLocate(vs ...float64) (*dcel.Face, error) {
 	if len(trs) == 0 {
 		return nil, nil
 	}
-	return trs[0].face, nil
+	faces := trs[0].faces
+	outerFace := tn.payload.(*dcel.Face)
+	if faces[0] != outerFace && faces[0].Contains(geom.Point{vs[0], vs[1]}) {
+		return faces[0], nil
+	}
+	if faces[1] != outerFace && faces[1].Contains(geom.Point{vs[0], vs[1]}) {
+		return faces[1], nil
+	}
+	return nil, nil
 }
 
 // Query is shorthand for tn.query(fe, tn)
@@ -165,7 +173,7 @@ func (tn *TrapezoidNode) payloadString() string {
 	case *Trapezoid:
 		return "T" + v.String()
 	case geom.D3:
-		return "X" + "(" + printutil.Stringf64(v.Val(0), v.Val(1)) + ")"
+		return "X" + "(" + printutil.Stringf64(v.Val(0)) + ")"
 	case geom.FullEdge:
 		return "Y" + "(" + printutil.Stringf64(v[0][0], v[0][1], v[1][0], v[1][1]) + ")"
 	}

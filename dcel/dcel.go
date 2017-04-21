@@ -117,13 +117,6 @@ func (dc *DCEL) FullEdges() ([]geom.FullEdge, [][2]*Face, error) {
 		}
 		faces[i/2] = [2]*Face{dc.HalfEdges[i].Face,
 			dc.HalfEdges[i+1].Face}
-
-		// Correct the edges so that the 0th indexed face
-		// is below this edge, and vice versa.
-		clkwz, _ := faces[i/2][0].Inner.IsClockwise()
-		if clkwz && dc.HalfEdges[i].X() > dc.HalfEdges[i+1].X() {
-			faces[i/2][0], faces[i/2][1] = faces[i/2][1], faces[i/2][0]
-		}
 	}
 	return fullEdges, faces, nil
 }

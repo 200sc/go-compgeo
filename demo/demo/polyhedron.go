@@ -96,7 +96,7 @@ func (p *Polyhedron) Update() {
 	// edge color slice is long enough to hold
 	// colors for the new edges.
 	if len(p.EdgeColors) < len(p.HalfEdges)/2 {
-		diff := len(p.HalfEdges)/2 - len(p.EdgeColors)
+		diff := (len(p.HalfEdges) / 2) - len(p.EdgeColors)
 		p.EdgeColors = append(p.EdgeColors, make([]color.Color, diff)...)
 	}
 
@@ -104,6 +104,9 @@ func (p *Polyhedron) Update() {
 		points, err := p.FullEdge(i)
 		if err != nil {
 			continue
+		}
+		if i/2 >= len(p.EdgeColors) {
+			return
 		}
 		if p.EdgeColors[i/2] == nil {
 			p.EdgeColors[i/2] = edgeColor
@@ -137,6 +140,7 @@ func (p *Polyhedron) Update() {
 				maxZ = v.Z()
 			}
 		}
+
 		// We draw each individual face as a Polygon formed of
 		// a list of vertices.
 		poly, err := render.NewPolygon(physVerts)
@@ -148,6 +152,7 @@ func (p *Polyhedron) Update() {
 			maxZ,
 			p.FaceColors[i],
 		}
+
 		zOrder[zi] = fpoly
 		zi++
 	}
