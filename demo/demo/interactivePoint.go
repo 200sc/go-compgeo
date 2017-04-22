@@ -1,7 +1,6 @@
 package demo
 
 import (
-	"fmt"
 	"time"
 
 	"bitbucket.org/oakmoundstudio/oak/collision"
@@ -76,7 +75,6 @@ func vertexShow(cID int, nothing interface{}) int {
 
 func vertexStartDrag(cID int, nothing interface{}) int {
 	if mode == MOVE_POINT {
-		fmt.Println("Start drag")
 		ip := event.GetEntity(cID).(*InteractivePoint)
 		dragging = ip.index
 	}
@@ -84,7 +82,6 @@ func vertexStartDrag(cID int, nothing interface{}) int {
 }
 
 func vertexStopDrag(no int, nothing interface{}) int {
-	fmt.Println("Stop drag")
 	dragging = -1
 	return 0
 }

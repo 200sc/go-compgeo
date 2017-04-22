@@ -53,10 +53,10 @@ func mapSingleCase(tr *Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 		// to think about ul,bl issues
 		u.Lefts(l)
 		d.Lefts(l)
-	} else if ul != nil && !geom.F64eq(ul.Edges[bot].Right().Y(), lp.Y()) {
+	} else if ul != nil && !geom.F64eq(ul.bot[right], lp.Y()) {
 		// If these values are equal, our original assignments
 		// above are fine.
-		if ul.Edges[bot].Right().Y() > lp.Y() {
+		if ul.bot[right] > lp.Y() {
 			fmt.Println("Above lp")
 			u.Neighbors[botleft] = bl
 		} else {
@@ -71,8 +71,8 @@ func mapSingleCase(tr *Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 		fmt.Println("r != nil")
 		u.Rights(r)
 		d.Rights(r)
-	} else if ur != nil && !geom.F64eq(ur.Edges[bot].Right().Y(), rp.Y()) {
-		if ur.Edges[bot].Right().Y() > rp.Y() {
+	} else if ur != nil && !geom.F64eq(ur.bot[right], rp.Y()) {
+		if ur.bot[right] > rp.Y() {
 			u.Neighbors[botright] = br
 			fmt.Println("Above rp")
 		} else {
@@ -86,8 +86,10 @@ func mapSingleCase(tr *Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 
 	// The border between these two
 	// is explicitly defined by fe.
-	d.Edges[top] = fe
-	u.Edges[bot] = fe
+	d.top[left] = lp.Y()
+	d.top[right] = rp.Y()
+	u.bot[left] = lp.Y()
+	u.bot[right] = rp.Y()
 
 	u.setLeft(lp.X())
 	d.setLeft(lp.X())

@@ -126,12 +126,8 @@ func (tn *TrapezoidNode) discard(n *TrapezoidNode) {
 
 func (tn *TrapezoidNode) set(v int, n *TrapezoidNode) {
 	switch v {
-	case top:
-		fallthrough
 	case left:
 		tn.left = n
-	case bot:
-		fallthrough
 	case right:
 		tn.right = n
 	}
@@ -286,7 +282,7 @@ func trapQuery(fe geom.FullEdge, n *TrapezoidNode) []*Trapezoid {
 			// of the separating edge, as we know that is within fe's
 			// horizontal span.
 			if geom.IsAbove(
-				tr.Neighbors[upright].Edges[bot].Left(), fe.Left(), fe.Right()) {
+				tr.Neighbors[upright].BotEdge().Left(), fe.Left(), fe.Right()) {
 				tr = tr.Neighbors[botright]
 			} else {
 				tr = tr.Neighbors[upright]

@@ -3,6 +3,7 @@ package dcel
 import (
 	"fmt"
 	"math"
+	"sort"
 
 	compgeo "github.com/200sc/go-compgeo"
 	"github.com/200sc/go-compgeo/geom"
@@ -213,4 +214,21 @@ func (dc *DCEL) Copy() *DCEL {
 	}
 
 	return dc2
+}
+
+// VerticesSorted returns a list indicating the sorted order
+// of this dcel's vertices in dimension d.
+func (dc *DCEL) VerticesSorted(d int) []int {
+	// Sort points in order of X value
+	pts := make([]int, len(dc.Vertices))
+	for i := range dc.Vertices {
+		pts[i] = i
+	}
+	// We sort by the 0th dimension here. There is no necessary requirement that
+	// the 0th dimension maps to X, but there's also no requirement that slab
+	// decomposition uses vertical slabs.
+	sort.Slice(pts, func(i, j int) bool {
+		return dc.Vertices[pts[i]].Val(d) < dc.Vertices[pts[j]].Val(d)
+	})
+	return pts
 }

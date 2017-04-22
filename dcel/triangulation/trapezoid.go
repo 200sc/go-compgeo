@@ -12,7 +12,9 @@ import (
 const (
 	top = iota
 	bot
-	left
+)
+const (
+	left = iota
 	right
 )
 
@@ -30,8 +32,9 @@ const (
 // the edges that border it.
 type Trapezoid struct {
 	// See above indices
-	Edges       [2]geom.FullEdge
-	left, right float64
+	top         [2]float64 // y values
+	bot         [2]float64 // y values
+	left, right float64    // x values
 	Neighbors   [4]*Trapezoid
 	node        *TrapezoidNode
 	faces       [2]*dcel.Face
@@ -57,29 +60,32 @@ func (tr *Trapezoid) DCELEdges() []*dcel.Edge {
 	edges := make([]*dcel.Edge, 1)
 	i := 0
 	edges[i] = dcel.NewEdge()
-	edges[i].Origin = dcel.PointToVertex(tr.Edges[top].Left())
+	edges[i].Origin = dcel.PointToVertex(geom.NewPoint(tr.left, tr.top[left], 0))
 	edges[i].Origin.OutEdge = edges[i]
-	if !tr.Edges[top].Right().Eq(edges[i].Origin) {
+	p := geom.NewPoint(tr.right, tr.top[right], 0)
+	if !p.Eq(edges[i].Origin) {
 		i++
 		edges = append(edges, dcel.NewEdge())
-		edges[i].Origin = dcel.PointToVertex(tr.Edges[top].Right())
+		edges[i].Origin = dcel.PointToVertex(p)
 		edges[i].Origin.OutEdge = edges[i]
 		edges[i-1].Next = edges[i]
 		edges[i].Prev = edges[i-1]
 	}
-	if !tr.Edges[bot].Right().Eq(edges[i].Origin) {
+	p = geom.NewPoint(tr.right, tr.bot[right], 0)
+	if !p.Eq(edges[i].Origin) {
 		i++
 		edges = append(edges, dcel.NewEdge())
-		edges[i].Origin = dcel.PointToVertex(tr.Edges[bot].Right())
+		edges[i].Origin = dcel.PointToVertex(p)
 		edges[i].Origin.OutEdge = edges[i]
 		edges[i-1].Next = edges[i]
 		edges[i].Prev = edges[i-1]
 	}
-	if !tr.Edges[bot].Left().Eq(edges[i].Origin) &&
-		!tr.Edges[bot].Left().Eq(edges[0].Origin) {
+	p = geom.NewPoint(tr.left, tr.bot[left], 0)
+	if !p.Eq(edges[i].Origin) &&
+		!p.Eq(edges[0].Origin) {
 		i++
 		edges = append(edges, dcel.NewEdge())
-		edges[i].Origin = dcel.PointToVertex(tr.Edges[bot].Left())
+		edges[i].Origin = dcel.PointToVertex(p)
 		edges[i].Origin.OutEdge = edges[i]
 		edges[i-1].Next = edges[i]
 		edges[i].Prev = edges[i-1]
@@ -93,11 +99,15 @@ func (tr *Trapezoid) DCELEdges() []*dcel.Edge {
 	return edges
 }
 
+// Rights is shorthand for setting both of
+// tr's right neighbors to the same value
 func (tr *Trapezoid) Rights(tr2 *Trapezoid) {
 	tr.Neighbors[upright] = tr2
 	tr.Neighbors[botright] = tr2
 }
 
+// Lefts is shorthand for setting both of
+// tr's left neighbors to the same value.
 func (tr *Trapezoid) Lefts(tr2 *Trapezoid) {
 	tr.Neighbors[upleft] = tr2
 	tr.Neighbors[botleft] = tr2
@@ -105,55 +115,50 @@ func (tr *Trapezoid) Lefts(tr2 *Trapezoid) {
 
 func (tr *Trapezoid) setRight(x float64) {
 	tr.right = x
-	e1 := tr.Edges[top].Left()
-	e2 := tr.Edges[top].Right()
-	e3 := tr.Edges[bot].Left()
-	e4 := tr.Edges[bot].Right()
-	if e1.X() > tr.right {
-		e1 = e1.Set(0, tr.right).(geom.D3)
-	}
-	if e2.X() > tr.right {
-		e2 = e2.Set(0, tr.right).(geom.D3)
-	}
-	if e3.X() > tr.right {
-		e3 = e3.Set(0, tr.right).(geom.D3)
-	}
-	if e4.X() > tr.right {
-		e4 = e4.Set(0, tr.right).(geom.D3)
-	}
-	tr.Edges[top] = geom.NewFullEdge(e1, e2)
-	tr.Edges[bot] = geom.NewFullEdge(e3, e4)
 }
 
 func (tr *Trapezoid) setLeft(x float64) {
 	tr.left = x
-	e1 := tr.Edges[top].Left()
-	e2 := tr.Edges[top].Right()
-	e3 := tr.Edges[bot].Left()
-	e4 := tr.Edges[bot].Right()
-	if e1.X() < tr.left {
-		e1 = e1.Set(0, tr.left).(geom.D3)
-	}
-	if e2.X() < tr.left {
-		e2 = e2.Set(0, tr.left).(geom.D3)
-	}
-	if e3.X() < tr.left {
-		e3 = e3.Set(0, tr.left).(geom.D3)
-	}
-	if e4.X() < tr.left {
-		e4 = e4.Set(0, tr.left).(geom.D3)
-	}
-	tr.Edges[top] = geom.NewFullEdge(e1, e2)
-	tr.Edges[bot] = geom.NewFullEdge(e3, e4)
 }
 
 // Copy returns a trapezoid with identical edges
 // and neighbors.
 func (tr *Trapezoid) Copy() *Trapezoid {
 	tr2 := new(Trapezoid)
-	tr2.Edges = tr.Edges
+	tr2.top = tr.top
+	tr2.bot = tr.bot
+	tr2.left = tr.left
+	tr2.right = tr.right
 	tr2.Neighbors = tr.Neighbors
 	return tr2
+}
+
+// AsPoints converts a trapezoid's internal values
+// into four points.
+func (tr *Trapezoid) AsPoints() []geom.D2 {
+	ds := make([]geom.D2, 4)
+	ds[0] = geom.NewPoint(tr.left, tr.top[left], 0)
+	ds[1] = geom.NewPoint(tr.right, tr.top[right], 0)
+	ds[2] = geom.NewPoint(tr.right, tr.bot[right], 0)
+	ds[3] = geom.NewPoint(tr.left, tr.bot[left], 0)
+	return ds
+}
+
+// BotEdge returns a translation of tr's values to
+// tr's bottom edge as a FullEdge
+func (tr *Trapezoid) BotEdge() geom.FullEdge {
+	return geom.FullEdge{
+		geom.NewPoint(tr.right, tr.bot[right], 0),
+		geom.NewPoint(tr.left, tr.bot[left], 0),
+	}
+}
+
+// TopEdge acts as BotEdge for tr's top
+func (tr *Trapezoid) TopEdge() geom.FullEdge {
+	return geom.FullEdge{
+		geom.NewPoint(tr.left, tr.top[left], 0),
+		geom.NewPoint(tr.right, tr.top[right], 0),
+	}
 }
 
 // HasDefinedPoint returns for a given Trapezoid
@@ -164,11 +169,9 @@ func (tr *Trapezoid) Copy() *Trapezoid {
 // that all intersections are represented through
 // vertices.
 func (tr *Trapezoid) HasDefinedPoint(p geom.D3) bool {
-	for _, e := range tr.Edges {
-		for _, p2 := range e {
-			if p2.Eq(p) {
-				return true
-			}
+	for _, p2 := range tr.AsPoints() {
+		if p2.Eq(p) {
+			return true
 		}
 	}
 	return false
@@ -176,10 +179,9 @@ func (tr *Trapezoid) HasDefinedPoint(p geom.D3) bool {
 
 func (tr *Trapezoid) String() string {
 	s := ""
-	for i := 0; i < len(tr.Edges); i++ {
+	for _, p := range tr.AsPoints() {
 		s += "("
-		s += printutil.Stringf64(tr.Edges[i][0][0], tr.Edges[i][0][1],
-			tr.Edges[i][1][0], tr.Edges[i][1][1])
+		s += printutil.Stringf64(p.X(), p.Y())
 		s += ")"
 	}
 	return s
@@ -187,13 +189,12 @@ func (tr *Trapezoid) String() string {
 
 func newTrapezoid(sp geom.Span) *Trapezoid {
 	t := new(Trapezoid)
-	min := sp.At(0).(geom.Point)
-	max := sp.At(1).(geom.Point)
-	p1 := geom.NewPoint(min.X(), max.Y(), 0)
-	p2 := geom.NewPoint(max.X(), min.Y(), 0)
-	// These might need to flip
-	t.Edges[top] = geom.FullEdge{max, p1}
-	t.Edges[bot] = geom.FullEdge{min, p2}
+	min := sp.At(geom.SPAN_MIN).(geom.Point)
+	max := sp.At(geom.SPAN_MAX).(geom.Point)
+	t.top[left] = max.Y()
+	t.top[right] = max.Y()
+	t.bot[left] = min.Y()
+	t.bot[right] = min.Y()
 	t.left = min.X()
 	t.right = max.X()
 	t.Neighbors = [4]*Trapezoid{}
@@ -202,9 +203,8 @@ func newTrapezoid(sp geom.Span) *Trapezoid {
 
 func (tr *Trapezoid) toPhysics() []physics.Vector {
 	vs := make([]physics.Vector, 4)
-	vs[0] = physics.NewVector(tr.left, tr.Edges[top].Left().Y())
-	vs[1] = physics.NewVector(tr.right, tr.Edges[top].Right().Y())
-	vs[2] = physics.NewVector(tr.right, tr.Edges[bot].Right().Y())
-	vs[3] = physics.NewVector(tr.left, tr.Edges[bot].Left().Y())
+	for i, p := range tr.AsPoints() {
+		vs[i] = physics.NewVector(p.X(), p.Y())
+	}
 	return vs
 }

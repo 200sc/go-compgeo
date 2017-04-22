@@ -3,7 +3,6 @@ package slab
 import (
 	"fmt"
 	"image/color"
-	"sort"
 
 	"bitbucket.org/oakmoundstudio/oak/physics"
 
@@ -48,24 +47,14 @@ func Decompose(dc *dcel.DCEL, bstType tree.Type) (dcel.LocatesPoints, error) {
 	if dc == nil || len(dc.Vertices) < 3 {
 		return nil, compgeo.BadDCELError{}
 	}
-	t := tree.New(bstType).ToPersistent()
-	// Sort points in order of X value
-	pts := make([]int, len(dc.Vertices))
-	for i := range dc.Vertices {
-		pts[i] = i
-	}
 	if dc.Vertices[0].D() < 2 {
 		// I don't know why someone would want to get the slab decomposition of
 		// a structure which has more than two dimensions but there could be
 		// applications so we don't reject that idea offhand.
 		return nil, compgeo.BadDimensionError{}
 	}
-	// We sort by the 0th dimension here. There is no necessary requirement that
-	// the 0th dimension maps to X, but there's also no requirement that slab
-	// decomposition uses vertical slabs.
-	sort.Slice(pts, func(i, j int) bool {
-		return dc.Vertices[pts[i]].X() < dc.Vertices[pts[j]].X()
-	})
+	t := tree.New(bstType).ToPersistent()
+	pts := dc.VerticesSorted(0)
 	compXMap := make(map[float64]float64)
 	i := 1
 OUTER:
