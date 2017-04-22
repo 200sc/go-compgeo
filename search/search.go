@@ -61,8 +61,8 @@ type Node interface {
 // arbitrary values.
 type Searchable interface {
 	Search(interface{}) (bool, interface{})
-	SearchUp(interface{}) (Comparable, interface{})
-	SearchDown(interface{}) (Comparable, interface{})
+	SearchUp(interface{}, int) (Comparable, interface{})
+	SearchDown(interface{}, int) (Comparable, interface{})
 }
 
 // Traversable types can produce lists of elements

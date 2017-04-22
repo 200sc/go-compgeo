@@ -194,40 +194,56 @@ func (bst *BST) search(key interface{}) (*node, bool) {
 
 // SearchUp performs a search, and rounds up to the nearest
 // existing key if no node of the query key exists.
-func (bst *BST) SearchUp(key interface{}) (search.Comparable, interface{}) {
+// SearchUp takes an optional number of times to get a
+// node's successor, meaning you can SearchUp(key, 2) to
+// get the value in a tree 2 greater than the input key,
+// whether or not the input exists.
+func (bst *BST) SearchUp(key interface{}, up int) (search.Comparable, interface{}) {
 	n, ok := bst.search(key)
 	// The tree is empty
 	if n == nil {
 		return nil, nil
 	}
-	if ok {
-		return n.key, n.val[0]
+	if !ok {
+		v := n.successor()
+		if v != nil &&
+			!((v.key.Compare(n.key) == search.Greater) &&
+				(n.key.Compare(key) == search.Greater)) {
+			n = v
+		}
 	}
-	v := n.successor()
-	if v == nil ||
-		((v.key.Compare(n.key) == search.Greater) &&
-			(n.key.Compare(key) == search.Greater)) {
-		return n.key, n.val[0]
+	for i := 0; i < up; i++ {
+		v := n.successor()
+		if v == nil {
+			break
+		}
+		n = v
 	}
-	return v.key, v.val[0]
+	return n.key, n.val[0]
 }
 
 // SearchDown acts as SearchUp, but rounds down.
-func (bst *BST) SearchDown(key interface{}) (search.Comparable, interface{}) {
+func (bst *BST) SearchDown(key interface{}, down int) (search.Comparable, interface{}) {
 	n, ok := bst.search(key)
 	if n == nil {
 		return nil, nil
 	}
-	if ok {
-		return n.key, n.val[0]
+	if !ok {
+		v := n.predecessor()
+		if v != nil &&
+			!((v.key.Compare(n.key) == search.Less) &&
+				n.key.Compare(key) == search.Less) {
+			n = v
+		}
 	}
-	v := n.predecessor()
-	if v == nil ||
-		((v.key.Compare(n.key) == search.Less) &&
-			n.key.Compare(key) == search.Less) {
-		return n.key, n.val[0]
+	for i := 0; i < down; i++ {
+		v := n.predecessor()
+		if v == nil {
+			break
+		}
+		n = v
 	}
-	return v.key, v.val[0]
+	return n.key, n.val[0]
 }
 
 func (bst *BST) updateRoot(n *node) {

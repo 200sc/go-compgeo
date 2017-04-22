@@ -236,7 +236,7 @@ func (spl *PointLocator) PointLocate(vs ...float64) (*dcel.Face, error) {
 	fmt.Println(tree)
 	p := geom.Point{vs[0], vs[1], 0}
 	fmt.Println("Searching on tree")
-	e, f := tree.SearchDown(p)
+	e, f := tree.SearchDown(p, 0)
 	if e == nil {
 		fmt.Println("Location on empty tree")
 		return nil, nil

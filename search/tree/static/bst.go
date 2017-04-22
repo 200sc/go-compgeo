@@ -97,34 +97,46 @@ func (b *BST) Search(key interface{}) (bool, interface{}) {
 	return false, nil
 }
 
-func (b *BST) SearchUp(key interface{}) (search.Comparable, interface{}) {
-	i, ok := b.search(key)
-	if ok {
-		return (*b)[i].key, (*b)[i].val
-	}
-	j := b.successor(i)
+func (b *BST) SearchUp(key interface{}, up int) (search.Comparable, interface{}) {
 	bst := *b
-	if b.isNil(j) ||
-		((bst[j].key.Compare(bst[i].key) == search.Greater) &&
-			(bst[i].key.Compare(key) == search.Greater)) {
-		j = i
+	i, ok := b.search(key)
+	if !ok {
+		j := b.successor(i)
+		if !b.isNil(j) &&
+			!((bst[j].key.Compare(bst[i].key) == search.Greater) &&
+				(bst[i].key.Compare(key) == search.Greater)) {
+			i = j
+		}
 	}
-	return bst[j].key, bst[j].val
+	for j := 0; j < up; j++ {
+		k := b.successor(i)
+		if b.isNil(k) {
+			break
+		}
+		i = k
+	}
+	return bst[i].key, bst[i].val
 }
 
-func (b *BST) SearchDown(key interface{}) (search.Comparable, interface{}) {
-	i, ok := b.search(key)
-	if ok {
-		return (*b)[i].key, (*b)[i].val
-	}
-	j := b.predecessor(i)
+func (b *BST) SearchDown(key interface{}, down int) (search.Comparable, interface{}) {
 	bst := *b
-	if b.isNil(j) ||
-		((bst[j].key.Compare(bst[i].key) == search.Less) &&
-			(bst[i].key.Compare(key) == search.Less)) {
-		j = i
+	i, ok := b.search(key)
+	if !ok {
+		j := b.predecessor(i)
+		if !b.isNil(j) &&
+			!((bst[j].key.Compare(bst[i].key) == search.Less) &&
+				(bst[i].key.Compare(key) == search.Less)) {
+			i = j
+		}
 	}
-	return bst[j].key, bst[j].val
+	for j := 0; j < down; j++ {
+		k := b.predecessor(i)
+		if b.isNil(k) {
+			break
+		}
+		i = k
+	}
+	return bst[i].key, bst[i].val
 }
 
 func (b *BST) search(key interface{}) (int, bool) {
