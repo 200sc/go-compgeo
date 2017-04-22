@@ -217,18 +217,111 @@ func (dc *DCEL) Copy() *DCEL {
 }
 
 // VerticesSorted returns a list indicating the sorted order
-// of this dcel's vertices in dimension d.
-func (dc *DCEL) VerticesSorted(d int) []int {
-	// Sort points in order of X value
+// of this dcel's vertices in dimensions ds.
+// Example: to get points sorted by x, use with (0)
+//          to get points sorted by y, breaking ties
+//             on lesser x, use with (1,0).
+func (dc *DCEL) VerticesSorted(ds ...int) []int {
 	pts := make([]int, len(dc.Vertices))
 	for i := range dc.Vertices {
 		pts[i] = i
 	}
-	// We sort by the 0th dimension here. There is no necessary requirement that
-	// the 0th dimension maps to X, but there's also no requirement that slab
-	// decomposition uses vertical slabs.
 	sort.Slice(pts, func(i, j int) bool {
-		return dc.Vertices[pts[i]].Val(d) < dc.Vertices[pts[j]].Val(d)
+		p1 := dc.Vertices[pts[i]]
+		p2 := dc.Vertices[pts[j]]
+		for _, d := range ds {
+			v1 := p1.Val(d)
+			v2 := p2.Val(d)
+			if v1 != v2 {
+				return v1 < v2
+			}
+		}
+		return false
 	})
 	return pts
+}
+
+func (dc *DCEL) ConnectVerts(a, b *Vertex) error {
+	// If a and b's outEdges and twins do not
+	// share a face, this connection would
+	// cross a face and is not allowed. Hypothetically
+	// it may be allowed in the future, recursively
+	// adding vertices and edges until the connection
+	// is complete.
+	edgesA := a.AllEdges()
+	edgesB := b.AllEdges()
+	// So we don't need to do a quadratic scan,
+	// we convert edgesA into a map.
+	// It should be impossible for the same face
+	// to exist on two edges off of the one vertex
+	// in a well-formed DCEL, but even if that happened
+	// it wouldn't cause an issue.
+	aMap := make(map[*Face]*Edge)
+	for _, e := range edgesA {
+		aMap[e.Face] = e
+	}
+	matches := [][2]*Edge{}
+	for _, e := range edgesB {
+		if e2, ok := aMap[e.Face]; ok {
+			matches = append(matches, [2]*Edge{e, e2})
+		}
+	}
+	// If the two vertices share more than one face,
+	// there's already an edge here and we can't add
+	// another one, unless one of those faces encloses
+	// the other, in which case we use the enclosed face.
+	// if there are more than two shared faces, this is also
+	// possible where one face is enclosed by the union of
+	// all other faces. Right now we reject this third case.
+	i := 0
+	var e1, e2 *Edge
+	if len(matches) > 2 {
+		return compgeo.UnsupportedError{}
+	} else if len(matches) == 2 {
+		if matches[0][0].Face.Encloses(matches[1][0].Face) {
+			i = 1
+		}
+	} else if len(matches) == 0 {
+		return compgeo.BadVertexError{}
+	}
+	e1 = matches[i][0]
+	e2 = matches[i][0]
+
+	new1 := NewEdge()
+	new1.Origin = b
+
+	new2 := NewEdge()
+	new2.Origin = a
+
+	new1.Twin = new2
+	new2.Twin = new1
+
+	e1.Prev.Next = new1
+	e1.Prev = new2
+
+	e2.Prev.Next = new2
+	e2.Prev = new1
+
+	new2.Prev = e2.Prev
+	new2.Next = e1
+
+	new1.Prev = e1.Prev
+	new1.Next = e2
+
+	// Now split the face into two
+
+	new1.Face = e1.Face
+
+	newf := NewFace()
+
+	// We still always use Inner
+	newf.Inner = new2
+	for walkEdge := new2; walkEdge.Face != newf; walkEdge = walkEdge.Next {
+		walkEdge.Face = newf
+	}
+
+	dc.HalfEdges = append(dc.HalfEdges, new1, new2)
+	dc.Faces = append(dc.Faces, newf)
+
+	return nil
 }

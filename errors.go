@@ -72,9 +72,25 @@ func (bde BadDCELError) Error() string {
 	return "The input DCEL was not valid"
 }
 
+// BadVertexError is returned when a query needs a vertex or vertices
+// which satisfy some condition which is not satisfied.
+type BadVertexError struct{}
+
+func (bve BadVertexError) Error() string {
+	return "The input vertex(ices) were not valid for the operation"
+}
+
 // DivideByZero is returned by functions that attempt to Divide by zero.
 type DivideByZero struct{}
 
 func (dbz DivideByZero) Error() string {
 	return "Division by zero. Default value to Infinity if unavoidable"
+}
+
+// UnsupportedError is returned when the input to a function is
+// hypothetically valid, but is not currently supported by go-compgeo
+type UnsupportedError struct{}
+
+func (use UnsupportedError) Error() string {
+	return "Unsupported input configuration"
 }
