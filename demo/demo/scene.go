@@ -15,6 +15,7 @@ import (
 	"bitbucket.org/oakmoundstudio/oak/event"
 	"bitbucket.org/oakmoundstudio/oak/render"
 	"github.com/200sc/go-compgeo/dcel"
+	"github.com/200sc/go-compgeo/dcel/off"
 	"github.com/200sc/go-compgeo/dcel/visualize"
 )
 
@@ -81,7 +82,7 @@ func InitScene(prevScene string, data interface{}) {
 	if offFile == "none" {
 		dc = dcel.New()
 	} else {
-		dc, err = dcel.LoadOFF(offFile)
+		dc, err = off.Load(offFile)
 		if err != nil {
 			fmt.Println("Unable to load", offFile, ":", err)
 			dc = dcel.New()

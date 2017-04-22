@@ -1,5 +1,0 @@
-package compgeo
-
-func buildable() {
-
-}
