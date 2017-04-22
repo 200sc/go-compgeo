@@ -15,7 +15,6 @@ import (
 	"bitbucket.org/oakmoundstudio/oak/event"
 	"bitbucket.org/oakmoundstudio/oak/render"
 	"github.com/200sc/go-compgeo/dcel"
-	"github.com/200sc/go-compgeo/dcel/slab"
 	"github.com/200sc/go-compgeo/dcel/visualize"
 )
 
@@ -67,13 +66,13 @@ var (
 // InitScene is called whenever the scene 'demo' starts.
 // it creates the objects in our application.
 func InitScene(prevScene string, data interface{}) {
-	if slab.VisualCh != nil {
-		close(slab.VisualCh)
+	if visualize.VisualCh != nil {
+		close(visualize.VisualCh)
 		select {
 		case stopTickerCh <- true:
 		default:
 		}
-		slab.VisualCh = nil
+		visualize.VisualCh = nil
 	}
 	ticker = NewDynamicTicker()
 	loopDemo = true
@@ -217,8 +216,8 @@ func visuals(no int, rt interface{}) int {
 	fmt.Println("Enter visuals")
 	rate := rt.(time.Duration)
 	if rate != 0 {
-		if slab.VisualCh == nil {
-			slab.VisualCh = make(chan *visualize.Visual)
+		if visualize.VisualCh == nil {
+			visualize.VisualCh = make(chan *visualize.Visual)
 		}
 		select {
 		case stopTickerCh <- true:
@@ -235,7 +234,7 @@ func visuals(no int, rt interface{}) int {
 					if visual != nil {
 						render.UndrawAfter(visual, 100*time.Millisecond)
 					}
-					visual = <-slab.VisualCh
+					visual = <-visualize.VisualCh
 					if visual == nil {
 						return
 					}
@@ -249,13 +248,13 @@ func visuals(no int, rt interface{}) int {
 			}
 		}()
 	} else {
-		if slab.VisualCh != nil {
-			close(slab.VisualCh)
+		if visualize.VisualCh != nil {
+			close(visualize.VisualCh)
 			select {
 			case stopTickerCh <- true:
 			default:
 			}
-			slab.VisualCh = nil
+			visualize.VisualCh = nil
 		}
 	}
 	fmt.Println("Leaving visuals")

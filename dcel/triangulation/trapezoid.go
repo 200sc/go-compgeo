@@ -1,6 +1,7 @@
 package triangulation
 
 import (
+	"bitbucket.org/oakmoundstudio/oak/physics"
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/geom"
 	"github.com/200sc/go-compgeo/printutil"
@@ -197,4 +198,13 @@ func newTrapezoid(sp geom.Span) *Trapezoid {
 	t.right = max.X()
 	t.Neighbors = [4]*Trapezoid{}
 	return t
+}
+
+func (tr *Trapezoid) toPhysics() []physics.Vector {
+	vs := make([]physics.Vector, 4)
+	vs[0] = physics.NewVector(tr.left, tr.Edges[top].Left().Y())
+	vs[1] = physics.NewVector(tr.right, tr.Edges[top].Right().Y())
+	vs[2] = physics.NewVector(tr.right, tr.Edges[bot].Right().Y())
+	vs[3] = physics.NewVector(tr.left, tr.Edges[bot].Left().Y())
+	return vs
 }

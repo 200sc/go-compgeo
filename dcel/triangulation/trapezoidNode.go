@@ -2,9 +2,11 @@ package triangulation
 
 import (
 	"fmt"
+	"image/color"
 
 	compgeo "github.com/200sc/go-compgeo"
 	"github.com/200sc/go-compgeo/dcel"
+	"github.com/200sc/go-compgeo/dcel/visualize"
 	"github.com/200sc/go-compgeo/geom"
 	"github.com/200sc/go-compgeo/printutil"
 )
@@ -204,6 +206,10 @@ func NewX(p geom.D3) *TrapezoidNode {
 
 func xQuery(fe geom.FullEdge, n *TrapezoidNode) []*Trapezoid {
 	p := n.payload.(geom.Point)
+	if visualize.VisualCh != nil {
+		visualize.HighlightColor = color.RGBA{128, 128, 128, 128}
+		visualize.DrawVerticalLine(p)
+	}
 	if fe.Left().X() < p.X() {
 		fmt.Println("X compare:", fe.Left().X(), p.X(), true)
 		return n.left.Query(fe)
@@ -227,6 +233,10 @@ func yQuery(fe geom.FullEdge, n *TrapezoidNode) []*Trapezoid {
 	// which slope is larger. If fe is larger, we go above,
 	// else we go below.
 	yn := n.payload.(geom.FullEdge)
+	if visualize.VisualCh != nil {
+		visualize.HighlightColor = color.RGBA{128, 128, 128, 128}
+		visualize.DrawLine(yn.Left(), yn.Right())
+	}
 	cp := geom.HzCross2D(fe.Left(), yn.Left(), yn.Right())
 	fmt.Println("Y compare:", cp, fe, yn)
 	if cp > 0 {
@@ -256,6 +266,10 @@ func NewTrapNode(tr *Trapezoid) *TrapezoidNode {
 func trapQuery(fe geom.FullEdge, n *TrapezoidNode) []*Trapezoid {
 	tr := n.payload.(*Trapezoid)
 	traps := []*Trapezoid{tr}
+	if visualize.VisualCh != nil {
+		visualize.HighlightColor = color.RGBA{0, 0, 128, 128}
+		visualize.DrawPoly(tr.toPhysics())
+	}
 	r := fe.Right()
 	for tr != nil && r.X() > tr.right {
 		// We perform this check here is it is less expensive
@@ -279,6 +293,10 @@ func trapQuery(fe geom.FullEdge, n *TrapezoidNode) []*Trapezoid {
 			}
 		}
 		if tr != nil {
+			if visualize.VisualCh != nil {
+				visualize.HighlightColor = color.RGBA{0, 0, 128, 128}
+				visualize.DrawPoly(tr.toPhysics())
+			}
 			traps = append(traps, tr)
 		}
 	}

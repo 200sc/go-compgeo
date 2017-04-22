@@ -15,14 +15,6 @@ import (
 	"github.com/200sc/go-compgeo/search/tree"
 )
 
-var (
-	// VisualCh is used to determine if
-	// this process is currently visualizing anything.
-	// if this is nil, the program will not attempt to
-	// send visuals.
-	VisualCh chan *visualize.Visual
-)
-
 type faces struct {
 	f1, f2 *dcel.Face
 }
@@ -133,7 +125,7 @@ OUTER:
 		fmt.Println("Right Edges", re)
 		// Remove all edges from the PersistentBST connecting to the left
 		// of the points
-		if VisualCh != nil {
+		if visualize.VisualCh != nil {
 			visualize.HighlightColor = color.RGBA{255, 0, 0, 255}
 		}
 		for _, e := range le {
@@ -144,7 +136,7 @@ OUTER:
 		}
 		// Add all edges to the PersistentBST connecting to the right
 		// of the point
-		if VisualCh != nil {
+		if visualize.VisualCh != nil {
 			visualize.HighlightColor = color.RGBA{0, 255, 0, 255}
 		}
 		for _, e := range re {
@@ -163,7 +155,7 @@ OUTER:
 		i++
 	}
 	fmt.Println("END CONSTRUCTION")
-	if VisualCh != nil {
+	if visualize.VisualCh != nil {
 		visualize.HighlightColor = color.RGBA{255, 255, 255, 255}
 	}
 	return &PointLocator{t, dc.Faces[dcel.OUTER_FACE]}, nil
@@ -179,9 +171,9 @@ type compEdge struct {
 func (ce compEdge) Compare(i interface{}) search.CompareResult {
 	switch c := i.(type) {
 	case compEdge:
-		if VisualCh != nil {
-			visualize.DrawLine(VisualCh, ce.Edge.Origin, ce.Edge.Twin.Origin)
-			visualize.DrawLine(VisualCh, c.Edge.Origin, c.Edge.Twin.Origin)
+		if visualize.VisualCh != nil {
+			visualize.DrawLine(ce.Edge.Origin, ce.Edge.Twin.Origin)
+			visualize.DrawLine(c.Edge.Origin, c.Edge.Twin.Origin)
 		}
 		fmt.Println("Comparing", ce, c)
 		if ce.Edge == c.Edge {
@@ -281,13 +273,13 @@ func (spl *PointLocator) PointLocate(vs ...float64) (*dcel.Face, error) {
 	for _, f5 := range faces {
 		if f5 != spl.outerFace {
 			fmt.Println("Checking if face contains", p)
-			if VisualCh != nil {
+			if visualize.VisualCh != nil {
 				ps := f5.Vertices()
 				physVerts := make([]physics.Vector, len(ps))
 				for i, v := range ps {
 					physVerts[i] = physics.NewVector(v.X(), v.Y())
 				}
-				visualize.DrawPoly(VisualCh, physVerts)
+				visualize.DrawPoly(physVerts)
 			}
 			if f5.Contains(p) {
 				fmt.Println("P was contained")
