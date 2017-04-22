@@ -316,3 +316,31 @@ func (e *Edge) AllEdges() []*Edge {
 	}
 	return edges
 }
+
+// FindSharedPoint returns some value, if one exists,
+// in dimension d, that has a defined point on both
+// e and e2.
+// This function is deterministic. It does not return
+// a -random- value, if multiple values are valid.
+func (e *Edge) FindSharedPoint(e2 *Edge, d int) (float64, error) {
+	eLow := e.Low(d)
+	e2Low := e2.Low(d)
+	eHigh := e.High(d)
+	e2High := e2.High(d)
+	// No point exists case:
+	// if e.High is lower than e2.Low
+	// or if e.Low is higher than e2.High
+	if eHigh.Val(d) < e2Low.Val(d) ||
+		eLow.Val(d) > e2High.Val(d) {
+		return 0, compgeo.BadEdgeError{}
+	}
+	var high, low geom.Dimensional
+	if eHigh.Val(d) < e2High.Val(d) {
+		high = eHigh
+		low = e2Low
+	} else {
+		high = e2High
+		low = eLow
+	}
+	return (high.Val(d) - low.Val(d)) / 2, nil
+}

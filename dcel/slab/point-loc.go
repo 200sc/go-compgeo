@@ -55,30 +55,11 @@ func Decompose(dc *dcel.DCEL, bstType tree.Type) (dcel.LocatesPoints, error) {
 	}
 	t := tree.New(bstType).ToPersistent()
 	pts := dc.VerticesSorted(0)
-	compXMap := make(map[float64]float64)
-	i := 1
-OUTER:
-	for i < len(pts) {
-		j := i - 1
-		prevX := dc.Vertices[pts[j]].X()
-		thisX := dc.Vertices[pts[i]].X()
-		for geom.F64eq(thisX, prevX) {
-			i++
-			if i == len(pts) {
-				break OUTER
-			}
-			thisX = dc.Vertices[pts[i]].X()
-		}
-		compXMap[geom.ToFixed(prevX, 5)] = (prevX + thisX) / 2
-		i++
-	}
-	compXMap[dc.Vertices[pts[len(pts)-1]].X()] = -1
 
 	fmt.Println(dc.Vertices)
 	fmt.Println(pts)
-	fmt.Println(compXMap)
 	fmt.Println("START CONSTRUCTION")
-	i = 0
+	i := 0
 	for i < len(pts) {
 		p := pts[i]
 		v := dc.Vertices[p]
@@ -118,8 +99,8 @@ OUTER:
 			visualize.HighlightColor = color.RGBA{255, 0, 0, 255}
 		}
 		for _, e := range le {
-			fmt.Println("Removing", e.Twin, compXMap[e.Twin.Origin.X()], compXMap[geom.ToFixed(e.Twin.Origin.X(), 5)])
-			err := ct.Delete(shellNode{compEdge{e.Twin, compXMap[geom.ToFixed(e.Twin.Origin.X(), 5)]}, search.Nil{}})
+			fmt.Println("Removing", e.Twin)
+			err := ct.Delete(shellNode{compEdge{e.Twin}, search.Nil{}})
 			fmt.Println("Remove result", err)
 			fmt.Println(ct)
 		}
@@ -135,9 +116,8 @@ OUTER:
 			// locate to the edge above the query point. Returning an
 			// edge for a query represents that the query is below
 			// the edge,
-			fmt.Println("Adding", e, "at", geom.ToFixed(v.X(), 5))
-			ct.Insert(shellNode{compEdge{e, compXMap[geom.ToFixed(v.X(), 5)]},
-				faces{e.Face, e.Twin.Face}})
+			fmt.Println("Adding", e)
+			ct.Insert(shellNode{compEdge{e}, faces{e.Face, e.Twin.Face}})
 			fmt.Println(ct)
 		}
 
@@ -150,11 +130,8 @@ OUTER:
 	return &PointLocator{t, dc.Faces[dcel.OUTER_FACE]}, nil
 }
 
-// We need to have our keys be CompEdges so
-// they are comparable within a certain x range.
 type compEdge struct {
 	*dcel.Edge
-	x float64
 }
 
 func (ce compEdge) Compare(i interface{}) search.CompareResult {
@@ -175,33 +152,17 @@ func (ce compEdge) Compare(i interface{}) search.CompareResult {
 			fmt.Println("Equal2!")
 			return search.Equal
 		}
-		compX := ce.x
-		compXbackup := c.x
-		if c.x > compX {
-			compX = c.x
-			compXbackup = ce.x
+		compX, err := ce.FindSharedPoint(c.Edge, 0)
+		if err != nil {
+			fmt.Println("Edges share no point on x axis")
 		}
-		tryBackup := false
 		p1, err := ce.PointAt(0, compX)
 		if err != nil {
 			fmt.Println("compX", compX, "not on point ", ce)
-			tryBackup = true
 		}
 		p2, err := c.PointAt(0, compX)
 		if err != nil {
 			fmt.Println("compX", compX, "not on point ", c)
-			tryBackup = true
-		}
-		if tryBackup {
-			compX = compXbackup
-			p1, err = ce.PointAt(0, compX)
-			if err != nil {
-				fmt.Println("Backup", compX, "not on point ", ce)
-			}
-			p2, err = c.PointAt(0, compX)
-			if err != nil {
-				fmt.Println("Backup", compX, "not on point ", c)
-			}
 		}
 		if p1[1] < p2[1] {
 			fmt.Println("Less!")
@@ -247,7 +208,7 @@ func (spl *PointLocator) PointLocate(vs ...float64) (*dcel.Face, error) {
 		return nil, nil
 	}
 
-	e2, f2 := tree.SearchUp(p)
+	e2, f2 := tree.SearchUp(p, 0)
 	if geom.VerticalCompare(p, e2.(compEdge)) == search.Less {
 		fmt.Println(p, "is below edge", e2)
 		return nil, nil

@@ -241,6 +241,10 @@ func (dc *DCEL) VerticesSorted(ds ...int) []int {
 	return pts
 }
 
+// ConnectVerts takes two vertices and adds a new face and edges
+// to the dcel containing them to connect the two vertices by a full edge.
+// the added edges will be at dc.HalfEdges[len-1] and len-2
+// and the added face will be at dc.Faces[len-1]
 func (dc *DCEL) ConnectVerts(a, b *Vertex) error {
 	// If a and b's outEdges and twins do not
 	// share a face, this connection would
