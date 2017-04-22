@@ -171,13 +171,13 @@ func addFace(cID int, ev interface{}) int {
 					poly.ShiftX(phd.X)
 					poly.ShiftY(phd.Y)
 					render.Draw(poly, 10)
-					render.UndrawAfter(poly, 2500*time.Millisecond)
+					render.UndrawAfter(poly, 1500*time.Millisecond)
 					phd.FaceColors[faceIndex] = color.RGBA{255, 0, 0, 255}
 
-					timing.DoAfter(50*time.Millisecond, func() {
+					go timing.DoAfter(50*time.Millisecond, func() {
 						phd.Update()
 					})
-					timing.DoAfter(2500*time.Millisecond, func() {
+					go timing.DoAfter(1500*time.Millisecond, func() {
 						phd.FaceColors[faceIndex] = faceColor
 						phd.Update()
 					})

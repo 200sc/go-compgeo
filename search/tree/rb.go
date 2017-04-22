@@ -1,9 +1,6 @@
 package tree
 
-import (
-	"errors"
-	"fmt"
-)
+import "errors"
 
 const (
 	red   = false
@@ -169,31 +166,32 @@ func rbDelete(n *node) (newRoot *node) {
 				if lc == nil {
 					lc = n.left.right
 				}
-				if lc == nil || lc.isRed() {
-					fmt.Println("Weird special case hit")
-					// For this specific structure we aren't doing the right thing
-					var newLeft *node
-					if lc == n.left.right && lc != nil {
-						newRoot = lc
-						newLeft = n.left
-					} else {
-						newRoot = n.left
-						newLeft = lc
-					}
+				// if lc == nil || lc.isRed() {
+				// 	fmt.Println("Weird special case hit")
+				// 	// For this specific structure we aren't doing the right thing?
+				//  new signs point to this case being fine
+				// 	var newLeft *node
+				// 	if lc == n.left.right && lc != nil {
+				// 		newRoot = lc
+				// 		newLeft = n.left
+				// 	} else {
+				// 		newRoot = n.left
+				// 		newLeft = lc
+				// 	}
 
-					newRight := n.right
-					newRoot.left = newLeft
-					newRoot.right = newRight
-					newRoot.parent = nil
-					if newLeft != nil {
-						newLeft.parent = newRoot
-						newLeft.left = nil
-						newLeft.right = nil
-					}
-					newRight.parent = newRoot
-					newRight.payload = red
-					return
-				}
+				// 	newRight := n.right
+				// 	newRoot.left = newLeft
+				// 	newRoot.right = newRight
+				// 	newRoot.parent = nil
+				// 	if newLeft != nil {
+				// 		newLeft.parent = newRoot
+				// 		newLeft.left = nil
+				// 		newLeft.right = nil
+				// 	}
+				// 	newRight.parent = newRoot
+				// 	newRight.payload = red
+				// 	return
+				// }
 			}
 		}
 		c = n2.payload.(bool)

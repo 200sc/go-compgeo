@@ -1,8 +1,6 @@
 package demo
 
 import (
-	"fmt"
-
 	"bitbucket.org/oakmoundstudio/oak"
 	"bitbucket.org/oakmoundstudio/oak/event"
 	"bitbucket.org/oakmoundstudio/oak/mouse"
@@ -11,7 +9,6 @@ import (
 
 func phdEnter(cID int, nothing interface{}) int {
 	if mode == LOCATING {
-		fmt.Println("Locating...")
 		return 0
 	}
 
