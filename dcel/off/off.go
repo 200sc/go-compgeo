@@ -1,4 +1,4 @@
-package dcel
+package off
 
 import (
 	"bufio"
@@ -8,11 +8,124 @@ import (
 	"strings"
 
 	compgeo "github.com/200sc/go-compgeo"
+	"github.com/200sc/go-compgeo/dcel"
+	"github.com/200sc/go-compgeo/geom"
 )
 
-// LoadOFF loads Object File Format files. This function
+func NewOFF() OFF {
+	return OFF{
+		Vertices: make([]Vertex, 0),
+		Faces:    make([]Face, 0),
+	}
+}
+
+// OFF represents the geometric values stored in the OFF format.
+// Does not store color.
+// Todo: if we could make a structure that satisfied io.Reader,
+// we could have less duplicate code here.
+type OFF struct {
+	NumVertices, NumFaces, NumEdges int
+	Vertices                        []Vertex
+	Faces                           []Face
+}
+
+func NewVertex(d geom.D3) Vertex {
+	return Vertex{d.X(), d.Y(), d.Z()}
+}
+
+type Vertex [3]float64
+
+type Face []int
+
+// Decode converts an OFF struct into a dcel.
+func Decode(o OFF) (*dcel.DCEL, error) {
+
+	dc := new(dcel.DCEL)
+
+	numVertices := o.NumVertices
+	numFaces := o.NumFaces
+
+	if numVertices == 0 || numFaces == 0 {
+		return dc, nil
+	}
+
+	var edge *dcel.Edge
+	var face *dcel.Face
+
+	dc.Vertices = make([]*dcel.Vertex, numVertices)
+
+	// Read numVertices lines as vertices
+	// Each dcel.Vertex is represented as three numbers,
+	// x, y, z, in that order.
+	for i := 0; i < numVertices; i++ {
+		fs := o.Vertices[i]
+		dc.Vertices[i] = dcel.NewVertex(fs[0], fs[1], fs[2])
+	}
+
+	var vi int
+
+	edges := make([]*dcel.Edge, 0)
+	dc.Faces = make([]*dcel.Face, numFaces+1)
+	auxData := make(map[*dcel.Vertex][]*dcel.Edge)
+
+	// Faces are represented by a count of edges followed
+	// by a list of dcel.Vertex indices
+	dc.Faces[dcel.OUTER_FACE] = new(dcel.Face)
+	// We start at 1 because 0 is reserved for the outermost
+	// face, which this algorithm deals with later
+	for i := 1; i < numFaces+1; i++ {
+		numEdges := o.Faces[i][9]
+		fs := o.Faces[i][1:]
+
+		face = new(dcel.Face)
+		dc.Faces[i] = face
+
+		edge = new(dcel.Edge)
+		edges = append(edges, edge)
+
+		// This model does not use Outer faces.
+		face.Inner = edge
+		edge.Face = face
+
+		vi = fs[0]
+
+		edge.Origin = dc.Vertices[vi]
+		dc.Vertices[vi].OutEdge = edge
+
+		aux := auxData[dc.Vertices[vi]]
+		if aux == nil {
+			aux = make([]*dcel.Edge, 0)
+		}
+		auxData[dc.Vertices[vi]] = append(aux, edge)
+
+		for j := 1; j < numEdges; j++ {
+			edge.Next = new(dcel.Edge)
+			edge.Next.Prev = edge
+			edge = edge.Next
+
+			edges = append(edges, edge)
+			edge.Face = face
+
+			vi = fs[j]
+
+			edge.Origin = dc.Vertices[vi]
+			dc.Vertices[vi].OutEdge = edge
+
+			aux := auxData[dc.Vertices[vi]]
+			if aux == nil {
+				aux = make([]*dcel.Edge, 0)
+			}
+			auxData[dc.Vertices[vi]] = append(aux, edge)
+		}
+		edge.Next = face.Inner
+		face.Inner.Prev = edge
+	}
+	return decode(dc, edges, auxData)
+}
+
+// Load loads Object File Format files. This function
 // is modeled after Ryan Holmes' C++ code, http://www.holmes3d.net/graphics/offfiles/
-func LoadOFF(file string) (*DCEL, error) {
+func Load(file string) (*dcel.DCEL, error) {
 
 	f, err := os.Open(file)
 	if err != nil {
@@ -20,15 +133,13 @@ func LoadOFF(file string) (*DCEL, error) {
 	}
 	defer f.Close()
 
-	return ReadOFF(f)
+	return Read(f)
 }
 
-// ReadOFF peforms the underlying work to transform OFF data
-// into a DCEL.
-func ReadOFF(f io.Reader) (*DCEL, error) {
+// Read peforms the underlying work to transform OFF data
+// into a dcel.DCEL.
+func Read(f io.Reader) (*dcel.DCEL, error) {
 	scanner := bufio.NewScanner(f)
-
-	isManifold := true
 
 	if scanner.Scan() {
 		if scanner.Text() != "OFF" {
@@ -45,37 +156,37 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 	numVertices := counts[0]
 	numFaces := counts[1]
 
-	dc := new(DCEL)
+	dc := new(dcel.DCEL)
 
 	if numVertices == 0 || numFaces == 0 {
 		return dc, nil
 	}
 
-	var edge *Edge
-	var face *Face
+	var edge *dcel.Edge
+	var face *dcel.Face
 
-	dc.Vertices = make([]*Vertex, numVertices)
+	dc.Vertices = make([]*dcel.Vertex, numVertices)
 
 	// Read numVertices lines as vertices
-	// Each vertex is represented as three numbers,
+	// Each dcel.Vertex is represented as three numbers,
 	// x, y, z, in that order.
 	for i := 0; i < numVertices; i++ {
 		fs, err := readFloat64Line(scanner, 3)
 		if err != nil {
 			return nil, err
 		}
-		dc.Vertices[i] = NewVertex(fs[0], fs[1], fs[2])
+		dc.Vertices[i] = dcel.NewVertex(fs[0], fs[1], fs[2])
 	}
 
 	var vi int
 
-	edges := make([]*Edge, 0)
-	dc.Faces = make([]*Face, numFaces+1)
-	auxData := make(map[*Vertex][]*Edge)
+	edges := make([]*dcel.Edge, 0)
+	dc.Faces = make([]*dcel.Face, numFaces+1)
+	auxData := make(map[*dcel.Vertex][]*dcel.Edge)
 
 	// Faces are represented by a count of edges followed
-	// by a list of vertex indices
-	dc.Faces[OUTER_FACE] = new(Face)
+	// by a list of dcel.Vertex indices
+	dc.Faces[dcel.OUTER_FACE] = new(dcel.Face)
 	// We start at 1 because 0 is reserved for the outermost
 	// face, which this algorithm deals with later
 	for i := 1; i < numFaces+1; i++ {
@@ -84,10 +195,10 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 			return nil, err
 		}
 
-		face = new(Face)
+		face = new(dcel.Face)
 		dc.Faces[i] = face
 
-		edge = new(Edge)
+		edge = new(dcel.Edge)
 		edges = append(edges, edge)
 
 		// This model does not use Outer faces.
@@ -101,12 +212,12 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 
 		aux := auxData[dc.Vertices[vi]]
 		if aux == nil {
-			aux = make([]*Edge, 0)
+			aux = make([]*dcel.Edge, 0)
 		}
 		auxData[dc.Vertices[vi]] = append(aux, edge)
 
 		for j := 1; j < numEdges; j++ {
-			edge.Next = new(Edge)
+			edge.Next = new(dcel.Edge)
 			edge.Next.Prev = edge
 			edge = edge.Next
 
@@ -120,19 +231,25 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 
 			aux := auxData[dc.Vertices[vi]]
 			if aux == nil {
-				aux = make([]*Edge, 0)
+				aux = make([]*dcel.Edge, 0)
 			}
 			auxData[dc.Vertices[vi]] = append(aux, edge)
 		}
 		edge.Next = face.Inner
 		face.Inner.Prev = edge
 	}
+	return decode(dc, edges, auxData)
+}
 
-	var numFound, foundIndex int
-	var twin *Edge
-
+// decode is shared by Decode and Read
+func decode(dc *dcel.DCEL, edges []*dcel.Edge,
+	auxData map[*dcel.Vertex][]*dcel.Edge) (*dcel.DCEL, error) {
 	// Create twins
-	outerFaceList := make([]*Edge, 0)
+	var numFound, foundIndex int
+	var edge, twin *dcel.Edge
+	isManifold := true
+
+	outerFaceList := make([]*dcel.Edge, 0)
 	for j := 0; j < len(edges); j++ {
 		edge = edges[j]
 		if edge.Twin == nil {
@@ -149,10 +266,10 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 				}
 			}
 			if numFound == 0 {
-				twin = new(Edge)
+				twin = new(dcel.Edge)
 				twin.Twin = edge
 				edge.Twin = twin
-				twin.Face = dc.Faces[OUTER_FACE]
+				twin.Face = dc.Faces[dcel.OUTER_FACE]
 				outerFaceList = append(outerFaceList, twin)
 				twin.Origin = edge.Next.Origin
 			} else if numFound == 1 {
@@ -176,7 +293,7 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 	}
 	edges = append(edges, outerFaceList...)
 
-	// The original algorithm here had auxData attached to each vertex,
+	// The original algorithm here had auxData attached to each dcel.Vertex,
 	// and called this step "cleaning up" those pointers, when all it was
 	// doing was making sure they were all empty.
 	//
@@ -200,7 +317,7 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 	if !isManifold {
 		return nil, compgeo.NotManifoldError{}
 	}
-	var prev *Edge
+	var prev *dcel.Edge
 	for _, edge := range outerFaceList {
 		if edge.Twin.Next == nil {
 			continue //?
@@ -211,11 +328,11 @@ func ReadOFF(f io.Reader) (*DCEL, error) {
 		}
 		prev.Next = edge
 	}
-	dc.HalfEdges = make([]*Edge, 0)
+	dc.HalfEdges = make([]*dcel.Edge, 0)
 	ei := 0
-	marked := make(map[*Edge]bool)
+	marked := make(map[*dcel.Edge]bool)
 
-	// Our internal DCEL format expects edges[i].Twin to be edges[i+1].
+	// Our internal dcel.DCEL format expects edges[i].Twin to be edges[i+1].
 	for ei < len(edges) {
 		if _, ok := marked[edges[ei]]; !ok {
 			dc.HalfEdges = append(dc.HalfEdges, edges[ei], edges[ei].Twin)
