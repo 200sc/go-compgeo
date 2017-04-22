@@ -28,6 +28,8 @@ const (
 	defScale      = 20
 	defRotZ       = math.Pi
 	defRotY       = math.Pi
+	defShiftX     = 200
+	defShiftY     = 200
 )
 
 const (
@@ -53,17 +55,27 @@ var (
 	font              *render.Font
 	phd               *InteractivePolyhedron
 	undoPhd           []InteractivePolyhedron
-	ticker            *time.Ticker
+	ticker            *dynamicTicker
 	stopTickerCh      = make(chan bool)
 	sliding           bool
 	locator           dcel.LocatesPoints
 	pointLocationMode = SLAB_DECOMPOSITION
 	modeBtn           *Button
+	locating          bool
 )
 
 // InitScene is called whenever the scene 'demo' starts.
 // it creates the objects in our application.
 func InitScene(prevScene string, data interface{}) {
+	if slab.VisualCh != nil {
+		close(slab.VisualCh)
+		select {
+		case stopTickerCh <- true:
+		default:
+		}
+		slab.VisualCh = nil
+	}
+	ticker = NewDynamicTicker()
 	loopDemo = true
 	//phd := render.NewCuboid(100, 100, 100, 100, 100, 100)
 	var dc *dcel.DCEL
@@ -78,7 +90,7 @@ func InitScene(prevScene string, data interface{}) {
 	}
 	pointLocationMode = SLAB_DECOMPOSITION
 	phd = new(InteractivePolyhedron)
-	phd.Polyhedron = NewPolyhedronFromDCEL(dc, 100, 100)
+	phd.Polyhedron = NewPolyhedronFromDCEL(dc, defShiftX, defShiftY)
 	phd.Polyhedron.Scale(defScale)
 	phd.Polyhedron.RotZ(defRotZ)
 	phd.Polyhedron.RotY(defRotY)
@@ -95,12 +107,18 @@ func InitScene(prevScene string, data interface{}) {
 		geom.Point{0, 0, 0}, 3, 465)
 	render.Draw(mouseStr, 3)
 
+	bkgrnd := render.NewColorBox(140, 480, color.RGBA{50, 50, 50, 255})
+	bkgrnd.SetPos(514, 0)
+	render.Draw(bkgrnd, 0)
+
 	clrBtn := NewButton(clear, font)
 	clrBtn.SetLogicDim(70, 20)
 	clrBtn.SetRenderable(render.NewColorBox(int(clrBtn.W), int(clrBtn.H), color.RGBA{50, 50, 100, 255}))
 	clrBtn.SetPos(560, 10)
 	clrBtn.TxtX = 10
 	clrBtn.TxtY = 5
+	clrBtn.Layer = 4
+	clrBtn.R.SetLayer(4)
 	clrBtn.SetString("Clear")
 
 	modeBtn = NewButton(changeMode, font)
@@ -109,34 +127,38 @@ func InitScene(prevScene string, data interface{}) {
 	modeBtn.SetPos(515, 410)
 	modeBtn.TxtX = 5
 	modeBtn.TxtY = 5
+	modeBtn.Layer = 4
+	modeBtn.R.SetLayer(4)
 	modeBtn.SetString("Slab Decomposition")
 
-	visSlider := NewSlider(font)
+	visSlider := NewSlider(4, font)
 	visSlider.SetDim(115, 35)
 	visSlider.SetRenderable(
 		render.NewColorBox(int(visSlider.W), int(visSlider.H), color.RGBA{50, 50, 100, 255}))
 	visSlider.SetPos(515, 440)
 	visSlider.TxtX = 10
 	visSlider.TxtY = 20
+	visSlider.R.SetLayer(4)
 	visSlider.SetString("No Visualization")
 
 	event.GlobalBind(clear, "Clear")
 	event.GlobalBind(visuals, "Visualize")
 	event.GlobalBind(vertexStopDrag, "MouseRelease")
-	event.GlobalBind(func(no int, nothing interface{}) int {
-		mode = (mode + 1) % LAST_MODE
-		modeStr.SetText(mode.String())
-		return 0
-	}, "KeyDownQ")
+
+	// Bind mode setting buttons
 	keys := []string{"1", "2", "3", "4"}
 	for i, k := range keys {
 		j := mouseMode(i)
 		event.GlobalBind(func(no int, nothing interface{}) int {
+			if mode == LOCATING || mode == ADDING_DCEL {
+				return 0
+			}
 			mode = j
 			modeStr.SetText(mode.String())
 			return 0
 		}, "KeyDown"+k)
 	}
+
 	phd.cID.Bind(phdEnter, "EnterFrame")
 	phd.cID.Bind(addFace, "MouseRelease")
 	// phd.cID.Bind(func(cID int, nothing interface{}) int {
@@ -192,34 +214,31 @@ func clear(no int, nothing interface{}) int {
 }
 
 func visuals(no int, rt interface{}) int {
+	fmt.Println("Enter visuals")
 	rate := rt.(time.Duration)
 	if rate != 0 {
-		if ticker != nil {
-			close(slab.VisualCh)
-			select {
-			case stopTickerCh <- true:
-			default:
-			}
-			ticker.Stop()
+		if slab.VisualCh == nil {
+			slab.VisualCh = make(chan *visualize.Visual)
 		}
-		slab.VisualCh = make(chan *visualize.Visual)
-		ticker = time.NewTicker(rate)
+		select {
+		case stopTickerCh <- true:
+		default:
+		}
+		ticker.SetTick(rate)
 		go func() {
 			var visual *visualize.Visual
 			for {
 				select {
 				case <-stopTickerCh:
 					return
-				case <-ticker.C:
+				case <-ticker.ch:
 					if visual != nil {
 						render.UndrawAfter(visual, 100*time.Millisecond)
 					}
 					visual = <-slab.VisualCh
 					if visual == nil {
-						fmt.Println("Nil visual recieved")
 						return
 					}
-					fmt.Println("Drawing visual")
 					visual.ShiftX(phd.X)
 					visual.ShiftY(phd.Y)
 
@@ -230,18 +249,16 @@ func visuals(no int, rt interface{}) int {
 			}
 		}()
 	} else {
-		if ticker != nil {
+		if slab.VisualCh != nil {
 			close(slab.VisualCh)
 			select {
 			case stopTickerCh <- true:
 			default:
 			}
-			ticker.Stop()
-			ticker = nil
+			slab.VisualCh = nil
 		}
-		slab.VisualCh = nil
 	}
-
+	fmt.Println("Leaving visuals")
 	return 0
 }
 

@@ -46,10 +46,11 @@ func (sl *Slider) Init() event.CID {
 
 // NewSlider returns a slider with initialized values
 // using the given font to render its text.
-func NewSlider(f *render.Font) *Slider {
+func NewSlider(layer int, f *render.Font) *Slider {
 	sl := new(Slider)
 	sl.Button = new(Button)
 	sl.min = 2
+	sl.Layer = layer
 	sl.max = 100
 	sl.val = 2
 	sl.interval = time.Duration(0)
@@ -94,8 +95,11 @@ func (sl *Slider) SetPos(x float64, y float64) {
 // sliderDragStart tells this demo to ignore some mouse events
 // until sliding = false, and binds to every frame sliderDrag.
 func sliderDragStart(sl int, nothing interface{}) int {
-	sliding = true
-	event.CID(sl).Bind(sliderDrag, "EnterFrame")
+	if sliding != true {
+		sliding = true
+		fmt.Println("Binding slide")
+		event.CID(sl).Bind(sliderDrag, "EnterFrame")
+	}
 	return 0
 }
 
@@ -106,10 +110,11 @@ func sliderDragStart(sl int, nothing interface{}) int {
 func sliderDrag(sl int, nothing interface{}) int {
 	slider := event.GetEntity(sl).(*Slider)
 	me := mouse.LastMouseEvent
-	if me.Event == "MouseRelease" {
+	if me.Event == "MouseRelease" || me.X < 515 {
 		event.Trigger("Visualize", slider.interval)
+		fmt.Println("Unbinding slide")
 		sliding = false
-		return event.UNBIND_SINGLE
+		return event.UNBIND_EVENT
 	}
 	x := float64(me.X) - (slider.X + 5)
 	if x <= slider.min {
@@ -136,12 +141,8 @@ func (sl *Slider) valText() fmt.Stringer {
 		sl.interval = time.Duration(0)
 		return stringer("No Visualization")
 	}
-	// We'd like--
-	// 1 == 5 ms
-	// 100 == 1 second
-	// y = x^1.5 maps to this well
 
-	scaled := math.Pow(sl.val, 1.5)
+	scaled := math.Pow(sl.val, 1.25)
 	sl.interval = time.Duration(scaled) * time.Millisecond
 	return stringer(strconv.Itoa(int(scaled)) + " ms")
 }

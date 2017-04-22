@@ -29,9 +29,10 @@ type Polyhedron struct {
 }
 
 var (
-	edgeColor = color.RGBA{0, 0, 255, 255}
-	faceColor = color.RGBA{0, 255, 255, 255}
-	ptColor   = color.RGBA{0, 0, 0, 255}
+	edgeColor   = color.RGBA{0, 0, 255, 255}
+	faceColor   = color.RGBA{0, 150, 150, 255}
+	ptColor     = color.RGBA{255, 255, 255, 255}
+	zCorrection = .1
 )
 
 // NewPolyhedronFromDCEL creates a polyhedron from a dcel
@@ -184,7 +185,7 @@ type drawPoint struct {
 }
 
 func (dp drawPoint) Z() float64 {
-	return dp.Vertex.Z() + .002
+	return dp.Vertex.Z() + zCorrection*2
 }
 
 func (dp drawPoint) draw(rgba *image.RGBA) {
@@ -197,7 +198,7 @@ type coloredEdge struct {
 }
 
 func (ce coloredEdge) Z() float64 {
-	return ce.ps.High(2).Val(2)
+	return ce.ps.High(2).Val(2) + zCorrection
 }
 
 func (ce coloredEdge) draw(rgba *image.RGBA) {
@@ -223,6 +224,20 @@ func (fp facePolygon) draw(rgba *image.RGBA) {
 			}
 		}
 	}
+}
+
+func PolygonFromFace(f *dcel.Face) *render.Polygon {
+	verts := f.Vertices()
+	maxZ := math.MaxFloat64 * -1
+	physVerts := make([]physics.Vector, len(verts))
+	for i, v := range verts {
+		physVerts[i] = physics.NewVector(v.X(), v.Y())
+		if v.Z() > maxZ {
+			maxZ = v.Z()
+		}
+	}
+	poly, _ := render.NewPolygon(physVerts)
+	return poly
 }
 
 func (p *Polyhedron) RotZ(theta float64) {

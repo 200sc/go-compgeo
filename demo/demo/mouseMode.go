@@ -11,6 +11,7 @@ const (
 	REM_DCEL
 	LAST_MODE
 	ADDING_DCEL
+	LOCATING
 )
 
 func (m mouseMode) String() string {
@@ -27,6 +28,8 @@ func (m mouseMode) String() string {
 		return "Defining Face..."
 	case REM_DCEL:
 		return "Define Inside Face"
+	case LOCATING:
+		return "Locating..."
 	default:
 		return "INVALID"
 	}

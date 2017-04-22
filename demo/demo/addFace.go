@@ -2,11 +2,15 @@ package demo
 
 import (
 	"fmt"
+	"image/color"
+	"time"
 
 	"golang.org/x/sync/syncmap"
 
 	"bitbucket.org/oakmoundstudio/oak/event"
 	"bitbucket.org/oakmoundstudio/oak/mouse"
+	"bitbucket.org/oakmoundstudio/oak/render"
+	"bitbucket.org/oakmoundstudio/oak/timing"
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/dcel/slab"
 	"github.com/200sc/go-compgeo/dcel/triangulation"
@@ -14,12 +18,9 @@ import (
 )
 
 func addFace(cID int, ev interface{}) int {
-	if sliding {
-		return 0
-	}
 	phd := event.GetEntity(cID).(*InteractivePolyhedron)
 	me := ev.(mouse.MouseEvent)
-	if me.X < 0 || me.Y < 0 || (me.X > 515 && me.Y > 410) {
+	if me.X < 0 || me.Y < 0 || me.X > 515 {
 		return 0
 	}
 	mx := float64(me.X) - phd.X
@@ -132,42 +133,57 @@ func addFace(cID int, ev interface{}) int {
 			phd.Update()
 			phd.UpdateSpaces()
 		} else if mode == POINT_LOCATE {
-			if locator == nil {
-				var err error
-				if pointLocationMode == SLAB_DECOMPOSITION {
-					locator, err = slab.Decompose(&phd.DCEL, tree.RedBlack)
-				} else if pointLocationMode == TRAPEZOID_MAP {
-					var dc *dcel.DCEL
-					dc, _, locator, err = triangulation.TrapezoidalMap(&phd.DCEL)
-					// for now
-					if err == nil {
-						phd.DCEL = *dc
-						phd.Update()
-					} else {
-						fmt.Println("error", err)
+			mode = LOCATING
+			go func() {
+				if locator == nil {
+					var err error
+					if pointLocationMode == SLAB_DECOMPOSITION {
+						locator, err = slab.Decompose(&phd.DCEL, tree.RedBlack)
+					} else if pointLocationMode == TRAPEZOID_MAP {
+						//var dc *dcel.DCEL
+						_, _, locator, err = triangulation.TrapezoidalMap(&phd.DCEL)
+						// for now
+						if err == nil {
+							//phd.DCEL = *dc
+							//phd.Update()
+						} else {
+							fmt.Println("error", err)
+						}
+					}
+					if err != nil {
+						fmt.Println(err)
+						mode = POINT_LOCATE
+						return
 					}
 				}
-				if err != nil {
-					fmt.Println(err)
-					return 0
+
+				f, _ := locator.PointLocate(mx, my)
+				if f == phd.Faces[0] || f == nil {
+					fmt.Println("Outer/No Face")
+				} else {
+					faceIndex := phd.ScanFaces(f)
+					if faceIndex < 0 {
+						mode = POINT_LOCATE
+						return
+					}
+					poly := PolygonFromFace(f)
+					poly.Fill(color.RGBA{125, 0, 0, 125})
+					poly.ShiftX(phd.X)
+					poly.ShiftY(phd.Y)
+					render.Draw(poly, 10)
+					render.UndrawAfter(poly, 2500*time.Millisecond)
+					phd.FaceColors[faceIndex] = color.RGBA{255, 0, 0, 255}
+
+					timing.DoAfter(50*time.Millisecond, func() {
+						phd.Update()
+					})
+					timing.DoAfter(2500*time.Millisecond, func() {
+						phd.FaceColors[faceIndex] = faceColor
+						phd.Update()
+					})
 				}
-			}
-
-			// f, _ := locator.PointLocate(mx, my)
-			// if f == phd.Faces[0] || f == nil {
-			// 	fmt.Println("Outer/No Face")
-			// } else {
-			// 	faceIndex := phd.ScanFaces(f)
-			// 	phd.FaceColors[faceIndex] = color.RGBA{255, 0, 0, 255}
-
-			// 	timing.DoAfter(50*time.Millisecond, func() {
-			// 		phd.Update()
-			// 	})
-			// 	timing.DoAfter(2500*time.Millisecond, func() {
-			// 		phd.FaceColors[faceIndex] = color.RGBA{0, 255, 255, 255}
-			// 		phd.Update()
-			// 	})
-			// }
+				mode = POINT_LOCATE
+			}()
 		}
 	} else if me.Button == "RightMouse" {
 		if mode == ADDING_DCEL {

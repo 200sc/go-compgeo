@@ -1,6 +1,8 @@
 package demo
 
 import (
+	"fmt"
+
 	"bitbucket.org/oakmoundstudio/oak"
 	"bitbucket.org/oakmoundstudio/oak/event"
 	"bitbucket.org/oakmoundstudio/oak/mouse"
@@ -8,6 +10,12 @@ import (
 )
 
 func phdEnter(cID int, nothing interface{}) int {
+	if mode == LOCATING {
+		fmt.Println("Locating...")
+		return 0
+	}
+
+	// Move the polyhedron with the arrow keys
 	phd := event.GetEntity(cID).(*InteractivePolyhedron)
 	shft := oak.IsDown("LeftShift")
 	if oak.IsDown("LeftArrow") {
@@ -34,15 +42,18 @@ func phdEnter(cID int, nothing interface{}) int {
 			phd.UpdateSpaces()
 		}
 	}
+
 	nme := mouse.LastMouseEvent
 	mX := float64(nme.X)
 	mY := float64(nme.Y)
 	mouseStr.SetText(geom.Point{mX - phd.X, mY - phd.Y, mouseZ})
-	if mX < 0 || mY < 0 || (mX > 515 && mY > 410) {
+	if mX < 0 || mY < 0 || mX > 515 {
 		dragX = -1
 		dragY = -1
 		return 0
 	}
+
+	// Certain modes allow for rotaing the dcel
 	if mode == ROTATE || ((mode == ADD_DCEL || mode == ADDING_DCEL) && shft) {
 		if dragX != -1 {
 			dx := mX - dragX
@@ -61,15 +72,19 @@ func phdEnter(cID int, nothing interface{}) int {
 				phd.UpdateSpaces()
 			}
 		}
+
+		// The Move point mode allows for changing the position of points.
 	} else if mode == MOVE_POINT && dragging != -1 {
-		update := false
 		mouseZ = phd.Vertices[dragging].Z()
+		update := false
 		if dragX != -1 {
-			phd.Vertices[dragging].Set(0, float64(dragX)-phd.X)
+			phd.Vertices[dragging].Point =
+				phd.Vertices[dragging].Set(0, float64(dragX)-phd.X).(geom.Point)
 			update = true
 		}
 		if dragY != -1 {
-			phd.Vertices[dragging].Set(1, float64(dragY)-phd.Y)
+			phd.Vertices[dragging].Point =
+				phd.Vertices[dragging].Set(1, float64(dragY)-phd.Y).(geom.Point)
 			update = true
 		}
 		if oak.IsDown("D") {

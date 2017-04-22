@@ -84,6 +84,7 @@ func vertexStartDrag(cID int, nothing interface{}) int {
 }
 
 func vertexStopDrag(no int, nothing interface{}) int {
+	fmt.Println("Stop drag")
 	dragging = -1
 	return 0
 }

@@ -259,10 +259,10 @@ func rbDeleteFixup(n, p *node) (newRoot *node) {
 			p.payload = red
 			s.payload = black
 			if s == p.right {
-				newRoot = p.leftRotate()
+				newRoot = root(p.leftRotate(), newRoot)
 				s = p.right
 			} else {
-				newRoot = p.rightRotate()
+				newRoot = root(p.rightRotate(), newRoot)
 				s = p.left
 			}
 			// Now P->N = P->NewS - 1, still,
@@ -305,14 +305,14 @@ func rbDeleteFixup(n, p *node) (newRoot *node) {
 		if n == p.left && s.right.isBlack() && s.left.isRed() {
 			s.payload = red
 			s.left.payload = black
-			newRoot = s.rightRotate()
+			newRoot = root(s.rightRotate(), newRoot)
 			s = p.right
 			// Case 5.2:
 			// As 5.1, but flipped
 		} else if n == p.right && s.left.isBlack() && s.right.isRed() {
 			s.payload = red
 			s.right.payload = black
-			newRoot = s.leftRotate()
+			newRoot = root(s.leftRotate(), newRoot)
 			s = p.left
 		}
 		// Case 6:
@@ -322,10 +322,10 @@ func rbDeleteFixup(n, p *node) (newRoot *node) {
 		p.payload = black
 		if n == p.left {
 			s.right.payload = black
-			newRoot = p.leftRotate()
+			newRoot = root(p.leftRotate(), newRoot)
 		} else {
 			s.left.payload = black
-			newRoot = p.rightRotate()
+			newRoot = root(p.rightRotate(), newRoot)
 		}
 		break
 	}

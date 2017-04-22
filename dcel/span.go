@@ -18,6 +18,9 @@ func (dc *DCEL) Bounds() geom.Span {
 // populate Outer
 func (f *Face) Bounds() geom.Span {
 	sp := geom.NewSpan()
+	if f == nil {
+		return sp
+	}
 	e := f.Inner
 	sp = sp.Expand(e.Origin)
 	for e.Next != f.Inner {
