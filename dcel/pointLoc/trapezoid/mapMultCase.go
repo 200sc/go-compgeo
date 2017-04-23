@@ -139,96 +139,96 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 		// endpoint.
 		p1 := u.TopEdge().Left()
 		p2 := tr.TopEdge().Right()
-		// if geom.IsColinear(p1, u.Edges[top].Right(), p2) {
-		// 	fmt.Println("Merge Case")
-		// 	u.Edges[top] = geom.NewFullEdge(p1, p2)
-		// 	u.Edges[bot] = geom.NewFullEdge(u.Edges[bot].Left(),
-		// 		tr.Edges[bot].Right())
-		// } else {
-		u2 := tr.Copy()
-		//
-		u.Neighbors[botright] = u2
-		u2.Neighbors[botleft] = u
-		// Otherwise there are three reasons we might not be
-		// able to merge.
-		//
-		// A: this trapezoid's upper edge
-		// shares a vertex with the previous trapezoid, but
-		// is at a different angle.
-		u2tl := u2.TopEdge().Left()
-		utr := u.TopEdge().Right()
-		if u2tl.Eq(utr) {
-			// In this case, top left and bot left are both u.
-			// u's bot right and bot left are similarly both u2.
-			u.Neighbors[upright] = u2
-			u2.Neighbors[upleft] = u
-			// The top edges of u and u2 do not need to be updated.
-			// The top edge of u2 is still accurate from the copy.
-			// the search structure is updated later.
+		if geom.IsColinear(p1, u.TopEdge().Right(), p2) {
+			fmt.Println("Merge Case")
+			// This can't be right
+			u.top[right] = p2.Y()
+			u.bot[right] = tr.bot[right]
 		} else {
-			if u2tl.Y() > utr.Y() {
-				// B: this trapezoid's left endpoint is above
-				// the left endpoint of the previous trapezoid.
+			u2 := tr.Copy()
+			//
+			u.Neighbors[botright] = u2
+			u2.Neighbors[botleft] = u
+			// Otherwise there are three reasons we might not be
+			// able to merge.
+			//
+			// A: this trapezoid's upper edge
+			// shares a vertex with the previous trapezoid, but
+			// is at a different angle.
+			u2tl := u2.TopEdge().Left()
+			utr := u.TopEdge().Right()
+			if u2tl.X() == utr.X() && u2tl.Y() == utr.Y() {
+				// In this case, top left and bot left are both u.
+				// u's bot right and bot left are similarly both u2.
 				u.Neighbors[upright] = u2
-			} else {
-				// C: this trapezoid's left endpoint is below
-				// the left endpoint of the previous trapezoid.
 				u2.Neighbors[upleft] = u
+				// The top edges of u and u2 do not need to be updated.
+				// The top edge of u2 is still accurate from the copy.
+				// the search structure is updated later.
+			} else {
+				if u2tl.Y() > utr.Y() {
+					// B: this trapezoid's left endpoint is above
+					// the left endpoint of the previous trapezoid.
+					u.Neighbors[upright] = u2
+				} else {
+					// C: this trapezoid's left endpoint is below
+					// the left endpoint of the previous trapezoid.
+					u2.Neighbors[upleft] = u
+				}
 			}
+			fmt.Println("u2, split from tr, left values", u2.left, tr.left)
+			u.right = u2.left
+			// the bottom edge is now this shard of fe.
+			// if this trapezoid is merged with another,
+			// this may change.
+			edge, err = fe.SubEdge(0, u2.left, u2.right)
+			u2.bot[left] = edge.Left().Y()
+			u2.bot[right] = edge.Right().Y()
+			if err != nil {
+				fmt.Println("Loc 3", err)
+			}
+			// y points to a new trapezoid node holding u2
+			un = NewTrapNode(u2)
+			u = u2
 		}
-		u2.setLeft(p1.X())
-		u.setRight(p1.X())
-		// the bottom edge is now this shard of fe.
-		// if this trapezoid is merged with another,
-		// this may change.
-		edge, err = fe.SubEdge(0, u2.left, u2.right)
-		u2.bot[left] = edge.Left().Y()
-		u2.bot[right] = edge.Right().Y()
-		if err != nil {
-			fmt.Println("Loc 3", err)
-		}
-		// y points to a new trapezoid node holding u2
-		un = NewTrapNode(u2)
-		u = u2
-		//}
 
 		y.set(left, un)
 
 		p1 = b.BotEdge().Left()
 		p2 = tr.BotEdge().Right()
 		// Behavior is similar for the lower trapezoid
-		// if geom.IsColinear(p1, b.Edges[bot].Right(), p2) {
-		// 	b.Edges[bot] = geom.NewFullEdge(p1, p2)
-		// 	b.Edges[top] = geom.NewFullEdge(b.Edges[top].Left(),
-		// 		tr.Edges[top].Right())
-		// } else {
-		b2 := tr.Copy()
-		b.Neighbors[upright] = b2
-		b2.Neighbors[upleft] = b
-
-		b2bl := b2.BotEdge().Left()
-		bbr := b.BotEdge().Right()
-		if b2bl == bbr {
-			b.Neighbors[botright] = b2
-			b2.Neighbors[botleft] = b
+		if geom.IsColinear(p1, b.BotEdge().Right(), p2) {
+			b.bot[right] = p2.Y()
+			b.top[right] = tr.top[right]
 		} else {
-			if b2bl.Y() < bbr.Y() {
+			b2 := tr.Copy()
+			b.Neighbors[upright] = b2
+			b2.Neighbors[upleft] = b
+
+			b2bl := b2.BotEdge().Left()
+			bbr := b.BotEdge().Right()
+			if b2bl == bbr {
 				b.Neighbors[botright] = b2
-			} else {
 				b2.Neighbors[botleft] = b
+			} else {
+				if b2bl.Y() < bbr.Y() {
+					b.Neighbors[botright] = b2
+				} else {
+					b2.Neighbors[botleft] = b
+				}
 			}
+			fmt.Println("b2, split from tr, left values", b2.left, tr.left)
+			b.right = b2.left
+
+			edge, err = fe.SubEdge(0, b2.left, b2.right)
+			b2.top[left] = edge.Left().Y()
+			b2.top[right] = edge.Right().Y()
+			if err != nil {
+				fmt.Println("Loc 4", err)
+			}
+			bn = NewTrapNode(b2)
+			b = b2
 		}
-		b.setRight(p1.X())
-		b2.setLeft(p2.X())
-		edge, err = fe.SubEdge(0, b2.left, b2.right)
-		b2.top[left] = edge.Left().Y()
-		b2.top[right] = edge.Right().Y()
-		if err != nil {
-			fmt.Println("Loc 4", err)
-		}
-		bn = NewTrapNode(b2)
-		b = b2
-		//}
 		u.faces = faces
 		b.faces = faces
 		y.set(right, bn)
@@ -239,14 +239,14 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 	// will be the same in the next case
 
 	rp := fe.Right()
-	u.setRight(rp.X())
-	b.setRight(rp.X())
+	u.right = rp.X()
+	b.right = rp.X()
 
 	var r, ur, br *Trapezoid
 	trn := trs[len(trs)-1]
 	if !trn.HasDefinedPoint(fe.Right()) {
 		r = trn.Copy()
-		r.setLeft(rp.X())
+		r.left = rp.X()
 		// other edges don't change
 		//
 		r.Neighbors[upleft] = u
@@ -273,10 +273,10 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 	u.Neighbors[upright] = ur
 	b.Neighbors[botright] = br
 	b.Neighbors[upright] = ur
-	if r != nil && rp.Eq(b.BotEdge().Right()) {
+	if r != nil && rp.X() == b.right && rp.Y() == b.bot[right] {
 		u.Rights(nil)
 		r.Neighbors[upleft] = b
-	} else if r != nil && rp.Eq(u.TopEdge().Right()) {
+	} else if r != nil && rp.X() == u.right && rp.Y() == u.top[right] {
 		b.Rights(nil)
 		r.Neighbors[botleft] = u
 	} else if r == nil && ur != nil && geom.F64eq(rp.X(), ur.left) {

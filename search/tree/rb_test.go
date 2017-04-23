@@ -136,7 +136,6 @@ func TestRBInOrder(t *testing.T) {
 	expected := [...]compFloat{
 		1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 	for i := range inOrder {
-		//fmt.Println(inOrder[i].Key(), inOrder[i].Val())
 		assert.Equal(t, expected[i], inOrder[i].Key())
 	}
 }

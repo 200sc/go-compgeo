@@ -30,15 +30,14 @@ func Decompose(dc *dcel.DCEL, bstType tree.Type) (pointLoc.LocatesPoints, error)
 	t := tree.New(bstType).ToPersistent()
 	pts := dc.VerticesSorted(0)
 
-	fmt.Println(dc.Vertices)
-	fmt.Println(pts)
-	fmt.Println("START CONSTRUCTION")
 	i := 0
 	for i < len(pts) {
 		p := pts[i]
 		v := dc.Vertices[p]
 		// Set the BST's instant to the x value of this point
-		fmt.Println("Setting Instant to", v.X())
+		if visualize.VisualCh != nil {
+			visualize.DrawVerticalLine(v)
+		}
 		t.SetInstant(v.X())
 		ct := t.ThisInstant()
 

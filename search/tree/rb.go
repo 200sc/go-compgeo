@@ -156,44 +156,6 @@ func rbDelete(n *node) (newRoot *node) {
 
 		// if rand.Float64() < 0.5 {
 		n2 := n.right.minKey()
-		// This case is not properly being captured or tested.
-		if n2 == n.right && p == nil {
-			if n.right != nil && n.right.isBlack() &&
-				n.left != nil && n.left.isBlack() && n.right.left == nil &&
-				n.right.right == nil {
-
-				lc := n.left.left
-				if lc == nil {
-					lc = n.left.right
-				}
-				// if lc == nil || lc.isRed() {
-				// 	fmt.Println("Weird special case hit")
-				// 	// For this specific structure we aren't doing the right thing?
-				//  new signs point to this case being fine
-				// 	var newLeft *node
-				// 	if lc == n.left.right && lc != nil {
-				// 		newRoot = lc
-				// 		newLeft = n.left
-				// 	} else {
-				// 		newRoot = n.left
-				// 		newLeft = lc
-				// 	}
-
-				// 	newRight := n.right
-				// 	newRoot.left = newLeft
-				// 	newRoot.right = newRight
-				// 	newRoot.parent = nil
-				// 	if newLeft != nil {
-				// 		newLeft.parent = newRoot
-				// 		newLeft.left = nil
-				// 		newLeft.right = nil
-				// 	}
-				// 	newRight.parent = newRoot
-				// 	newRight.payload = red
-				// 	return
-				// }
-			}
-		}
 		c = n2.payload.(bool)
 		//} else {
 		// n2 := n.left.maxKey()

@@ -1,8 +1,6 @@
 package tree
 
 import (
-	"fmt"
-
 	"github.com/200sc/go-compgeo/printutil"
 	"github.com/200sc/go-compgeo/search"
 )
@@ -33,7 +31,6 @@ func (pbst *PersistentBST) AtInstant(ins float64) search.Dynamic {
 			if pbst.instants[bot].instant > ins {
 				bot--
 			}
-			fmt.Println("Returning index", bot)
 			return pbst.instants[bot]
 		}
 		mid = (bot + top) / 2
@@ -65,9 +62,6 @@ func (pbst *PersistentBST) SetInstant(ins float64) {
 	}
 	bsti := BSTInstant{}
 	bsti.BST = pbst.instants[len(pbst.instants)-1].copy()
-	fmt.Println("Copy!")
-	fmt.Println(pbst.instants[len(pbst.instants)-1])
-	fmt.Println(bsti.BST)
 	bsti.instant = ins
 	pbst.instants = append(pbst.instants, bsti)
 	pbst.instant = ins

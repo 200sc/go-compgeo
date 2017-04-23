@@ -1,7 +1,6 @@
 package dcel
 
 import (
-	"fmt"
 	"sort"
 
 	"github.com/200sc/go-compgeo/geom"
@@ -47,12 +46,10 @@ func (f *Face) Contains(p geom.D2) bool {
 	bounds := f.Bounds()
 	min := bounds.At(0).(geom.D2)
 	max := bounds.At(1).(geom.D2)
-	fmt.Println("Face bounds", bounds)
 	if x < min.Val(0) || x > max.Val(0) ||
 		y < min.Val(1) || y > max.Val(1) {
 		return contains
 	}
-	fmt.Println("Point lied in bounds")
 
 	e1 := f.Outer.Prev
 	e2 := f.Outer

@@ -41,14 +41,12 @@ func TrapezoidalMap(dc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, *Node
 		}
 		i++
 	}
-	fmt.Println("FullEdges")
 	// Scramble the edges
 	// Will bring this back in once the algorithm works
 	// for i := range fullEdges {
-	// 	fmt.Println(fullEdges[i])
 	// 	j := i + rand.Intn(len(fullEdges)-i)
 	// 	fullEdges[i], fullEdges[j] = fullEdges[j], fullEdges[i]
-	// }
+	// }1
 	if visualize.VisualCh != nil {
 		visualize.HighlightColor = color.RGBA{0, 255, 0, 255}
 	}

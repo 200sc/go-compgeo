@@ -219,7 +219,6 @@ func clear(no int, nothing interface{}) int {
 }
 
 func visuals(no int, rt interface{}) int {
-	fmt.Println("Enter visuals")
 	rate := rt.(time.Duration)
 	if rate != 0 {
 		if visualize.VisualCh == nil {
@@ -247,8 +246,6 @@ func visuals(no int, rt interface{}) int {
 					visual.ShiftX(phd.X)
 					visual.ShiftY(phd.Y)
 
-					fmt.Println(visual.GetX(), visual.GetY())
-
 					render.Draw(visual.Renderable, visual.Layer)
 				}
 			}
@@ -263,7 +260,6 @@ func visuals(no int, rt interface{}) int {
 			visualize.VisualCh = nil
 		}
 	}
-	fmt.Println("Leaving visuals")
 	return 0
 }
 

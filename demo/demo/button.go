@@ -76,7 +76,6 @@ func (b *Button) SetString(txt string) {
 // SetText changes the text on this button to be the input txt.
 func (b *Button) SetText(txt fmt.Stringer) {
 	if b.Text != nil {
-		//fmt.Println("Undrawing!")
 		b.Text.UnDraw()
 	}
 	b.Text = b.Font.NewInterfaceText(txt, b.X+b.TxtX, b.Y-b.TxtY+b.H)

@@ -293,27 +293,6 @@ func decode(dc *dcel.DCEL, edges []*dcel.Edge,
 	}
 	edges = append(edges, outerFaceList...)
 
-	// The original algorithm here had auxData attached to each dcel.Vertex,
-	// and called this step "cleaning up" those pointers, when all it was
-	// doing was making sure they were all empty.
-	//
-	// It seems like the algorithm will -always- have elements in some auxdata,
-	// as it doesn't remove things from auxdata that already had twins in the
-	// twin-attaching phase.
-	// for _, v := range auxData {
-	// 	if v == nil || len(v) == 0 {
-	// 		continue
-	// 	}
-	// 	for _, v2 := range v {
-	// 		if v2 != nil {
-	// 			break
-	// 		}
-	// 	}
-	// 	fmt.Println("AuxData was not empty because of course it wasn't")
-	// 	isManifold = false
-	// 	break
-	// }
-
 	if !isManifold {
 		return nil, compgeo.NotManifoldError{}
 	}

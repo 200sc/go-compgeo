@@ -113,14 +113,6 @@ func (tr *Trapezoid) Lefts(tr2 *Trapezoid) {
 	tr.Neighbors[botleft] = tr2
 }
 
-func (tr *Trapezoid) setRight(x float64) {
-	tr.right = x
-}
-
-func (tr *Trapezoid) setLeft(x float64) {
-	tr.left = x
-}
-
 // Copy returns a trapezoid with identical edges
 // and neighbors.
 func (tr *Trapezoid) Copy() *Trapezoid {
@@ -170,7 +162,7 @@ func (tr *Trapezoid) TopEdge() geom.FullEdge {
 // vertices.
 func (tr *Trapezoid) HasDefinedPoint(p geom.D3) bool {
 	for _, p2 := range tr.AsPoints() {
-		if p2.Eq(p) {
+		if p2.X() == p.X() && p2.Y() == p.Y() {
 			return true
 		}
 	}

@@ -1,8 +1,6 @@
 package monotone
 
 import (
-	"fmt"
-
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/dcel/pointLoc/visualize"
 	"github.com/200sc/go-compgeo/geom"
@@ -54,28 +52,22 @@ func (ce compEdge) Compare(i interface{}) search.CompareResult {
 			visualize.DrawLine(ce.Edge.Origin, ce.Edge.Twin.Origin)
 			visualize.DrawLine(c.Edge.Origin, c.Edge.Twin.Origin)
 		}
-		fmt.Println("Comparing", ce, c)
 		if ce.Edge == c.Edge {
-			fmt.Println("Equal1!")
 			return search.Equal
 		}
 
 		if geom.F64eq(ce.X(), c.X()) && geom.F64eq(ce.Y(), c.Y()) &&
 			geom.F64eq(ce.Twin.X(), c.Twin.X()) && geom.F64eq(ce.Twin.Y(), c.Twin.Y()) {
-			fmt.Println("Equal2!")
 			return search.Equal
 		}
 		y, err := ce.FindSharedPoint(c.Edge, 1)
 		if err != nil {
-			fmt.Println("Edges share no y point")
 		}
 		p1, _ := ce.PointAt(1, y)
 		p2, _ := c.PointAt(1, y)
 		if p1[0] < p2[0] {
-			fmt.Println("Less!")
 			return search.Less
 		}
-		fmt.Println("Greater!")
 		return search.Greater
 	}
 	return ce.Edge.Compare(i)

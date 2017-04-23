@@ -214,7 +214,6 @@ func addFace(cID int, ev interface{}) int {
 			twin.Prev = first.Twin
 			first.Twin.Next = twin
 
-			fmt.Println(phd.DCEL.HalfEdges)
 			phd.CorrectDirectionality(addedFace)
 
 			prev = nil
@@ -225,8 +224,6 @@ func addFace(cID int, ev interface{}) int {
 
 			phd.Update()
 			phd.UpdateSpaces()
-
-			fmt.Println(phd.DCEL.HalfEdges)
 		}
 	}
 	return 0

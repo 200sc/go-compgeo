@@ -45,34 +45,23 @@ func (ce compEdge) Compare(i interface{}) search.CompareResult {
 			visualize.DrawLine(ce.Edge.Origin, ce.Edge.Twin.Origin)
 			visualize.DrawLine(c.Edge.Origin, c.Edge.Twin.Origin)
 		}
-		fmt.Println("Comparing", ce, c)
 		if ce.Edge == c.Edge {
-			fmt.Println("Equal1!")
 			return search.Equal
 		}
 
 		if geom.F64eq(ce.X(), c.X()) && geom.F64eq(ce.Y(), c.Y()) &&
 			geom.F64eq(ce.Twin.X(), c.Twin.X()) && geom.F64eq(ce.Twin.Y(), c.Twin.Y()) {
-			fmt.Println("Equal2!")
 			return search.Equal
 		}
 		compX, err := ce.FindSharedPoint(c.Edge, 0)
 		if err != nil {
 			fmt.Println("Edges share no point on x axis")
 		}
-		p1, err := ce.PointAt(0, compX)
-		if err != nil {
-			fmt.Println("compX", compX, "not on point ", ce)
-		}
-		p2, err := c.PointAt(0, compX)
-		if err != nil {
-			fmt.Println("compX", compX, "not on point ", c)
-		}
+		p1, _ := ce.PointAt(0, compX)
+		p2, _ := c.PointAt(0, compX)
 		if p1[1] < p2[1] {
-			fmt.Println("Less!")
 			return search.Less
 		}
-		fmt.Println("Greater!")
 		return search.Greater
 	}
 	return ce.Edge.Compare(i)

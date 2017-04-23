@@ -1,7 +1,6 @@
 package trapezoid
 
 import (
-	"fmt"
 	"image/color"
 
 	"github.com/200sc/go-compgeo/dcel/pointLoc/visualize"
@@ -23,9 +22,7 @@ func xQuery(fe geom.FullEdge, n *Node) []*Trapezoid {
 		visualize.DrawVerticalLine(p)
 	}
 	if fe.Left().X() < p.X() {
-		fmt.Println("X compare:", fe.Left().X(), p.X(), true)
 		return n.left.Query(fe)
 	}
-	fmt.Println("X compare:", fe.Left().X(), p.X(), false)
 	return n.right.Query(fe)
 }

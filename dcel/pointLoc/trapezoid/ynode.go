@@ -28,7 +28,6 @@ func yQuery(fe geom.FullEdge, n *Node) []*Trapezoid {
 		visualize.DrawLine(yn.Left(), yn.Right())
 	}
 	cp := geom.HzCross2D(fe.Left(), yn.Left(), yn.Right())
-	fmt.Println("Y compare:", cp, fe, yn)
 	if cp > 0 {
 		return n.left.Query(fe)
 	} else if cp < 0 {
@@ -37,6 +36,8 @@ func yQuery(fe geom.FullEdge, n *Node) []*Trapezoid {
 	// The colinear case
 	s1 := fe.Slope()
 	s2 := yn.Slope()
+	fmt.Println("Slope of", fe, yn, ":")
+	fmt.Println(s1, s2)
 	if s1 > s2 {
 		return n.left.Query(fe)
 	}

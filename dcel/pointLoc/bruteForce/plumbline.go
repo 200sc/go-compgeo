@@ -1,7 +1,6 @@
 package bruteForce
 
 import (
-	"fmt"
 	"image/color"
 
 	compgeo "github.com/200sc/go-compgeo"
@@ -56,7 +55,6 @@ func VisualizeContains(f *dcel.Face, p geom.D2) bool {
 	bounds := f.Bounds()
 	min := bounds.At(0).(geom.D2)
 	max := bounds.At(1).(geom.D2)
-	fmt.Println("Face bounds", bounds)
 	visualize.HighlightColor = color.RGBA{0, 0, 255, 255}
 	visualize.DrawFace(f)
 	if x < min.Val(0) || x > max.Val(0) ||

@@ -21,7 +21,7 @@ func (fe FullEdge) Slope() float64 {
 	if p1.X() == p2.X() {
 		return Inf
 	}
-	return (p2.Y() - p1.Y()) / (p2.X() - p2.X())
+	return (p2.Y() - p1.Y()) / (p2.X() - p1.X())
 }
 
 // PointAt returns the value along this edge

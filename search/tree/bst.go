@@ -2,7 +2,6 @@ package tree
 
 import (
 	"errors"
-	"fmt"
 	"math"
 
 	"github.com/200sc/go-compgeo/search"
@@ -74,7 +73,6 @@ func (bst *BST) calcSize() int {
 
 // Insert :
 func (bst *BST) Insert(inNode search.Node) error {
-	//fmt.Println("Inserting ", inNode)
 	n := new(node)
 	n.key = inNode.Key()
 	n.val = []search.Equalable{inNode.Val()}
@@ -119,7 +117,6 @@ func (bst *BST) Insert(inNode search.Node) error {
 	}
 
 	bst.size++
-	//fmt.Println("Inserting for real!", n, parent)
 	bst.updateRoot(bst.insertFn(n))
 	return nil
 }
@@ -299,7 +296,7 @@ func (n *node) findCycle(seen map[search.Comparable]bool) error {
 		return nil
 	}
 	if _, ok := seen[n.key]; ok {
-		fmt.Println(n)
+		//fmt.Println(n)
 		return errors.New("Cycle found")
 	}
 	seen[n.key] = true

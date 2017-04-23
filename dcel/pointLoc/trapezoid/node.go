@@ -1,8 +1,6 @@
 package trapezoid
 
 import (
-	"fmt"
-
 	compgeo "github.com/200sc/go-compgeo"
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/geom"
@@ -111,7 +109,6 @@ func (tn *Node) PointLocate(vs ...float64) (*dcel.Face, error) {
 // Query is shorthand for tn.query(fe, tn)
 func (tn *Node) Query(fe geom.FullEdge) []*Trapezoid {
 	if tn == nil {
-		fmt.Println("Off the edge")
 		return []*Trapezoid{}
 	}
 	return tn.query(fe, tn)
