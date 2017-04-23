@@ -36,10 +36,10 @@ const (
 const (
 	SLAB_DECOMPOSITION = iota
 	TRAPEZOID_MAP
-	KIRKPATRICK_MONOTONE
-	KIRKPATRICK_TRAPEZOID
 	PLUMB_LINE
 	LAST_PL_MODE
+	KIRKPATRICK_MONOTONE
+	KIRKPATRICK_TRAPEZOID
 )
 
 var (
@@ -284,5 +284,6 @@ func changeMode(no int, nothing interface{}) int {
 	locator = nil
 	modeBtn.SetRenderable(render.NewColorBox(int(modeBtn.W), int(modeBtn.H), color.RGBA{50, 50, 100, 255}))
 	modeBtn.SetPos(515, 410)
+	modeBtn.R.SetLayer(4)
 	return 0
 }

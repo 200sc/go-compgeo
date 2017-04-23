@@ -87,7 +87,13 @@ func TriangleTree(dc *dcel.DCEL, m Method) (pointLoc.LocatesPoints, error) {
 		nodes[i] = &Tree{tri: t}
 	}
 
-	// ...
+	// Hit a wall here.
+	// We need a structure that stores every vertex and every face that
+	// each vertex borders, so when we remove a vertex we can somehow
+	// indicate which facecs are being removed and what faces are being added.
+	// this structure needs to somehow inform other vertices when a face they
+	// are next to has been removed, or it needs to be regenerated at every
+	// tier of the triangle stack.
 	return nil, compgeo.UnsupportedError{}
 }
 

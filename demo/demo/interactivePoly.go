@@ -1,8 +1,11 @@
 package demo
 
 import (
+	"image/color"
+
 	"bitbucket.org/oakmoundstudio/oak/event"
 	"bitbucket.org/oakmoundstudio/oak/mouse"
+	"bitbucket.org/oakmoundstudio/oak/render"
 )
 
 // An InteractivePolyhedron is a wrapper around
@@ -36,6 +39,9 @@ func (ip *InteractivePolyhedron) Init() event.CID {
 // all of the vertex collision areas stay in the right spots.
 func (ip *InteractivePolyhedron) UpdateSpaces() {
 	locator = nil
+	modeBtn.SetRenderable(render.NewColorBox(int(modeBtn.W), int(modeBtn.H), color.RGBA{50, 50, 100, 255}))
+	modeBtn.SetPos(515, 410)
+	modeBtn.R.SetLayer(4)
 	if len(ip.vs) < len(ip.Vertices) {
 		diff := len(ip.Vertices) - len(ip.vs)
 		ip.vs = append(ip.vs, make([]*InteractivePoint, diff)...)
