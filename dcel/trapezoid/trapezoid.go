@@ -1,4 +1,4 @@
-package triangulation
+package trapezoid
 
 import (
 	"bitbucket.org/oakmoundstudio/oak/physics"
@@ -36,7 +36,7 @@ type Trapezoid struct {
 	bot         [2]float64 // y values
 	left, right float64    // x values
 	Neighbors   [4]*Trapezoid
-	node        *TrapezoidNode
+	node        *Node
 	faces       [2]*dcel.Face
 }
 

@@ -1,4 +1,4 @@
-package triangulation
+package trapezoid
 
 import (
 	"fmt"

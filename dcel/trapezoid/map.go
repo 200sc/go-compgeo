@@ -1,4 +1,4 @@
-package triangulation
+package trapezoid
 
 import (
 	"fmt"
@@ -10,19 +10,19 @@ import (
 )
 
 var (
-	Search *TrapezoidNode
-	err    error
+	tree *Node
+	err  error
 )
 
 // TrapezoidalMap converts a dcel into a version of itself split into
 // trapezoids and a search structure to find a containing trapezoid in
 // the map in response to a point location query.
-func TrapezoidalMap(dc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, *TrapezoidNode, error) {
+func TrapezoidalMap(dc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, *Node, error) {
 	bounds := dc.Bounds()
 
-	Search = NewRoot()
-	Search.payload = dc.Faces[dcel.OUTER_FACE]
-	Search.set(left, NewTrapNode(newTrapezoid(bounds)))
+	tree = NewRoot()
+	tree.payload = dc.Faces[dcel.OUTER_FACE]
+	tree.set(left, NewTrapNode(newTrapezoid(bounds)))
 
 	fullEdges, faces, err := dc.FullEdges()
 	if err != nil {
@@ -43,6 +43,7 @@ func TrapezoidalMap(dc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, *Trap
 	}
 	fmt.Println("FullEdges")
 	// Scramble the edges
+	// Will bring this back in once the algorithm works
 	// for i := range fullEdges {
 	// 	fmt.Println(fullEdges[i])
 	// 	j := i + rand.Intn(len(fullEdges)-i)
@@ -57,11 +58,11 @@ func TrapezoidalMap(dc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, *Trap
 			visualize.DrawLine(fe.Left(), fe.Right())
 		}
 		// 1: Find the trapezoids intersected by fe
-		trs := Search.Query(fe)
+		trs := tree.Query(fe)
 		// 2: Remove those and replace them with what they become
 		//    due to the intersection of halfEdges[i]
 
-		fmt.Println(Search)
+		fmt.Println(tree)
 
 		// Case A: A fe is contained in a single trapezoid tr
 		// Then we make (up to) four trapezoids out of tr.
@@ -81,7 +82,7 @@ func TrapezoidalMap(dc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, *Trap
 			mapMultipleCase(trs, fe, faces[k])
 		}
 	}
-	fmt.Println("Search:\n", Search)
-	dc, m := Search.DCEL()
-	return dc, m, Search, nil
+	fmt.Println("Search:\n", tree)
+	dc, m := tree.DCEL()
+	return dc, m, tree, nil
 }

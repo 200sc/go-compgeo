@@ -1,4 +1,4 @@
-package triangulation
+package trapezoid
 
 import (
 	"fmt"
@@ -15,8 +15,8 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 	// in the search structure, we define three new trapezoids by
 	// drawing rays up and down from each new point.
 	var ul, bl, l, u, b *Trapezoid
-	var ln, un, bn *TrapezoidNode
-	var x *TrapezoidNode
+	var ln, un, bn *Node
+	var x *Node
 	y := NewY(fe)
 	tr0 := trs[0]
 	if !tr0.HasDefinedPoint(lp) {
@@ -115,7 +115,7 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 	y.set(right, bn)
 
 	fmt.Println("Finished first trapezoid", trs[0])
-	fmt.Println(Search)
+	fmt.Println(tree)
 
 	// len(trs)-1 as the nth element is a special case,
 	// just like the first, but it is initially handled

@@ -274,6 +274,12 @@ func (dc *DCEL) ConnectVerts(a, b *Vertex) error {
 	// there's already an edge here and we can't add
 	// another one, unless one of those faces encloses
 	// the other, in which case we use the enclosed face.
+	//
+	// ^^ this is not correct. Consider two vertices on
+	// a vertical line with both the left and right faces
+	// defined. What we need is a good algorithm to determine
+	// which of the two faces contains the diagonal
+	//
 	// if there are more than two shared faces, this is also
 	// possible where one face is enclosed by the union of
 	// all other faces. Right now we reject this third case.
