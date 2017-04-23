@@ -21,9 +21,9 @@ func (f *Face) Bounds() geom.Span {
 	if f == nil {
 		return sp
 	}
-	e := f.Inner
+	e := f.Outer
 	sp = sp.Expand(e.Origin)
-	for e.Next != f.Inner {
+	for e.Next != f.Outer {
 		e = e.Next
 		sp = sp.Expand(e.Origin)
 	}

@@ -84,7 +84,7 @@ func Decode(o OFF) (*dcel.DCEL, error) {
 		edges = append(edges, edge)
 
 		// This model does not use Outer faces.
-		face.Inner = edge
+		face.Outer = edge
 		edge.Face = face
 
 		vi = fs[0]
@@ -117,8 +117,8 @@ func Decode(o OFF) (*dcel.DCEL, error) {
 			}
 			auxData[dc.Vertices[vi]] = append(aux, edge)
 		}
-		edge.Next = face.Inner
-		face.Inner.Prev = edge
+		edge.Next = face.Outer
+		face.Outer.Prev = edge
 	}
 	return decode(dc, edges, auxData)
 }
@@ -202,7 +202,7 @@ func Read(f io.Reader) (*dcel.DCEL, error) {
 		edges = append(edges, edge)
 
 		// This model does not use Outer faces.
-		face.Inner = edge
+		face.Outer = edge
 		edge.Face = face
 
 		vi = fs[0]
@@ -235,8 +235,8 @@ func Read(f io.Reader) (*dcel.DCEL, error) {
 			}
 			auxData[dc.Vertices[vi]] = append(aux, edge)
 		}
-		edge.Next = face.Inner
-		face.Inner.Prev = edge
+		edge.Next = face.Outer
+		face.Outer.Prev = edge
 	}
 	return decode(dc, edges, auxData)
 }

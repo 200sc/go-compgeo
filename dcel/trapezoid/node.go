@@ -47,7 +47,7 @@ func (tn *Node) DCEL() (*dcel.DCEL, map[*dcel.Face]*dcel.Face) {
 		// has an edge associated with it, the first of which is the face's
 		// inner (going with the broken convention of always using inner)
 		edges := tr.DCELEdges()
-		dc.Faces[i].Inner = edges[0]
+		dc.Faces[i].Outer = edges[0]
 		dc.HalfEdges = append(dc.HalfEdges, edges...)
 		// each vertex in each trapezoid, if it has not been seen before,
 		// is added to the dcel and added to a map connected to it's edge

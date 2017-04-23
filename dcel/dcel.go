@@ -131,15 +131,15 @@ func (dc *DCEL) CorrectDirectionality(f *Face) {
 	// Inners need to be going CC
 	// Outers need to be going Clockwise
 
-	clock, err := f.Inner.IsClockwise()
+	clock, err := f.Outer.IsClockwise()
 	if err == nil && clock {
-		f.Inner.Flip()
+		f.Outer.Flip()
 	} else {
 		fmt.Println(err, clock)
 	}
-	clock, err = f.Outer.IsClockwise()
+	clock, err = f.Inner.IsClockwise()
 	if err == nil && !clock {
-		f.Outer.Flip()
+		f.Inner.Flip()
 
 	}
 }
@@ -180,13 +180,13 @@ func (dc *DCEL) Copy() *DCEL {
 		fPointerMap[f] = i
 		f2 := NewFace()
 		dc2.Faces[i] = f2
-		if f.Outer != nil {
-			f2.Outer = dc2.HalfEdges[ePointerMap[f.Outer]]
-			f2.Outer.Face = f2
-		}
 		if f.Inner != nil {
 			f2.Inner = dc2.HalfEdges[ePointerMap[f.Inner]]
 			f2.Inner.Face = f2
+		}
+		if f.Outer != nil {
+			f2.Outer = dc2.HalfEdges[ePointerMap[f.Outer]]
+			f2.Outer.Face = f2
 		}
 	}
 	for i, v := range dc.Vertices {
@@ -241,11 +241,16 @@ func (dc *DCEL) VerticesSorted(ds ...int) []int {
 	return pts
 }
 
-// ConnectVerts takes two vertices and adds a new face and edges
+// ConnectVerts takes two vertices and adds edges
 // to the dcel containing them to connect the two vertices by a full edge.
-// the added edges will be at dc.HalfEdges[len-1] and len-2
-// and the added face will be at dc.Faces[len-1]
-func (dc *DCEL) ConnectVerts(a, b *Vertex) error {
+// the added edges will be at dc.HalfEdges[len-1] and len-2.
+// no face is added, and connectVerts assumes the provided face
+// is the face in which the diagonal will land.
+//
+// The job of creating new faces is delayed because if a series of
+// ConnectVerts is called on the same face, calling code won't be
+// able to easily tell which face the sequential diagonals land in.
+func (dc *DCEL) ConnectVerts(a, b *Vertex, f *Face) {
 	// If a and b's outEdges and twins do not
 	// share a face, this connection would
 	// cross a face and is not allowed. Hypothetically
@@ -254,20 +259,21 @@ func (dc *DCEL) ConnectVerts(a, b *Vertex) error {
 	// is complete.
 	edgesA := a.AllEdges()
 	edgesB := b.AllEdges()
-	// So we don't need to do a quadratic scan,
-	// we convert edgesA into a map.
 	// It should be impossible for the same face
 	// to exist on two edges off of the one vertex
-	// in a well-formed DCEL, but even if that happened
-	// it wouldn't cause an issue.
-	aMap := make(map[*Face]*Edge)
+	// in a well-formed DCEL, and if that happens we
+	// may change the wrong edges.
+	var e1, e2 *Edge
 	for _, e := range edgesA {
-		aMap[e.Face] = e
+		if e.Face == f {
+			e1 = e
+			break
+		}
 	}
-	matches := [][2]*Edge{}
 	for _, e := range edgesB {
-		if e2, ok := aMap[e.Face]; ok {
-			matches = append(matches, [2]*Edge{e, e2})
+		if e.Face == f {
+			e2 = e
+			break
 		}
 	}
 	// If the two vertices share more than one face,
@@ -276,26 +282,12 @@ func (dc *DCEL) ConnectVerts(a, b *Vertex) error {
 	// the other, in which case we use the enclosed face.
 	//
 	// ^^ this is not correct. Consider two vertices on
-	// a vertical line with both the left and right faces
+	// a pseudo-vertical line with both the left and right faces
 	// defined. What we need is a good algorithm to determine
 	// which of the two faces contains the diagonal
 	//
-	// if there are more than two shared faces, this is also
-	// possible where one face is enclosed by the union of
-	// all other faces. Right now we reject this third case.
-	i := 0
-	var e1, e2 *Edge
-	if len(matches) > 2 {
-		return compgeo.UnsupportedError{}
-	} else if len(matches) == 2 {
-		if matches[0][0].Face.Encloses(matches[1][0].Face) {
-			i = 1
-		}
-	} else if len(matches) == 0 {
-		return compgeo.BadVertexError{}
-	}
-	e1 = matches[i][0]
-	e2 = matches[i][0]
+	// The way this algorithm solves this is by taking the
+	// face being split in as a hint.
 
 	new1 := NewEdge()
 	new1.Origin = b
@@ -318,20 +310,8 @@ func (dc *DCEL) ConnectVerts(a, b *Vertex) error {
 	new1.Prev = e1.Prev
 	new1.Next = e2
 
-	// Now split the face into two
-
 	new1.Face = e1.Face
-
-	newf := NewFace()
-
-	// We still always use Inner
-	newf.Inner = new2
-	for walkEdge := new2; walkEdge.Face != newf; walkEdge = walkEdge.Next {
-		walkEdge.Face = newf
-	}
+	new2.Face = e1.Face
 
 	dc.HalfEdges = append(dc.HalfEdges, new1, new2)
-	dc.Faces = append(dc.Faces, newf)
-
-	return nil
 }

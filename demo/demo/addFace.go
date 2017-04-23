@@ -13,7 +13,7 @@ import (
 	"bitbucket.org/oakmoundstudio/oak/timing"
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/dcel/slab"
-	"github.com/200sc/go-compgeo/dcel/triangulation"
+	"github.com/200sc/go-compgeo/dcel/trapezoid"
 	"github.com/200sc/go-compgeo/search/tree"
 )
 
@@ -52,7 +52,7 @@ func addFace(cID int, ev interface{}) int {
 			prev.Origin = firstAddedPoint
 
 			f := dcel.NewFace()
-			f.Inner = prev
+			f.Outer = prev
 			phd.Faces = append(phd.Faces, f)
 			addedFace = phd.Faces[len(phd.Faces)-1]
 
@@ -140,15 +140,12 @@ func addFace(cID int, ev interface{}) int {
 					if pointLocationMode == SLAB_DECOMPOSITION {
 						locator, err = slab.Decompose(&phd.DCEL, tree.RedBlack)
 					} else if pointLocationMode == TRAPEZOID_MAP {
-						//var dc *dcel.DCEL
-						_, _, locator, err = triangulation.TrapezoidalMap(&phd.DCEL)
-						// for now
-						if err == nil {
-							//phd.DCEL = *dc
-							//phd.Update()
-						} else {
+						_, _, locator, err = trapezoid.TrapezoidalMap(&phd.DCEL)
+						if err != nil {
 							fmt.Println("error", err)
 						}
+					} else if pointLocationMode == KIRKPATRICK_MONOTONE {
+
 					}
 					if err != nil {
 						fmt.Println(err)
@@ -187,7 +184,7 @@ func addFace(cID int, ev interface{}) int {
 		}
 	} else if me.Button == "RightMouse" {
 		if mode == ADDING_DCEL {
-			first := addedFace.Inner
+			first := addedFace.Outer
 			prev.Next = first
 			first.Prev = prev
 

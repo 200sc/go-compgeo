@@ -29,6 +29,7 @@ func Split(inDc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, error) {
 	// so we need to iterate it's current length (ignoring OUTER_FACE)
 	faceLen := len(dc.Faces)
 	edgeTree := tree.New(tree.RedBlack)
+	edgeLen := len(dc.HalfEdges)
 
 	for i := dcel.OUTER_FACE + 1; i < faceLen; i++ {
 		f := dc.Faces[i]
@@ -46,7 +47,7 @@ func Split(inDc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, error) {
 				// If the previous edge's helper is a merge vertex,
 				// we want to insert a diagonal in the dcel from v
 				// to that helper.
-				err := MergeInsert(helpers, faceMap, f, e, v, dc)
+				err := MergeInsert(helpers, f, e, v, dc)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -55,7 +56,7 @@ func Split(inDc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, error) {
 				if IsLeftOf(v, f, dc) {
 					e := CounterClockwiseEdge(v, dc)
 					prev := e.Prev
-					err := MergeInsert(helpers, faceMap, f, prev, v, dc)
+					err := MergeInsert(helpers, f, prev, v, dc)
 					if err != nil {
 						return nil, nil, err
 					}
@@ -66,7 +67,7 @@ func Split(inDc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, error) {
 					e2 := CounterClockwiseEdge(v, dc)
 					c, _ := edgeTree.SearchDown(compEdge{e2}, 1)
 					e := c.(compEdge).Edge
-					err := MergeInsert(helpers, faceMap, f, e, v, dc)
+					err := MergeInsert(helpers, f, e, v, dc)
 					if err != nil {
 						return nil, nil, err
 					}
@@ -75,14 +76,14 @@ func Split(inDc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, error) {
 			case MERGE:
 				e2 := CounterClockwiseEdge(v, dc)
 				e := e2.Prev
-				err := MergeInsert(helpers, faceMap, f, e, v, dc)
+				err := MergeInsert(helpers, f, e, v, dc)
 				if err != nil {
 					return nil, nil, err
 				}
 				delete(helpers, e)
 				c, _ := edgeTree.SearchDown(compEdge{e2}, 1)
 				e = c.(compEdge).Edge
-				err = MergeInsert(helpers, faceMap, f, e, v, dc)
+				err = MergeInsert(helpers, f, e, v, dc)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -92,7 +93,7 @@ func Split(inDc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, error) {
 				e2 := CounterClockwiseEdge(v, dc)
 				c, _ := edgeTree.SearchDown(compEdge{e2}, 1)
 				e := c.(compEdge).Edge
-				err := MergeInsert(helpers, faceMap, f, e, v, dc)
+				err := MergeInsert(helpers, f, e, v, dc)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -101,6 +102,20 @@ func Split(inDc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, error) {
 				helpers[e2] = helper{v, SPLIT}
 			}
 		}
+		// Walk each new edge to create new faces.
+		for i := edgeLen; i < len(dc.HalfEdges); i++ {
+			e := dc.HalfEdges[i]
+			if e.Face == f {
+				newFace := dcel.NewFace()
+				newFace.Outer = e
+				e.Face = newFace
+				for e = e.Next; e != newFace.Outer; e = e.Next {
+					e.Face = newFace
+				}
+				faceMap[newFace] = f
+			} // else we've already walked this edge
+		}
+		edgeLen = len(dc.HalfEdges)
 	}
 	return nil, nil, nil
 }
@@ -112,19 +127,11 @@ func CounterClockwiseEdge(v *dcel.Vertex, dc *dcel.DCEL) *dcel.Edge {
 	return v.OutEdge.Twin.Prev
 }
 
-func MergeInsert(helpers map[*dcel.Edge]helper, faces map[*dcel.Face]*dcel.Face,
-	f *dcel.Face, e *dcel.Edge, v *dcel.Vertex, dc *dcel.DCEL) error {
+func MergeInsert(helpers map[*dcel.Edge]helper, f *dcel.Face, e *dcel.Edge,
+	v *dcel.Vertex, dc *dcel.DCEL) error {
 	if help, ok := helpers[e]; ok {
 		if help.typ == MERGE {
-			err := dc.ConnectVerts(help.Vertex, v)
-			// Add to face map
-			if err == nil {
-				newFace := dc.Faces[len(dc.Faces)-1]
-				// Whatever the old face used to point to in the original
-				// dcel, the new face also does, as it was split off of that face.
-				faces[newFace] = faces[f]
-			}
-			return err
+			dc.ConnectVerts(help.Vertex, v, f)
 		}
 		return nil
 	}

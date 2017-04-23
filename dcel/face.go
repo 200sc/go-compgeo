@@ -10,11 +10,8 @@ import (
 // A Face points to the edges on its inner and
 // outer portions. Any given face may have either
 // of these values be nil, but never both.
-//
-// We are using Outer and Inner completely wrong at time of writing.
-// Outer is unused when Inner should be.
 type Face struct {
-	Outer, Inner *Edge
+	Inner, Outer *Edge
 }
 
 // NewFace returns a null-initialized Face.
@@ -28,8 +25,8 @@ func (f *Face) Vertices() []*Vertex {
 	// Outer is not populated by anything as of this writing.
 
 	pts := []*Vertex{}
-	e := f.Inner
-	for e != nil && e.Next != f.Inner {
+	e := f.Outer
+	for e != nil && e.Next != f.Outer {
 		pts = append(pts, e.Origin)
 		e = e.Next
 	}
@@ -57,8 +54,8 @@ func (f *Face) Contains(p geom.D2) bool {
 	}
 	fmt.Println("Point lied in bounds")
 
-	e1 := f.Inner.Prev
-	e2 := f.Inner
+	e1 := f.Outer.Prev
+	e2 := f.Outer
 	for {
 		if (e2.Y() > y) != (e1.Y() > y) { // Three comparisons
 			if x < (e1.X()-e2.X())*(y-e2.Y())/(e1.Y()-e2.Y())+e2.X() { // One Comparison, Four add/sub, Two mult/div
@@ -67,7 +64,7 @@ func (f *Face) Contains(p geom.D2) bool {
 		}
 		e1 = e1.Next
 		e2 = e2.Next
-		if e1 == f.Inner.Prev {
+		if e1 == f.Outer.Prev {
 			break
 		}
 	}

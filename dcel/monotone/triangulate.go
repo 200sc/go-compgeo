@@ -13,10 +13,25 @@ func Triangulate(inDc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, error)
 	if err != nil {
 		return monotonized, faceMap, err
 	}
+	return TriangulateSplit(monotonized, faceMap)
+}
+
+// TriangulateSplit takes in a dcel whose faces are already
+// monotone. If there is no existing faceMap, it will
+// create its own.
+func TriangulateSplit(monotonized *dcel.DCEL, faceMap map[*dcel.Face]*dcel.Face) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, error) {
+	edgeLen := len(monotonized.HalfEdges)
+	if faceMap == nil {
+		faceMap = make(map[*dcel.Face]*dcel.Face)
+	}
 	// Triangulate each monotone polygon
 	for _, f := range monotonized.Faces {
 		ypts := f.VerticesSorted(1, 0)
 		chainMap, err := Chains(monotonized, f, ypts)
+		if err != nil {
+			return monotonized, faceMap, err
+		}
+		plTree, err := NewDoubleIntervalTree(f, monotonized)
 		if err != nil {
 			return monotonized, faceMap, err
 		}
@@ -27,7 +42,7 @@ func Triangulate(inDc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, error)
 			if chainMap[ypts[i]] != chainMap[stack.first.Vertex] {
 				v = stack.Pop()
 				for !stack.IsEmpty() {
-					monotonized.ConnectVerts(v, ypts[i])
+					monotonized.ConnectVerts(v, ypts[i], f)
 					v = stack.Pop()
 				}
 				stack.Push(ypts[i-1], ypts[i])
@@ -35,8 +50,8 @@ func Triangulate(inDc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, error)
 				stack.Pop()
 				for {
 					v = stack.Pop()
-					if DiagonalWithinFace(v, ypts[i], f) {
-						monotonized.ConnectVerts(v, ypts[i])
+					if DiagonalWithinFace(plTree, v, ypts[i]) {
+						monotonized.ConnectVerts(v, ypts[i], f)
 					} else {
 						break
 					}
@@ -44,6 +59,20 @@ func Triangulate(inDc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, error)
 				stack.Push(v, ypts[i])
 			}
 		}
+		// Walk each new edge to create new faces.
+		for i := edgeLen; i < len(monotonized.HalfEdges); i++ {
+			e := monotonized.HalfEdges[i]
+			if e.Face == f {
+				newFace := dcel.NewFace()
+				newFace.Outer = e
+				e.Face = newFace
+				for e = e.Next; e != newFace.Outer; e = e.Next {
+					e.Face = newFace
+				}
+				faceMap[newFace] = f
+			} // else we've already walked this edge
+		}
+		edgeLen = len(monotonized.HalfEdges)
 	}
 	return monotonized, faceMap, nil
 }
@@ -74,7 +103,7 @@ func Chains(dc *dcel.DCEL, f *dcel.Face, pts []*dcel.Vertex) (map[*dcel.Vertex]c
 		}
 	}
 
-	e := f.Inner
+	e := f.Outer
 	for {
 		if e.Origin == start {
 			break
@@ -96,8 +125,10 @@ func Chains(dc *dcel.DCEL, f *dcel.Face, pts []*dcel.Vertex) (map[*dcel.Vertex]c
 	return m, nil
 }
 
-func DiagonalWithinFace(f *dcel.Face, a, b *dcel.Vertex) bool {
-
+func DiagonalWithinFace(tree dcel.LocatesPoints, a, b *dcel.Vertex) bool {
+	mid := a.Mid2D(b)
+	f, _ := tree.PointLocate(mid.X(), mid.Y())
+	return f != nil
 }
 
 type VertexStackItem struct {
