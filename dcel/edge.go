@@ -334,13 +334,10 @@ func (e *Edge) FindSharedPoint(e2 *Edge, d int) (float64, error) {
 		eLow.Val(d) > e2High.Val(d) {
 		return 0, compgeo.BadEdgeError{}
 	}
-	var high, low geom.Dimensional
-	if eHigh.Val(d) < e2High.Val(d) {
-		high = eHigh
-		low = e2Low
-	} else {
-		high = e2High
-		low = eLow
+	r1 := eHigh.Val(d) - e2Low.Val(d)
+	r2 := e2High.Val(d) - eLow.Val(d)
+	if r1 < r2 {
+		return r1/2 + e2Low.Val(d), nil
 	}
-	return (high.Val(d) - low.Val(d)) / 2, nil
+	return r2/2 + eLow.Val(d), nil
 }

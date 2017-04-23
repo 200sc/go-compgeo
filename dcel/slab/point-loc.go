@@ -196,19 +196,19 @@ func (spl *PointLocator) PointLocate(vs ...float64) (*dcel.Face, error) {
 	fmt.Println("Tree found:")
 	fmt.Println(tree)
 	p := geom.Point{vs[0], vs[1], 0}
-	fmt.Println("Searching on tree")
+
 	e, f := tree.SearchDown(p, 0)
 	if e == nil {
 		fmt.Println("Location on empty tree")
 		return nil, nil
 	}
-	fmt.Println("Edge found", e)
+	e2, f2 := tree.SearchUp(p, 0)
+	fmt.Println("Edges found", e, e2)
 	if geom.VerticalCompare(p, e.(compEdge)) == search.Greater {
-		fmt.Println(p, "is above found edge", e)
+		fmt.Println(p, "is above edge", e)
 		return nil, nil
 	}
 
-	e2, f2 := tree.SearchUp(p, 0)
 	if geom.VerticalCompare(p, e2.(compEdge)) == search.Less {
 		fmt.Println(p, "is below edge", e2)
 		return nil, nil
