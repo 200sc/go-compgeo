@@ -12,8 +12,10 @@ import (
 	"bitbucket.org/oakmoundstudio/oak/render"
 	"bitbucket.org/oakmoundstudio/oak/timing"
 	"github.com/200sc/go-compgeo/dcel"
-	"github.com/200sc/go-compgeo/dcel/slab"
-	"github.com/200sc/go-compgeo/dcel/trapezoid"
+	"github.com/200sc/go-compgeo/dcel/pointLoc/bruteForce"
+	"github.com/200sc/go-compgeo/dcel/pointLoc/kirkpatrick"
+	"github.com/200sc/go-compgeo/dcel/pointLoc/slab"
+	"github.com/200sc/go-compgeo/dcel/pointLoc/trapezoid"
 	"github.com/200sc/go-compgeo/search/tree"
 )
 
@@ -137,15 +139,17 @@ func addFace(cID int, ev interface{}) int {
 			go func() {
 				if locator == nil {
 					var err error
-					if pointLocationMode == SLAB_DECOMPOSITION {
+					switch pointLocationMode {
+					case SLAB_DECOMPOSITION:
 						locator, err = slab.Decompose(&phd.DCEL, tree.RedBlack)
-					} else if pointLocationMode == TRAPEZOID_MAP {
+					case TRAPEZOID_MAP:
 						_, _, locator, err = trapezoid.TrapezoidalMap(&phd.DCEL)
-						if err != nil {
-							fmt.Println("error", err)
-						}
-					} else if pointLocationMode == KIRKPATRICK_MONOTONE {
-
+					case KIRKPATRICK_MONOTONE:
+						locator, err = kirkpatrick.TriangleTree(&phd.DCEL, kirkpatrick.MONOTONE)
+					case KIRKPATRICK_TRAPEZOID:
+						locator, err = kirkpatrick.TriangleTree(&phd.DCEL, kirkpatrick.TRAPEZOID)
+					case PLUMB_LINE:
+						locator = bruteForce.PlumbLine(&phd.DCEL)
 					}
 					if err != nil {
 						fmt.Println(err)
@@ -153,6 +157,9 @@ func addFace(cID int, ev interface{}) int {
 						return
 					}
 				}
+				modeBtn.SetRenderable(render.NewColorBox(int(modeBtn.W),
+					int(modeBtn.H), color.RGBA{50, 100, 50, 255}))
+				modeBtn.SetPos(515, 410)
 
 				f, _ := locator.PointLocate(mx, my)
 				if f == phd.Faces[0] || f == nil {

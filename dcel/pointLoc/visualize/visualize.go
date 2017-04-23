@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image/color"
 
+	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/geom"
 
 	"bitbucket.org/oakmoundstudio/oak/physics"
@@ -22,6 +23,11 @@ var (
 	// HighlightLayer is the layer that (right now)
 	// will be assigned to every Visual generated.
 	HighlightLayer = 10
+	// Default color sets
+	AddColor    = color.RGBA{0, 255, 0, 255}
+	RemoveColor = color.RGBA{255, 0, 0, 255}
+	CheckColor  = color.RGBA{0, 0, 160, 160}
+	FoundColor  = color.RGBA{255, 255, 255, 255}
 )
 
 // Visual is a renderable with attached instructions
@@ -64,4 +70,13 @@ func DrawPoly(ps []physics.Vector) {
 
 	v.Layer = HighlightLayer
 	VisualCh <- v
+}
+
+func DrawFace(f *dcel.Face) {
+	ps := f.Vertices()
+	physVerts := make([]physics.Vector, len(ps))
+	for i, v := range ps {
+		physVerts[i] = physics.NewVector(v.X(), v.Y())
+	}
+	DrawPoly(physVerts)
 }

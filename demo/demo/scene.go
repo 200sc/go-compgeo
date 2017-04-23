@@ -16,7 +16,8 @@ import (
 	"bitbucket.org/oakmoundstudio/oak/render"
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/dcel/off"
-	"github.com/200sc/go-compgeo/dcel/visualize"
+	"github.com/200sc/go-compgeo/dcel/pointLoc"
+	"github.com/200sc/go-compgeo/dcel/pointLoc/visualize"
 )
 
 const (
@@ -37,6 +38,8 @@ const (
 	TRAPEZOID_MAP
 	KIRKPATRICK_MONOTONE
 	KIRKPATRICK_TRAPEZOID
+	PLUMB_LINE
+	LAST_PL_MODE
 )
 
 var (
@@ -60,7 +63,7 @@ var (
 	ticker            *dynamicTicker
 	stopTickerCh      = make(chan bool)
 	sliding           bool
-	locator           dcel.LocatesPoints
+	locator           pointLoc.LocatesPoints
 	pointLocationMode = SLAB_DECOMPOSITION
 	modeBtn           *Button
 	locating          bool
@@ -265,13 +268,21 @@ func visuals(no int, rt interface{}) int {
 }
 
 func changeMode(no int, nothing interface{}) int {
-	if pointLocationMode == SLAB_DECOMPOSITION {
-		pointLocationMode = TRAPEZOID_MAP
+	pointLocationMode = (pointLocationMode + 1) % LAST_PL_MODE
+	switch pointLocationMode {
+	case TRAPEZOID_MAP:
 		modeBtn.SetString("Trapezoidal Map")
-	} else {
-		pointLocationMode = SLAB_DECOMPOSITION
+	case SLAB_DECOMPOSITION:
 		modeBtn.SetString("Slab Decomposition")
+	case KIRKPATRICK_MONOTONE:
+		modeBtn.SetString("Kirkpatrick (mono)")
+	case KIRKPATRICK_TRAPEZOID:
+		modeBtn.SetString("Kirkpatrick (trap)")
+	case PLUMB_LINE:
+		modeBtn.SetString("Plumb Line")
 	}
 	locator = nil
+	modeBtn.SetRenderable(render.NewColorBox(int(modeBtn.W), int(modeBtn.H), color.RGBA{50, 50, 100, 255}))
+	modeBtn.SetPos(515, 410)
 	return 0
 }

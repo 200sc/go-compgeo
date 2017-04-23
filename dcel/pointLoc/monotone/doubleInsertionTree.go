@@ -3,6 +3,7 @@ package monotone
 import (
 	compgeo "github.com/200sc/go-compgeo"
 	"github.com/200sc/go-compgeo/dcel"
+	"github.com/200sc/go-compgeo/dcel/pointLoc"
 	"github.com/200sc/go-compgeo/geom"
 	"github.com/200sc/go-compgeo/search"
 	"github.com/200sc/go-compgeo/search/tree"
@@ -14,7 +15,7 @@ import (
 // Because this is a monotone polygon we don't actually
 // make an interval tree, we just make bsts. The intervals
 // we use will be non-overlapping except at vertices
-func NewDoubleIntervalTree(f *dcel.Face, dc *dcel.DCEL) (dcel.LocatesPoints, error) {
+func NewDoubleIntervalTree(f *dcel.Face, dc *dcel.DCEL) (pointLoc.LocatesPoints, error) {
 	var e *dcel.Edge
 	for e = f.Outer; VertexType(e.Origin, dc) != START; e = e.Next {
 	}

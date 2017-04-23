@@ -57,8 +57,8 @@ func (f *Face) Contains(p geom.D2) bool {
 	e1 := f.Outer.Prev
 	e2 := f.Outer
 	for {
-		if (e2.Y() > y) != (e1.Y() > y) { // Three comparisons
-			if x < (e1.X()-e2.X())*(y-e2.Y())/(e1.Y()-e2.Y())+e2.X() { // One Comparison, Four add/sub, Two mult/div
+		if (e2.Y() > y) != (e1.Y() > y) {
+			if x < (e1.X()-e2.X())*(y-e2.Y())/(e1.Y()-e2.Y())+e2.X() {
 				contains = !contains
 			}
 		}

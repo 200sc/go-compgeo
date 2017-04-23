@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/200sc/go-compgeo/dcel"
+	"github.com/200sc/go-compgeo/dcel/pointLoc"
 )
 
 // Triangulate uses Monotonization to convert a dcel into
@@ -125,7 +126,7 @@ func Chains(dc *dcel.DCEL, f *dcel.Face, pts []*dcel.Vertex) (map[*dcel.Vertex]c
 	return m, nil
 }
 
-func DiagonalWithinFace(tree dcel.LocatesPoints, a, b *dcel.Vertex) bool {
+func DiagonalWithinFace(tree pointLoc.LocatesPoints, a, b *dcel.Vertex) bool {
 	mid := a.Mid2D(b)
 	f, _ := tree.PointLocate(mid.X(), mid.Y())
 	return f != nil

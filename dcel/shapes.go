@@ -41,13 +41,13 @@ func Rect(x, y, w, h float64) *DCEL {
 
 // FourPoint creates a dcel from four points, connected
 // in order around one face.
-func FourPoint(p1, p2, p3, p4 geom.Point) *DCEL {
+func FourPoint(p1, p2, p3, p4 geom.D3) *DCEL {
 	dc := new(DCEL)
 	dc.Vertices = make([]*Vertex, 4)
-	dc.Vertices[0] = &Vertex{p1, nil}
-	dc.Vertices[1] = &Vertex{p2, nil}
-	dc.Vertices[2] = &Vertex{p3, nil}
-	dc.Vertices[3] = &Vertex{p4, nil}
+	dc.Vertices[0] = PointToVertex(p1)
+	dc.Vertices[1] = PointToVertex(p2)
+	dc.Vertices[2] = PointToVertex(p3)
+	dc.Vertices[3] = PointToVertex(p4)
 	dc.HalfEdges = make([]*Edge, 8)
 	dc.Faces = make([]*Face, 2)
 	dc.Faces[0] = NewFace()

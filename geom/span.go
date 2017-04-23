@@ -1,7 +1,5 @@
 package geom
 
-import "math"
-
 const (
 	// SPAN_MIN refers to the point in a span
 	// which it holds its minimum value in.
@@ -24,8 +22,8 @@ type Span struct {
 func NewSpan(ds ...Dimensional) Span {
 	sp := Span{}
 	for i := 0; i < sp.D(); i++ {
-		sp.At(SPAN_MIN).Set(i, math.MaxFloat64)
-		sp.At(SPAN_MAX).Set(i, math.MaxFloat64*-1)
+		sp.FullEdge[0][i] = Inf
+		sp.FullEdge[1][i] = NegInf
 	}
 	return sp.Expand(ds...)
 }

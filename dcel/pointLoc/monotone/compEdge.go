@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/200sc/go-compgeo/dcel"
-	"github.com/200sc/go-compgeo/dcel/visualize"
+	"github.com/200sc/go-compgeo/dcel/pointLoc/visualize"
 	"github.com/200sc/go-compgeo/geom"
 	"github.com/200sc/go-compgeo/search"
 )

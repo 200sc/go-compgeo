@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"image/color"
 
-	"bitbucket.org/oakmoundstudio/oak/physics"
-
 	compgeo "github.com/200sc/go-compgeo"
 	"github.com/200sc/go-compgeo/dcel"
-	"github.com/200sc/go-compgeo/dcel/visualize"
+	"github.com/200sc/go-compgeo/dcel/pointLoc"
+	"github.com/200sc/go-compgeo/dcel/pointLoc/visualize"
 	"github.com/200sc/go-compgeo/geom"
 	"github.com/200sc/go-compgeo/search"
 	"github.com/200sc/go-compgeo/search/tree"
@@ -18,7 +17,7 @@ import (
 // point location.
 // The real difficulties in Slab Decomposition are all in the
 // persistent bst itself, so this is a fairly simple function.
-func Decompose(dc *dcel.DCEL, bstType tree.Type) (dcel.LocatesPoints, error) {
+func Decompose(dc *dcel.DCEL, bstType tree.Type) (pointLoc.LocatesPoints, error) {
 	if dc == nil || len(dc.Vertices) < 3 {
 		return nil, compgeo.BadDCELError{}
 	}
@@ -155,12 +154,7 @@ func (spl *PointLocator) PointLocate(vs ...float64) (*dcel.Face, error) {
 		if f5 != spl.outerFace {
 			fmt.Println("Checking if face contains", p)
 			if visualize.VisualCh != nil {
-				ps := f5.Vertices()
-				physVerts := make([]physics.Vector, len(ps))
-				for i, v := range ps {
-					physVerts[i] = physics.NewVector(v.X(), v.Y())
-				}
-				visualize.DrawPoly(physVerts)
+				visualize.DrawFace(f5)
 			}
 			if f5.Contains(p) {
 				fmt.Println("P was contained")

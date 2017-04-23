@@ -1,9 +1,6 @@
 package demo
 
-import (
-	"fmt"
-	"time"
-)
+import "time"
 
 type dynamicTicker struct {
 	ticker  *time.Ticker
@@ -28,7 +25,6 @@ func NewDynamicTicker() *dynamicTicker {
 	}
 	go func(dt *dynamicTicker) {
 		for {
-			fmt.Println("Waiting on ", dt.ticker.C, "or", dt.resetCh)
 			select {
 			case v := <-dt.ticker.C:
 				select {
@@ -42,12 +38,10 @@ func NewDynamicTicker() *dynamicTicker {
 				dt.ticker = ticker
 			}
 		}
-		fmt.Println("Goroutine exited")
 	}(dt)
 	return dt
 }
 
 func (dt *dynamicTicker) SetTick(d time.Duration) {
-	fmt.Println(dt.resetCh, "Sending on reset ch")
 	dt.resetCh <- time.NewTicker(d)
 }
