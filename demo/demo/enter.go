@@ -88,7 +88,7 @@ func phdEnter(cID int, nothing interface{}) int {
 			phd.Vertices[dragging].Add(2, zMoveSpeed)
 			update = true
 		} else if oak.IsDown("C") {
-			phd.Vertices[dragging].Add(2, zMoveSpeed)
+			phd.Vertices[dragging].Add(2, -zMoveSpeed)
 			update = true
 		}
 		if update {

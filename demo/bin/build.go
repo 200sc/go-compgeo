@@ -1,5 +1,11 @@
 package main
 
+// Build cross-compiles the demo package on a small set of
+// OS and architecture pairs. It should be generalized to
+// take in variable output and package names, and varible
+// sets of os-arch pairs, then split off into a separate
+// project.
+
 import (
 	"bytes"
 	"fmt"
