@@ -46,7 +46,7 @@ var (
 	dragX             float64 = -1
 	dragY             float64 = -1
 	dragging                  = -1
-	offFile                   = filepath.Join("data", "test.off")
+	offFile                   = filepath.Join("data", "A.off")
 	mode                      = ROTATE
 	loopDemo          bool
 	firstAddedPoint   *dcel.Vertex

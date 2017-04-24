@@ -42,7 +42,11 @@ func NewDynamicTicker() *dynamicTicker {
 				dt.ticker.Stop()
 				dt.ticker = ticker
 			case <-dt.forceTick:
-				dt.ch <- time.Time{}
+				select {
+				case <-dt.forceTick:
+					continue
+				case dt.ch <- time.Time{}:
+				}
 			}
 		}
 	}(dt)
