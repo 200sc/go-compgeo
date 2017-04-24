@@ -43,19 +43,6 @@ type Trapezoid struct {
 // DCELEdges evaluates and returns the edges of
 // a trapezoid as DCElEdges with initialized origins,
 // prevs, and nexts.
-//
-// DCELEdges makes one assumption about our data:
-// it is very unlikely that we will have an innaccurate top
-// or bottom, but potentially likely we will have an innaccurate
-// left or right. (We also may do away with left and right,
-// as their information is stored in top and bottom)
-// By this, this function adds each successive vertex that is not
-// the same as the previous added vertex in order--
-// top left, top right, bottom right, bottom left.
-// in most cases, this will end up adding four, but in
-// expected cases we may just have three, and in malformed
-// cases we may have trapezoids that are segments or points,
-// in which ase we will just have two or one returned edge.
 func (tr *Trapezoid) DCELEdges() []*dcel.Edge {
 	edges := make([]*dcel.Edge, 1)
 	i := 0
