@@ -1,3 +1,5 @@
+// Package compgeo serves as a root point for several computational geometry
+// packages.
 package compgeo
 
 // TypeError is returned when some input to be
