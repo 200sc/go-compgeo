@@ -51,7 +51,7 @@ func NewSlider(layer int, f *render.Font) *Slider {
 	sl.Button = new(Button)
 	sl.min = 2
 	sl.Layer = layer
-	sl.max = 100
+	sl.max = 101
 	sl.val = 2
 	sl.interval = time.Duration(0)
 	sl.CID = sl.Init()
@@ -138,6 +138,10 @@ func (sl *Slider) valText() fmt.Stringer {
 	if sl.val == 2 {
 		sl.interval = time.Duration(0)
 		return stringer("No Visualization")
+	}
+	if sl.val == 101 {
+		sl.interval = time.Duration(math.MaxInt64)
+		return stringer("Stepwise")
 	}
 
 	scaled := math.Pow(sl.val, 1.25)

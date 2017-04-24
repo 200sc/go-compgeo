@@ -136,6 +136,8 @@ func addFace(cID int, ev interface{}) int {
 			phd.UpdateSpaces()
 		} else if mode == POINT_LOCATE {
 			mode = LOCATING
+			visSlider.min++
+			mouseModeBtn.SetString(mode.String())
 			go func() {
 				if locator == nil {
 					var err error
@@ -154,6 +156,8 @@ func addFace(cID int, ev interface{}) int {
 					if err != nil {
 						fmt.Println(err)
 						mode = POINT_LOCATE
+						mouseModeBtn.SetString(mode.String())
+						visSlider.min--
 						return
 					}
 				}
@@ -169,6 +173,8 @@ func addFace(cID int, ev interface{}) int {
 					faceIndex := phd.ScanFaces(f)
 					if faceIndex < 0 {
 						mode = POINT_LOCATE
+						mouseModeBtn.SetString(mode.String())
+						visSlider.min--
 						return
 					}
 					poly := PolygonFromFace(f)
@@ -188,6 +194,8 @@ func addFace(cID int, ev interface{}) int {
 					})
 				}
 				mode = POINT_LOCATE
+				mouseModeBtn.SetString(mode.String())
+				visSlider.min--
 			}()
 		}
 	} else if me.Button == "RightMouse" {

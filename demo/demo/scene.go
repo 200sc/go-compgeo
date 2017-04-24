@@ -69,6 +69,7 @@ var (
 	locating          bool
 	btnColor          = color.RGBA{50, 50, 140, 255}
 	createdColor      = color.RGBA{50, 140, 50, 255}
+	visSlider         *Slider
 )
 
 // InitScene is called whenever the scene 'demo' starts.
@@ -126,6 +127,16 @@ func InitScene(prevScene string, data interface{}) {
 	clrBtn.R.SetLayer(4)
 	clrBtn.SetString("Clear")
 
+	stepBtn := NewButton(step, font)
+	stepBtn.SetLogicDim(70, 20)
+	stepBtn.SetRenderable(render.NewColorBox(int(stepBtn.W), int(stepBtn.H), btnColor))
+	stepBtn.SetPos(560, 350)
+	stepBtn.TxtX = 5
+	stepBtn.TxtY = 5
+	stepBtn.Layer = 4
+	stepBtn.R.SetLayer(4)
+	stepBtn.SetString("Step")
+
 	modeBtn = NewButton(changeMode, font)
 	modeBtn.SetLogicDim(115, 20)
 	modeBtn.SetRenderable(render.NewColorBox(int(modeBtn.W), int(modeBtn.H), btnColor))
@@ -136,7 +147,7 @@ func InitScene(prevScene string, data interface{}) {
 	modeBtn.R.SetLayer(4)
 	modeBtn.SetString("Slab Decomposition")
 
-	visSlider := NewSlider(4, font)
+	visSlider = NewSlider(4, font)
 	visSlider.SetDim(115, 35)
 	visSlider.SetRenderable(
 		render.NewColorBox(int(visSlider.W), int(visSlider.H), btnColor))
@@ -196,8 +207,15 @@ func AddCommands() {
 		offFile = args[0]
 	}
 	oak.AddCommand("load", func(strs []string) {
-		if len(strs) > 1 {
-			offFile = strs[1]
+		if mode != LOCATING {
+			if len(strs) > 1 {
+				offFile = strs[1]
+				loopDemo = false
+			}
+		}
+	})
+	oak.AddCommand("reset", func(strs []string) {
+		if mode != LOCATING {
 			loopDemo = false
 		}
 	})
@@ -213,8 +231,10 @@ func AddCommands() {
 }
 
 func clear(no int, nothing interface{}) int {
-	offFile = "none"
-	loopDemo = false
+	if mode != LOCATING {
+		offFile = "none"
+		loopDemo = false
+	}
 	return 0
 }
 
@@ -247,6 +267,7 @@ func visuals(no int, rt interface{}) int {
 					visual.ShiftY(phd.Y)
 
 					render.Draw(visual.Renderable, visual.Layer)
+					render.UndrawAfter(visual, 2000*time.Millisecond)
 				}
 			}
 		}()
@@ -292,5 +313,12 @@ func changeMouseMode(no int, nothing interface{}) int {
 	}
 	mode = (mode + 1) % LAST_MODE
 	mouseModeBtn.SetString(mode.String())
+	return 0
+}
+
+func step(no int, nothing interface{}) int {
+	if mode == LOCATING {
+		ticker.Step()
+	}
 	return 0
 }
