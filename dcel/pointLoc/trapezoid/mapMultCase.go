@@ -1,8 +1,6 @@
 package trapezoid
 
 import (
-	"fmt"
-
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/geom"
 )
@@ -48,21 +46,15 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 	u.left = lp.X()
 	b.left = lp.X()
 
-	edge, err := fe.SubEdge(0, u.left, u.right)
+	edge, _ := fe.SubEdge(0, u.left, u.right)
 	u.bot[left] = edge.Left().Y()
 	u.bot[right] = edge.Right().Y()
-	if err != nil {
-		fmt.Println("Loc 1", err)
-	}
 	u.Neighbors[upleft] = ul
 	u.Neighbors[botleft] = bl
 
-	edge, err = fe.SubEdge(0, b.left, b.right)
+	edge, _ = fe.SubEdge(0, b.left, b.right)
 	b.top[left] = edge.Left().Y()
 	b.top[right] = edge.Right().Y()
-	if err != nil {
-		fmt.Println("Loc 2", err)
-	}
 	b.Neighbors[upleft] = ul
 	b.Neighbors[botleft] = bl
 
@@ -114,9 +106,6 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 	y.set(left, un)
 	y.set(right, bn)
 
-	fmt.Println("Finished first trapezoid", trs[0])
-	fmt.Println(tree)
-
 	// len(trs)-1 as the nth element is a special case,
 	// just like the first, but it is initially handled
 	// as if it is not.
@@ -140,8 +129,7 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 		p1 := u.TopEdge().Left()
 		p2 := tr.TopEdge().Right()
 		if geom.IsColinear(p1, u.TopEdge().Right(), p2) {
-			fmt.Println("Merge Case")
-			// This can't be right
+			// This can't be right?
 			u.top[right] = p2.Y()
 			u.bot[right] = tr.bot[right]
 		} else {
@@ -176,17 +164,14 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 					u2.Neighbors[upleft] = u
 				}
 			}
-			fmt.Println("u2, split from tr, left values", u2.left, tr.left)
 			u.right = u2.left
 			// the bottom edge is now this shard of fe.
 			// if this trapezoid is merged with another,
 			// this may change.
-			edge, err = fe.SubEdge(0, u2.left, u2.right)
+			edge, _ = fe.SubEdge(0, u2.left, u2.right)
 			u2.bot[left] = edge.Left().Y()
 			u2.bot[right] = edge.Right().Y()
-			if err != nil {
-				fmt.Println("Loc 3", err)
-			}
+
 			// y points to a new trapezoid node holding u2
 			un = NewTrapNode(u2)
 			u = u2
@@ -217,15 +202,12 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 					b2.Neighbors[botleft] = b
 				}
 			}
-			fmt.Println("b2, split from tr, left values", b2.left, tr.left)
 			b.right = b2.left
 
-			edge, err = fe.SubEdge(0, b2.left, b2.right)
+			edge, _ = fe.SubEdge(0, b2.left, b2.right)
 			b2.top[left] = edge.Left().Y()
 			b2.top[right] = edge.Right().Y()
-			if err != nil {
-				fmt.Println("Loc 4", err)
-			}
+
 			bn = NewTrapNode(b2)
 			b = b2
 		}

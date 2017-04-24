@@ -50,10 +50,6 @@ func (v *Vertex) PartitionEdges(d int) (lesser []*Edge,
 	checkAgainst := v.Val(d)
 	for _, e1 := range allEdges {
 		e2 := e1.Twin
-		// Potential issue:
-		// Will something bad happen if there are multiple
-		// elements with the same value in this dimension?
-		// Answer: Yes yes yes
 		if geom.F64eq(e2.Origin.Val(d), checkAgainst) {
 			colinear = append(colinear, e1)
 		} else if e2.Origin.Val(d) < checkAgainst {

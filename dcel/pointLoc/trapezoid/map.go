@@ -1,8 +1,8 @@
 package trapezoid
 
 import (
-	"fmt"
 	"image/color"
+	"math/rand"
 
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/dcel/pointLoc/visualize"
@@ -42,11 +42,10 @@ func TrapezoidalMap(dc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, *Node
 		i++
 	}
 	// Scramble the edges
-	// Will bring this back in once the algorithm works
-	// for i := range fullEdges {
-	// 	j := i + rand.Intn(len(fullEdges)-i)
-	// 	fullEdges[i], fullEdges[j] = fullEdges[j], fullEdges[i]
-	// }1
+	for i := range fullEdges {
+		j := i + rand.Intn(len(fullEdges)-i)
+		fullEdges[i], fullEdges[j] = fullEdges[j], fullEdges[i]
+	}
 	if visualize.VisualCh != nil {
 		visualize.HighlightColor = color.RGBA{0, 255, 0, 255}
 	}
@@ -59,28 +58,21 @@ func TrapezoidalMap(dc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, *Node
 		trs := tree.Query(fe)
 		// 2: Remove those and replace them with what they become
 		//    due to the intersection of halfEdges[i]
-
-		fmt.Println(tree)
-
 		// Case A: A fe is contained in a single trapezoid tr
 		// Then we make (up to) four trapezoids out of tr.
 		if len(trs) == 0 {
-			fmt.Println(fe, "intersected nothing?")
 			continue
 		}
 		if len(trs) == 1 {
-			fmt.Println(fe, "intersected one trapezoid", trs[0])
 			if visualize.VisualCh != nil {
 				visualize.HighlightColor = color.RGBA{0, 0, 128, 128}
 				visualize.DrawPoly(trs[0].toPhysics())
 			}
 			mapSingleCase(trs[0], fe, faces[k])
 		} else {
-			fmt.Println(fe, "Intersected multiple zoids", trs)
 			mapMultipleCase(trs, fe, faces[k])
 		}
 	}
-	fmt.Println("Search:\n", tree)
 	dc, m := tree.DCEL()
 	return dc, m, tree, nil
 }

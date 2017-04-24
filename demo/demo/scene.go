@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/200sc/go-compgeo/geom"
 	"golang.org/x/sync/syncmap"
 
 	"bitbucket.org/oakmoundstudio/oak"
@@ -18,6 +17,7 @@ import (
 	"github.com/200sc/go-compgeo/dcel/off"
 	"github.com/200sc/go-compgeo/dcel/pointLoc"
 	"github.com/200sc/go-compgeo/dcel/pointLoc/visualize"
+	"github.com/200sc/go-compgeo/geom"
 )
 
 const (
@@ -56,7 +56,6 @@ var (
 	faceVertices      = &syncmap.Map{}
 	err               error
 	mouseStr          *render.IFText
-	modeStr           *render.Text
 	font              *render.Font
 	phd               *InteractivePolyhedron
 	undoPhd           []InteractivePolyhedron
@@ -66,7 +65,10 @@ var (
 	locator           pointLoc.LocatesPoints
 	pointLocationMode = SLAB_DECOMPOSITION
 	modeBtn           *Button
+	mouseModeBtn      *Button
 	locating          bool
+	btnColor          = color.RGBA{50, 50, 140, 255}
+	createdColor      = color.RGBA{50, 140, 50, 255}
 )
 
 // InitScene is called whenever the scene 'demo' starts.
@@ -93,6 +95,7 @@ func InitScene(prevScene string, data interface{}) {
 			dc = dcel.New()
 		}
 	}
+	mode = ROTATE
 	pointLocationMode = SLAB_DECOMPOSITION
 	phd = new(InteractivePolyhedron)
 	phd.Polyhedron = NewPolyhedronFromDCEL(dc, defShiftX, defShiftY)
@@ -105,20 +108,17 @@ func InitScene(prevScene string, data interface{}) {
 	fg := render.FontGenerator{File: "luxisr.ttf", Color: render.FontColor("white"), Size: 12}
 	font = fg.Generate()
 
-	modeStr = font.NewText(mode.String(), 3, 40)
-	render.Draw(modeStr, 3)
-
 	mouseStr = font.NewInterfaceText(
 		geom.Point{0, 0, 0}, 3, 465)
 	render.Draw(mouseStr, 3)
 
-	bkgrnd := render.NewColorBox(140, 480, color.RGBA{50, 50, 50, 255})
+	bkgrnd := render.NewColorBox(140, 480, color.RGBA{50, 50, 80, 255})
 	bkgrnd.SetPos(514, 0)
 	render.Draw(bkgrnd, 0)
 
 	clrBtn := NewButton(clear, font)
-	clrBtn.SetLogicDim(70, 20)
-	clrBtn.SetRenderable(render.NewColorBox(int(clrBtn.W), int(clrBtn.H), color.RGBA{50, 50, 100, 255}))
+	clrBtn.SetLogicDim(50, 20)
+	clrBtn.SetRenderable(render.NewColorBox(int(clrBtn.W), int(clrBtn.H), btnColor))
 	clrBtn.SetPos(560, 10)
 	clrBtn.TxtX = 10
 	clrBtn.TxtY = 5
@@ -128,7 +128,7 @@ func InitScene(prevScene string, data interface{}) {
 
 	modeBtn = NewButton(changeMode, font)
 	modeBtn.SetLogicDim(115, 20)
-	modeBtn.SetRenderable(render.NewColorBox(int(modeBtn.W), int(modeBtn.H), color.RGBA{50, 50, 100, 255}))
+	modeBtn.SetRenderable(render.NewColorBox(int(modeBtn.W), int(modeBtn.H), btnColor))
 	modeBtn.SetPos(515, 410)
 	modeBtn.TxtX = 5
 	modeBtn.TxtY = 5
@@ -139,12 +139,22 @@ func InitScene(prevScene string, data interface{}) {
 	visSlider := NewSlider(4, font)
 	visSlider.SetDim(115, 35)
 	visSlider.SetRenderable(
-		render.NewColorBox(int(visSlider.W), int(visSlider.H), color.RGBA{50, 50, 100, 255}))
+		render.NewColorBox(int(visSlider.W), int(visSlider.H), btnColor))
 	visSlider.SetPos(515, 440)
 	visSlider.TxtX = 10
 	visSlider.TxtY = 20
 	visSlider.R.SetLayer(4)
 	visSlider.SetString("No Visualization")
+
+	mouseModeBtn = NewButton(changeMouseMode, font)
+	mouseModeBtn.SetLogicDim(90, 20)
+	mouseModeBtn.SetRenderable(render.NewColorBox(int(mouseModeBtn.W), int(mouseModeBtn.H), btnColor))
+	mouseModeBtn.SetPos(540, 380)
+	mouseModeBtn.TxtX = 5
+	mouseModeBtn.TxtY = 5
+	mouseModeBtn.Layer = 4
+	mouseModeBtn.R.SetLayer(4)
+	mouseModeBtn.SetString("Rotate")
 
 	event.GlobalBind(clear, "Clear")
 	event.GlobalBind(visuals, "Visualize")
@@ -159,23 +169,13 @@ func InitScene(prevScene string, data interface{}) {
 				return 0
 			}
 			mode = j
-			modeStr.SetText(mode.String())
+			mouseModeBtn.SetString(mode.String())
 			return 0
 		}, "KeyDown"+k)
 	}
 
 	phd.cID.Bind(phdEnter, "EnterFrame")
 	phd.cID.Bind(addFace, "MouseRelease")
-	// phd.cID.Bind(func(cID int, nothing interface{}) int {
-	// 	if oak.IsDown("LeftControl") && len(undoPhd) != 0 {
-	// 		phd := event.GetEntity(cID).(*InteractivePolyhedron)
-	// 		*phd = undoPhd[len(undoPhd)-1]
-	// 		// Discarding right now,
-	// 		// could offer redo later
-	// 		undoPhd = undoPhd[len(undoPhd)-1:]
-	// 	}
-	// 	return 0
-	// }, "KeyDownZ")
 }
 
 // LoopScene is a basic scene-loop function,
@@ -277,9 +277,20 @@ func changeMode(no int, nothing interface{}) int {
 	case PLUMB_LINE:
 		modeBtn.SetString("Plumb Line")
 	}
-	locator = nil
-	modeBtn.SetRenderable(render.NewColorBox(int(modeBtn.W), int(modeBtn.H), color.RGBA{50, 50, 100, 255}))
-	modeBtn.SetPos(515, 410)
-	modeBtn.R.SetLayer(4)
+	if locator != nil {
+		locator = nil
+		modeBtn.SetRenderable(render.NewColorBox(int(modeBtn.W), int(modeBtn.H), btnColor))
+		modeBtn.SetPos(515, 410)
+		modeBtn.R.SetLayer(4)
+	}
+	return 0
+}
+
+func changeMouseMode(no int, nothing interface{}) int {
+	if mode == LOCATING || mode == ADDING_DCEL {
+		return 0
+	}
+	mode = (mode + 1) % LAST_MODE
+	mouseModeBtn.SetString(mode.String())
 	return 0
 }

@@ -97,7 +97,6 @@ func (sl *Slider) SetPos(x float64, y float64) {
 func sliderDragStart(sl int, nothing interface{}) int {
 	if sliding != true {
 		sliding = true
-		fmt.Println("Binding slide")
 		event.CID(sl).Bind(sliderDrag, "EnterFrame")
 	}
 	return 0
@@ -112,7 +111,6 @@ func sliderDrag(sl int, nothing interface{}) int {
 	me := mouse.LastMouseEvent
 	if me.Event == "MouseRelease" || me.X < 515 {
 		event.Trigger("Visualize", slider.interval)
-		fmt.Println("Unbinding slide")
 		sliding = false
 		return event.UNBIND_EVENT
 	}

@@ -1,3 +1,7 @@
+// Package off describes methods for interacting with OFF files and structures
+// formatted as OFF files. The file loading code is modeled after Ryan Holmes'
+// C++ code, http://www.holmes3d.net/graphics/offfiles/
+
 package off
 
 import (
@@ -123,8 +127,7 @@ func Decode(o OFF) (*dcel.DCEL, error) {
 	return decode(dc, edges, auxData)
 }
 
-// Load loads Object File Format files. This function
-// is modeled after Ryan Holmes' C++ code, http://www.holmes3d.net/graphics/offfiles/
+// Load loads Object File Format files.
 func Load(file string) (*dcel.DCEL, error) {
 
 	f, err := os.Open(file)

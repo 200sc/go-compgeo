@@ -1,8 +1,6 @@
 package demo
 
 import (
-	"image/color"
-
 	"bitbucket.org/oakmoundstudio/oak/event"
 	"bitbucket.org/oakmoundstudio/oak/mouse"
 	"bitbucket.org/oakmoundstudio/oak/render"
@@ -38,10 +36,12 @@ func (ip *InteractivePolyhedron) Init() event.CID {
 // through space. In this case the large job here is making sure
 // all of the vertex collision areas stay in the right spots.
 func (ip *InteractivePolyhedron) UpdateSpaces() {
-	locator = nil
-	modeBtn.SetRenderable(render.NewColorBox(int(modeBtn.W), int(modeBtn.H), color.RGBA{50, 50, 100, 255}))
-	modeBtn.SetPos(515, 410)
-	modeBtn.R.SetLayer(4)
+	if locator != nil {
+		modeBtn.SetRenderable(render.NewColorBox(int(modeBtn.W), int(modeBtn.H), btnColor))
+		modeBtn.SetPos(515, 410)
+		modeBtn.R.SetLayer(4)
+		locator = nil
+	}
 	if len(ip.vs) < len(ip.Vertices) {
 		diff := len(ip.Vertices) - len(ip.vs)
 		ip.vs = append(ip.vs, make([]*InteractivePoint, diff)...)

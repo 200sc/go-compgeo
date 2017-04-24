@@ -1,7 +1,6 @@
 package trapezoid
 
 import (
-	"fmt"
 	"image/color"
 
 	"github.com/200sc/go-compgeo/dcel/pointLoc/visualize"
@@ -36,8 +35,6 @@ func yQuery(fe geom.FullEdge, n *Node) []*Trapezoid {
 	// The colinear case
 	s1 := fe.Slope()
 	s2 := yn.Slope()
-	fmt.Println("Slope of", fe, yn, ":")
-	fmt.Println(s1, s2)
 	if s1 > s2 {
 		return n.left.Query(fe)
 	}

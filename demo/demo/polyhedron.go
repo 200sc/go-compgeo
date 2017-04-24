@@ -19,7 +19,7 @@ import (
 // colors for the DCEL's faces and Edges. Vertices are given
 // a generic color because they are barely visibile anyway
 // with our drawing scheme.
-// Polyhedron's are not drawn in a very sophisticated manner.
+// Polyhedrons are not drawn in a very sophisticated manner.
 type Polyhedron struct {
 	render.Sprite
 	dcel.DCEL
@@ -29,6 +29,7 @@ type Polyhedron struct {
 }
 
 var (
+	// Default colors
 	edgeColor   = color.RGBA{0, 0, 255, 255}
 	faceColor   = color.RGBA{0, 150, 150, 255}
 	ptColor     = color.RGBA{255, 255, 255, 255}

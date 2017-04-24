@@ -24,13 +24,14 @@ const (
 
 // New returns a tree as defined by the input type.
 // Hypothetically, this is the only exported function in this package
+// not on a tree structure.
 func New(typ Type) search.Persistable {
 	bst := new(BST)
 	switch typ {
 	case AVL:
-		bst.fnSet = avlFnSet
+		fallthrough
 	case Splay:
-		bst.fnSet = splayFnSet
+		fallthrough
 	default:
 		fallthrough
 	case RedBlack:

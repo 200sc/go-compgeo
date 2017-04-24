@@ -158,7 +158,7 @@ func addFace(cID int, ev interface{}) int {
 					}
 				}
 				modeBtn.SetRenderable(render.NewColorBox(int(modeBtn.W),
-					int(modeBtn.H), color.RGBA{50, 100, 50, 255}))
+					int(modeBtn.H), createdColor))
 				modeBtn.SetPos(515, 410)
 				modeBtn.R.SetLayer(4)
 

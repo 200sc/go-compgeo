@@ -24,10 +24,11 @@ var (
 	// will be assigned to every Visual generated.
 	HighlightLayer = 10
 	// Default color sets
-	AddColor    = color.RGBA{0, 255, 0, 255}
-	RemoveColor = color.RGBA{255, 0, 0, 255}
-	CheckColor  = color.RGBA{0, 0, 160, 160}
-	FoundColor  = color.RGBA{255, 255, 255, 255}
+	AddColor       = color.RGBA{0, 255, 0, 255}
+	RemoveColor    = color.RGBA{255, 0, 0, 255}
+	CheckFaceColor = color.RGBA{0, 0, 128, 128}
+	FoundColor     = color.RGBA{255, 255, 255, 255}
+	CheckLineColor = color.RGBA{128, 128, 128, 128}
 )
 
 // Visual is a renderable with attached instructions

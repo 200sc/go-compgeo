@@ -110,8 +110,11 @@ func FourPoint(p1, p2, p3, p4 geom.D3) *DCEL {
 	dc.HalfEdges[3].Next = dc.HalfEdges[5]
 	dc.HalfEdges[3].Prev = dc.HalfEdges[1]
 
-	dc.Faces[0].Inner = dc.HalfEdges[0]
-	dc.Faces[1].Outer = dc.HalfEdges[1]
+	dc.Faces[0].Outer = dc.HalfEdges[0]
+	dc.Faces[1].Inner = dc.HalfEdges[1]
+
+	// Correcting for faces[0] = the infinite exterior
+	dc.Faces[0], dc.Faces[1] = dc.Faces[1], dc.Faces[0]
 
 	return dc
 }
