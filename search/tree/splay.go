@@ -1,10 +1,10 @@
 package tree
 
 var (
-	splayFnSet = &fnSet{
-		insertFn: splay,
-		deleteFn: splayDelete,
-		searchFn: splay,
+	SplayFnSet = &FnSet{
+		InsertFn: splay,
+		DeleteFn: splayDelete,
+		SearchFn: splay,
 	}
 )
 

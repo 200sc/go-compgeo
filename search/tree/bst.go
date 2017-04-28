@@ -2,17 +2,11 @@ package tree
 
 import (
 	"errors"
-	"math"
 
 	"github.com/200sc/go-compgeo/search"
+	"github.com/200sc/go-compgeo/search/tree/fullCopy"
 	"github.com/200sc/go-compgeo/search/tree/static"
 )
-
-type fnSet struct {
-	insertFn func(*node) *node
-	deleteFn func(*node) *node
-	searchFn func(*node) *node
-}
 
 func nopNode(n *node) *node {
 	return nil
@@ -24,7 +18,7 @@ func nopNode(n *node) *node {
 // their balance after each insert, delete, or search (sometimes)
 // operation.
 type BST struct {
-	*fnSet
+	*FnSet
 	root *node
 	// Because the size of a bst is something someone might want
 	// to query quickly, we raise it to the top instead of making
@@ -39,10 +33,7 @@ func (bst *BST) isValid() bool {
 
 // ToPersistent converts this BST into a Persistent BST.
 func (bst *BST) ToPersistent() search.DynamicPersistent {
-	pbst := new(FullPersistentBST)
-	pbst.instant = math.MaxFloat64 * -1
-	pbst.instants = []BSTInstant{{BST: bst, instant: pbst.instant}}
-	return pbst
+	return fullCopy.NewFullPersistentBST(bst)
 }
 
 // ToStatic on a BST figures out where all nodes
@@ -117,7 +108,7 @@ func (bst *BST) Insert(inNode search.Node) error {
 	}
 
 	bst.size++
-	bst.updateRoot(bst.insertFn(n))
+	bst.updateRoot(bst.InsertFn(n))
 	return nil
 }
 
@@ -151,7 +142,7 @@ func (bst *BST) Delete(n search.Node) error {
 		return errors.New("Value not found")
 	}
 	bst.size--
-	bst.updateRoot(bst.deleteFn(curNode))
+	bst.updateRoot(bst.DeleteFn(curNode))
 	return nil
 }
 
@@ -161,7 +152,7 @@ func (bst *BST) Search(key interface{}) (bool, interface{}) {
 	if !isReal {
 		return false, nil
 	}
-	bst.updateRoot(bst.searchFn(curNode))
+	bst.updateRoot(bst.SearchFn(curNode))
 	return true, curNode.val[0]
 }
 
@@ -269,10 +260,10 @@ func (bst *BST) InOrderTraverse() []search.Node {
 	return inOrderTraverse(bst.root)
 }
 
-func (bst *BST) copy() *BST {
+func (bst *BST) Copy() interface{} {
 	newBst := new(BST)
 	newBst.root = bst.root.copy()
-	newBst.fnSet = bst.fnSet
+	newBst.FnSet = bst.FnSet
 	newBst.size = bst.size
 	return newBst
 }

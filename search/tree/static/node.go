@@ -33,6 +33,10 @@ func (n Node) Val() search.Equalable {
 	return n.val
 }
 
+func (n Node) copy() *Node {
+	return &Node{n.key, n.val}
+}
+
 // This implicitly says that
 // a user cannot store nils in
 // this tree. This is probably

@@ -8,10 +8,13 @@ const (
 )
 
 var (
-	rbFnSet = &fnSet{
-		insertFn: rbInsert,
-		deleteFn: rbDelete,
-		searchFn: nopNode,
+	// RbFnSet performs RB insert and
+	// RB delete for inserts and deletes,
+	// and does nothing on lookups.
+	RbFnSet = &FnSet{
+		InsertFn: rbInsert,
+		DeleteFn: rbDelete,
+		SearchFn: nopNode,
 	}
 )
 

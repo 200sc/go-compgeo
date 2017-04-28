@@ -1,6 +1,10 @@
-package tree
+package fullCopy
 
 import (
+	"math"
+
+	"fmt"
+
 	"github.com/200sc/go-compgeo/printutil"
 	"github.com/200sc/go-compgeo/search"
 )
@@ -15,9 +19,16 @@ type FullPersistentBST struct {
 	instants []BSTInstant
 }
 
+func NewFullPersistentBST(dyn search.Dynamic) search.DynamicPersistent {
+	pbst := new(FullPersistentBST)
+	pbst.instant = math.MaxFloat64 * -1
+	pbst.instants = []BSTInstant{{Dynamic: dyn, instant: pbst.instant}}
+	return pbst
+}
+
 // BSTInstant is a single BST within a Persistent BST.
 type BSTInstant struct {
-	*BST
+	search.Dynamic
 	instant float64
 }
 
@@ -78,7 +89,7 @@ func (pbst *FullPersistentBST) SetInstant(ins float64) {
 		return
 	}
 	bsti := BSTInstant{}
-	bsti.BST = pbst.instants[len(pbst.instants)-1].copy()
+	bsti.Dynamic = pbst.instants[len(pbst.instants)-1].Copy().(search.Dynamic)
 	bsti.instant = ins
 	pbst.instants = append(pbst.instants, bsti)
 	pbst.instant = ins
@@ -131,7 +142,11 @@ func (pbst *FullPersistentBST) String() string {
 	s := ""
 	for _, ins := range pbst.instants {
 		s += printutil.Stringf64(ins.instant) + ":\n"
-		s += ins.BST.String()
+		s += fmt.Sprintf("%v", ins.Dynamic)
 	}
 	return s
+}
+
+func (pbst *FullPersistentBST) Copy() interface{} {
+	return nil
 }

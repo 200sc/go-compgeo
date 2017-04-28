@@ -78,6 +78,11 @@ type Sizable interface {
 	Size() int
 }
 
+// Copyable types can create copies of themself.
+type Copyable interface {
+	Copy() interface{}
+}
+
 // Static types can be searched and traversed,
 // but not modified. The benefit of using a static
 // type is that it should be faster to query than
@@ -86,6 +91,7 @@ type Static interface {
 	Sizable
 	Searchable
 	Traversable
+	Copyable
 }
 
 // Dynamic types implicitly are static types with

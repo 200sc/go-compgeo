@@ -1,4 +1,4 @@
-package tree
+package fullCopy
 
 import (
 	"testing"

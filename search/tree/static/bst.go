@@ -186,3 +186,11 @@ func (b *BST) inOrderTraverse(out []search.Node, i int, nextIndex *int) {
 		b.inOrderTraverse(out, Left(i), nextIndex)
 	}
 }
+
+func (b *BST) Copy() interface{} {
+	b2 := make(BST, len(*b))
+	for i, n := range *b {
+		b2[i] = n.copy()
+	}
+	return &b2
+}

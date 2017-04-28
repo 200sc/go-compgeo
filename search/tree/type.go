@@ -24,6 +24,15 @@ const (
 	// AA?
 )
 
+// FnSet represents the fields that need to
+// be attached to a BST to let it generically
+// act as any type of BST.
+type FnSet struct {
+	InsertFn func(*node) *node
+	DeleteFn func(*node) *node
+	SearchFn func(*node) *node
+}
+
 // New returns a tree as defined by the input type.
 // Hypothetically, this is the only exported function in this package
 // not on a tree structure.
@@ -37,7 +46,7 @@ func New(typ Type) search.Persistable {
 	default:
 		fallthrough
 	case RedBlack:
-		bst.fnSet = rbFnSet
+		bst.FnSet = RbFnSet
 	}
 	return bst
 }
