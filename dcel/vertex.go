@@ -36,6 +36,21 @@ func (v *Vertex) AllEdges() []*Edge {
 	return v.OutEdge.AllEdges()
 }
 
+// EdgeToward returns the edge around this
+// vertex which is pointing toward v2.
+func (v *Vertex) EdgeToward(v2 *Vertex) *Edge {
+	e := v.OutEdge
+	for {
+		if e.Twin.Origin == v2 {
+			return e
+		}
+		e = e.Twin.Next
+		if e == v.OutEdge {
+			return nil
+		}
+	}
+}
+
 // PartitionEdges splits the edges around a vertex and
 // returns those whose endpoints are lesser, equal to, and greater
 // than the given vertex in dimension d.

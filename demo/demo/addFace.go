@@ -10,13 +10,21 @@ import (
 	"bitbucket.org/oakmoundstudio/oak/event"
 	"bitbucket.org/oakmoundstudio/oak/mouse"
 	"bitbucket.org/oakmoundstudio/oak/render"
-	"bitbucket.org/oakmoundstudio/oak/timing"
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/dcel/pointLoc/bruteForce"
 	"github.com/200sc/go-compgeo/dcel/pointLoc/kirkpatrick"
 	"github.com/200sc/go-compgeo/dcel/pointLoc/slab"
 	"github.com/200sc/go-compgeo/dcel/pointLoc/trapezoid"
 	"github.com/200sc/go-compgeo/search/tree"
+)
+
+var (
+	prevVertExisted   bool
+	prevVert          *dcel.Vertex
+	firstAddedPoint   *dcel.Vertex
+	firstAddedExisted bool
+	prevEdge          *dcel.Edge
+	addedFace         *dcel.Face
 )
 
 func addFace(cID int, ev interface{}) int {
@@ -42,96 +50,159 @@ func addFace(cID int, ev interface{}) int {
 			if len(hits) > 0 {
 				ip := event.GetEntity(int(hits[0].CID)).(*InteractivePoint)
 				firstAddedPoint = ip.Vertex
-				faceVertices.Store(firstAddedPoint, true)
 				mouseZ = firstAddedPoint.Z()
+				prevVertExisted = true
+				firstAddedExisted = true
 			} else {
 				firstAddedPoint = dcel.NewVertex(mx, my, mouseZ)
 				phd.Vertices = append(phd.Vertices, firstAddedPoint)
-				faceVertices.Store(phd.Vertices[len(phd.Vertices)-1], true)
+				prevVertExisted = false
+				firstAddedExisted = false
+				phd.Update()
+				phd.UpdateSpaces()
 			}
-			phd.HalfEdges = append(phd.HalfEdges, dcel.NewEdge())
-			prev = phd.HalfEdges[len(phd.HalfEdges)-1]
-			prev.Origin = firstAddedPoint
+			prevVert = firstAddedPoint
+			faceVertices.Store(prevVert, true)
 
-			f := dcel.NewFace()
-			f.Outer = prev
-			phd.Faces = append(phd.Faces, f)
-			addedFace = phd.Faces[len(phd.Faces)-1]
-
-			prev.Face = addedFace
-			if firstAddedPoint.OutEdge == nil {
-				firstAddedPoint.OutEdge = prev
-			}
+			addedFace = dcel.NewFace()
+			phd.Faces = append(phd.Faces, addedFace)
 
 			mode = ADDING_DCEL
-
-			phd.Update()
-			phd.UpdateSpaces()
 			// On following clicks, prev.next = next, next.prev = prev
 			//                      next.origin = origin
 			//                      next.face = theface
 			//                      prev.twin = make a twin at origin
 			//                      twin.face = 0 I guess for now
-			// Detect final click by clicking on first point or
-			//                      by right clicking
+			// Detect final click by right clicking
 		} else if mode == ADDING_DCEL {
-			// Add Case D:
-			// Some node other than the first in the face already
-			// exists
-			var p *dcel.Vertex
 			hits := mouse.Hits(me.ToSpace())
+			// Old Point <- ...
 			if len(hits) > 0 {
 				ip := event.GetEntity(int(hits[0].CID)).(*InteractivePoint)
-				p = ip.Vertex
-				// Add Case F: this point already exists in this
-				// face. Reject it.
-				_, ok := faceVertices.Load(p)
-				if ok {
+				p := ip.Vertex
+				mouseZ = p.Z()
+				// This vertex already exists in this face.
+				if _, ok := faceVertices.Load(p); ok {
 					return 0
 				}
-				faceVertices.Store(p, true)
-				mouseZ = p.Z()
+				// Old Point -> Old Point
+				if prevVertExisted {
+					// This vertex must be connected to the previous
+					// vertex. If it is not then we need to split a
+					// face which we can't do with the information we've
+					// been given, in the middle of making a new face.
+					// Specifically, we don't know which face this new
+					// face is supposed to be consuming in the split.
+					// Todo: consider the assumption that addedFace is
+					// consuming OUTER_FACE. Is this then reasonable?
+					consumedEdge := p.EdgeToward(prevVert)
+					if consumedEdge == nil {
+						panic("Splitting face with add face")
+					}
+					check := consumedEdge.Next
+					if consumedEdge.Face != phd.Faces[dcel.OUTER_FACE] {
+						consumedEdge = consumedEdge.Twin
+						check = consumedEdge.Prev
+						fmt.Println("Sawp")
+					}
+					consumedEdge.Face = addedFace
+
+					// If there was a 'T' before this
+					if prevEdge != check && prevEdge != nil {
+						check.SetNext(prevEdge.Twin)
+						// This causes an issue because it assumes the
+						// consumed edge follows our directionality. If it
+						// doesn't, because we're defining the points clockwise,
+						// we'll loop forever down the line.
+						consumedEdge.SetPrev(prevEdge)
+						fmt.Println("T case")
+					}
+
+					prevEdge = consumedEdge
+
+					// New Point -> Old Point
+				} else {
+					// As NewPoint -> NewPoint, but
+					// we make no new point
+					e := dcel.NewEdge()
+					tw := dcel.NewEdge()
+					phd.HalfEdges = append(phd.HalfEdges, e, tw)
+					e.SetTwin(tw)
+					e.Face = addedFace
+					tw.Face = phd.Faces[dcel.OUTER_FACE]
+					tw.Origin = p
+					e.Origin = prevVert
+					if prevVert == firstAddedPoint {
+						prevVert.OutEdge = e
+					}
+					e.SetPrev(prevEdge)
+					if prevEdge != nil {
+						prevEdge.Twin.SetPrev(tw)
+					}
+					prevEdge = e
+				}
+				prevVert = p
+				prevVertExisted = true
+				// New Point <- ...
 			} else {
-				p = dcel.NewVertex(mx, my, mouseZ)
+				p := dcel.NewVertex(mx, my, mouseZ)
 				phd.Vertices = append(phd.Vertices, p)
-				faceVertices.Store(p, true)
+				e := dcel.NewEdge()
+				tw := dcel.NewEdge()
+				phd.HalfEdges = append(phd.HalfEdges, e, tw)
+				e.SetTwin(tw)
+				e.Face = addedFace
+				tw.Face = phd.Faces[dcel.OUTER_FACE]
+				tw.Origin = p
+				e.Origin = prevVert
+				if prevVert == firstAddedPoint {
+					prevVert.OutEdge = e
+				}
+				p.OutEdge = tw
+				// Old Point -> New Point
+				if prevVertExisted {
+					if prevEdge == nil {
+						// This is illegal, we
+						// have no idea what edge off
+						// of the previous vertex this
+						// face should wrap around
+						//
+						// This actually prevents zero-width
+						// spaces at vertices, where two
+						// faces do not touch but at
+						// a vertex point.
+						panic("Illegal vertex added")
+					}
+					// If the previous point was old, then
+					// this new twin wraps around and connects
+					// to the previous's next edge, like this:
+					//
+					// \ -prevEdge.next
+					//  \     /
+					//   \   / -prevEdge
+					//    \ /
+					// (prevVert)
+					//     |
+					// tw- | -e
+					//     |
+					//     |
+					//    (p)
+					tw.SetNext(prevEdge.Next)
+					// New Point -> New Point
+				} else {
+					if prevEdge != nil {
+						prevEdge.Twin.SetPrev(tw)
+					}
+				}
+				e.SetPrev(prevEdge)
+				prevEdge = e
+				prevVert = p
+				prevVertExisted = false
 			}
-			// This twin points from the new point to the previous point.
-			phd.HalfEdges = append(phd.HalfEdges, dcel.NewEdge())
-			twin := phd.HalfEdges[len(phd.HalfEdges)-1]
-
-			twin.Origin = p
-
-			// We make an assumption here that all twins have the outer face
-			// as their face.
-			twin.Face = phd.Faces[dcel.OUTER_FACE]
-
-			// This should be the twin of the previous edge,
-			// and vice versa.
-			prev.Twin = twin
-			twin.Twin = prev
-
-			// If the previous edge has a previous edge,
-			if prev.Prev != nil {
-				// This twin's next should be the previous twin,
-				// and the previous twin's previous should be this.
-				twin.Next = prev.Prev.Twin
-				prev.Prev.Twin.Prev = twin
+			if addedFace.Outer == nil {
+				addedFace.Outer = firstAddedPoint.OutEdge
 			}
-
-			phd.HalfEdges = append(phd.HalfEdges, dcel.NewEdge())
-			next := phd.HalfEdges[len(phd.HalfEdges)-1]
-			next.Origin = p
-			next.Prev = prev
-			next.Face = addedFace
-			prev.Next = next
-
-			prev = next
-
-			if p.OutEdge == nil {
-				p.OutEdge = prev
-			}
-
+			faceVertices.Store(prevVert, true)
 			phd.Update()
 			phd.UpdateSpaces()
 		} else if mode == POINT_LOCATE {
@@ -183,15 +254,6 @@ func addFace(cID int, ev interface{}) int {
 					poly.ShiftY(phd.Y)
 					render.Draw(poly, 10)
 					render.UndrawAfter(poly, 1500*time.Millisecond)
-					phd.FaceColors[faceIndex] = color.RGBA{255, 0, 0, 255}
-
-					go timing.DoAfter(50*time.Millisecond, func() {
-						phd.Update()
-					})
-					go timing.DoAfter(1500*time.Millisecond, func() {
-						phd.FaceColors[faceIndex] = faceColor
-						phd.Update()
-					})
 				}
 				mode = POINT_LOCATE
 				mouseModeBtn.SetString(mode.String())
@@ -200,31 +262,45 @@ func addFace(cID int, ev interface{}) int {
 		}
 	} else if me.Button == "RightMouse" {
 		if mode == ADDING_DCEL {
-			first := addedFace.Outer
-			prev.Next = first
-			first.Prev = prev
-
-			phd.HalfEdges = append(phd.HalfEdges, dcel.NewEdge())
-			// The final twin starts at the first point of this face
-			twin := phd.HalfEdges[len(phd.HalfEdges)-1]
-			twin.Origin = firstAddedPoint
-			twin.Face = phd.Faces[dcel.OUTER_FACE]
-
-			prev.Twin = twin
-			twin.Twin = prev
-
-			// This twin's next should be the previous twin,
-			// and the previous twin's previous should be this.
-			twin.Next = prev.Prev.Twin
-			prev.Prev.Twin.Prev = twin
-			// This twin's previous should be the first edge
-			// we added's twin. and vice versa
-			twin.Prev = first.Twin
-			first.Twin.Next = twin
+			// Special case
+			if firstAddedExisted && prevVertExisted {
+				// If firstAddedPoint and prevVert are
+				// connected, we set first.prev.face to addedface
+				// and stop.
+				if firstAddedPoint.EdgeToward(prevVert) != nil {
+					addedFace.Outer.Prev.Face = addedFace
+				} else {
+					// Otherwise we try to split faces on the two verts
+					// But this won't correct faces properly
+					fmt.Println("Connecting verts")
+					phd.ConnectVerts(firstAddedPoint, prevVert, addedFace)
+				}
+			} else {
+				firstEdge := addedFace.Outer
+				e := dcel.NewEdge()
+				tw := dcel.NewEdge()
+				phd.HalfEdges = append(phd.HalfEdges, e, tw)
+				e.SetTwin(tw)
+				e.SetNext(firstEdge)
+				tw.SetPrev(firstEdge.Twin)
+				e.Face = addedFace
+				tw.Face = phd.Faces[dcel.OUTER_FACE]
+				tw.Origin = firstAddedPoint
+				e.Origin = prevVert
+				if prevVertExisted {
+					// !firstAddedExisted
+					// else covered above
+					tw.SetNext(prevEdge.Next)
+				} else {
+					tw.SetNext(prevEdge.Twin)
+				}
+				e.SetPrev(prevEdge)
+			}
 
 			phd.CorrectDirectionality(addedFace)
 
-			prev = nil
+			prevEdge = nil
+			prevVert = nil
 			addedFace = nil
 			firstAddedPoint = nil
 

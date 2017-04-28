@@ -79,14 +79,22 @@ func (e *Edge) String() string {
 
 // SetTwin is shorthand for two twin assignments.
 func (e *Edge) SetTwin(e2 *Edge) {
-	e.Twin = e2
-	e2.Twin = e
+	if e != nil {
+		e.Twin = e2
+	}
+	if e2 != nil {
+		e2.Twin = e
+	}
 }
 
 // SetPrev is shorthand for a prev and next assignment.
 func (e *Edge) SetPrev(e2 *Edge) {
-	e.Prev = e2
-	e2.Next = e
+	if e != nil {
+		e.Prev = e2
+	}
+	if e2 != nil {
+		e2.Next = e
+	}
 }
 
 // SetNext is shorthand for a next and prev assignment.

@@ -49,9 +49,6 @@ var (
 	offFile                   = filepath.Join("data", "A.off")
 	mode                      = ROTATE
 	loopDemo          bool
-	firstAddedPoint   *dcel.Vertex
-	prev              *dcel.Edge
-	addedFace         *dcel.Face
 	mouseZ            = 0.0
 	faceVertices      = &syncmap.Map{}
 	err               error
