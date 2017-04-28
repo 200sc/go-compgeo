@@ -72,6 +72,9 @@ func (e *Edge) Set(i int, d geom.Dimensional) geom.Spanning {
 
 // String converts an edge into a string.
 func (e *Edge) String() string {
+	if e == nil {
+		return "<nil>"
+	}
 	s := ""
 	s += fmt.Sprintf("%v", e.Origin) + "->" + fmt.Sprintf("%v", e.Twin.Origin)
 	return s

@@ -225,6 +225,9 @@ func AddCommands() {
 			event.Trigger("Visualize", rate)
 		}
 	})
+	oak.AddCommand("print", func(strs []string) {
+		fmt.Println(phd.DCEL.String())
+	})
 }
 
 func clear(no int, nothing interface{}) int {

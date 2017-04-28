@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strconv"
 
 	compgeo "github.com/200sc/go-compgeo"
 	"github.com/200sc/go-compgeo/geom"
@@ -30,6 +31,55 @@ func New() *DCEL {
 	dc.HalfEdges = []*Edge{}
 	dc.Faces = []*Face{NewFace()}
 	return dc
+}
+
+func (dc *DCEL) String() string {
+	s := "DCEL\n"
+	s += "-----\n"
+	s += "Faces\n"
+	s += "-----\n"
+	for i, f := range dc.Faces {
+		s += "f" + strconv.Itoa(i)
+		s += " Inner: "
+		s += f.Inner.String()
+		s += " Outer: "
+		s += f.Outer.String()
+		s += "\n"
+	}
+	s += "-----\n"
+	s += "Vertices\n"
+	s += "--------\n"
+	for _, v := range dc.Vertices {
+		s += v.String()
+		s += " OutEdge: "
+		s += v.OutEdge.String()
+		s += "\n"
+	}
+	s += "-----\n"
+	s += "HalfEdges\n"
+	s += "-----\n"
+	for _, e := range dc.HalfEdges {
+		s += "Origin: "
+		s += e.Origin.String()
+		s += " Next: "
+		s += e.Next.String()
+		s += " Prev: "
+		s += e.Prev.String()
+		s += " Twin: "
+		s += e.Twin.String()
+		s += " Face: "
+		faceIndex := 0
+		for i, f := range dc.Faces {
+			if f == e.Face {
+				faceIndex = i
+				break
+			}
+		}
+		s += "f" + strconv.Itoa(faceIndex)
+		s += "\n"
+	}
+	s += "-----\n"
+	return s
 }
 
 // MaxX returns the Maximum of all X values
