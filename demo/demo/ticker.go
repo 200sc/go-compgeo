@@ -2,18 +2,23 @@ package demo
 
 import "time"
 
-type dynamicTicker struct {
+// A DynamicTicker is a ticker which can
+// be sent signals in the form of durations to
+// change how often it ticks.
+type DynamicTicker struct {
 	ticker    *time.Ticker
 	ch        chan time.Time
 	resetCh   chan *time.Ticker
 	forceTick chan bool
 }
 
-func NewDynamicTicker() *dynamicTicker {
+// NewDynamicTicker returns a null-initialized
+// dynamic ticker
+func NewDynamicTicker() *DynamicTicker {
 	ch := make(chan time.Time)
 	resetCh := make(chan *time.Ticker)
 	forceTick := make(chan bool)
-	dt := &dynamicTicker{
+	dt := &DynamicTicker{
 		// Please do not leave the application running
 		// for a thousand hours without clicking on
 		// the visualization knub, or else your next
@@ -26,7 +31,7 @@ func NewDynamicTicker() *dynamicTicker {
 		resetCh:   resetCh,
 		forceTick: forceTick,
 	}
-	go func(dt *dynamicTicker) {
+	go func(dt *DynamicTicker) {
 		for {
 			select {
 			case v := <-dt.ticker.C:
@@ -53,11 +58,16 @@ func NewDynamicTicker() *dynamicTicker {
 	return dt
 }
 
-func (dt *dynamicTicker) SetTick(d time.Duration) {
+// SetTick changes the rate at which a dynamic ticker
+// ticks
+func (dt *DynamicTicker) SetTick(d time.Duration) {
 	dt.resetCh <- time.NewTicker(d)
 }
 
-func (dt *dynamicTicker) Step() {
+// Step will force the dynamic ticker to tick, once.
+// If the forced tick is not received, multiple calls
+// to step will do nothing.
+func (dt *DynamicTicker) Step() {
 	select {
 	case dt.forceTick <- true:
 	default:

@@ -1,3 +1,5 @@
+// demo houses the main file for the point location demo.
+
 package main
 
 import (

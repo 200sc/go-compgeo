@@ -1,3 +1,5 @@
+// Demo is a Point Location visualization demo.
+
 package demo
 
 import (
@@ -33,6 +35,7 @@ const (
 	defShiftY     = 200
 )
 
+// Point Location Mode Const
 const (
 	SLAB_DECOMPOSITION = iota
 	TRAPEZOID_MAP
@@ -46,7 +49,7 @@ var (
 	dragX             float64 = -1
 	dragY             float64 = -1
 	dragging                  = -1
-	offFile                   = filepath.Join("data", "A.off")
+	offFile                   = filepath.Join("data", "test.off")
 	mode                      = ROTATE
 	loopDemo          bool
 	mouseZ            = 0.0
@@ -56,7 +59,7 @@ var (
 	font              *render.Font
 	phd               *InteractivePolyhedron
 	undoPhd           []InteractivePolyhedron
-	ticker            *dynamicTicker
+	ticker            *DynamicTicker
 	stopTickerCh      = make(chan bool)
 	sliding           bool
 	locator           pointLoc.LocatesPoints

@@ -1,3 +1,6 @@
+// dcel holds structures representing doubly-connected edge lists in two
+// and tree dimensions.
+
 package dcel
 
 import (

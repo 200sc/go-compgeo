@@ -1,3 +1,6 @@
+// trapezoid holds structures and functions for point location through
+// mapping a dcel to a trapezoidal map.
+
 package trapezoid
 
 import (

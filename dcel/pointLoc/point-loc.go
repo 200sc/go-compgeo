@@ -1,3 +1,5 @@
+// pointLoc holds interfaces for point location.
+
 package pointLoc
 
 import "github.com/200sc/go-compgeo/dcel"

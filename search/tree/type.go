@@ -1,3 +1,5 @@
+// tree defines data structures for search tree types
+
 package tree
 
 import "github.com/200sc/go-compgeo/search"

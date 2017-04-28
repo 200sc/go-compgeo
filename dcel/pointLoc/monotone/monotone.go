@@ -1,3 +1,5 @@
+// monotone holds functions for converting dcels into monotone components
+
 package monotone
 
 import (

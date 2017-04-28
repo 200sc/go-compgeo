@@ -1,3 +1,5 @@
+// bruteForce implements some simple brute force point location methods
+
 package bruteForce
 
 import (
@@ -10,7 +12,7 @@ import (
 	"github.com/200sc/go-compgeo/geom"
 )
 
-// The Plumb Line method is a name for a linear PIP check that
+// PlumbLine method is a name for a linear PIP check that
 // shoots a ray out and checks how many times that ray intersects
 // a polygon. The variation on a DCEL will iteratively perform
 // plumb line on each face of the DCEL.
@@ -18,16 +20,19 @@ func PlumbLine(dc *dcel.DCEL) pointLoc.LocatesPoints {
 	return &Iterator{dc}
 }
 
+// Iterator is a simple dcel wrapper for the following pointLocate method
 type Iterator struct {
 	*dcel.DCEL
 }
 
+// PointLocate on an iterator performs plumb line on each
+// of a DCEL's faces in order.
 func (i *Iterator) PointLocate(vs ...float64) (*dcel.Face, error) {
 	if len(vs) < 2 {
 		return nil, compgeo.InsufficientDimensionsError{}
 	}
 	p := geom.NewPoint(vs[0], vs[1], 0)
-	containFn := Contains
+	containFn := contains
 	if visualize.VisualCh != nil {
 		containFn = VisualizeContains
 	}
@@ -40,14 +45,15 @@ func (i *Iterator) PointLocate(vs ...float64) (*dcel.Face, error) {
 	return nil, nil
 }
 
-func Contains(f *dcel.Face, p geom.D2) bool {
+func contains(f *dcel.Face, p geom.D2) bool {
 	return f.Contains(p)
 }
 
-// Contains returns whether a point lies inside f.
+// VisualizeContains returns whether a point lies inside f.
 // We cannot assume that f is convex, or anything
 // besides some polygon. That leaves us with a rather
 // complex form of PIP--
+// It also sends visualization singals while doing this.
 func VisualizeContains(f *dcel.Face, p geom.D2) bool {
 	x := p.X()
 	y := p.Y()

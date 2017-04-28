@@ -1,3 +1,5 @@
+// search contains definitions for searchable data structure types.
+
 package search
 
 // A CompareResult is returned from a Compare query.

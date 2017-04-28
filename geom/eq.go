@@ -1,3 +1,5 @@
+// geom holds geometric primitives and interfaces.
+
 package geom
 
 import "math"

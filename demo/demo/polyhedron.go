@@ -227,6 +227,8 @@ func (fp facePolygon) draw(rgba *image.RGBA) {
 	}
 }
 
+// PolygonFromFace converts a dcelFace into a polygon
+// to be rendered
 func PolygonFromFace(f *dcel.Face) *render.Polygon {
 	verts := f.Vertices()
 	maxZ := math.MaxFloat64 * -1
@@ -241,6 +243,7 @@ func PolygonFromFace(f *dcel.Face) *render.Polygon {
 	return poly
 }
 
+// RotZ rotates the polyhedron around the Z axis
 func (p *Polyhedron) RotZ(theta float64) {
 	st := math.Sin(theta)
 	ct := math.Cos(theta)
@@ -253,6 +256,7 @@ func (p *Polyhedron) RotZ(theta float64) {
 	p.Update()
 }
 
+// RotX rotates the polyhedron around the X axis
 func (p *Polyhedron) RotX(theta float64) {
 	st := math.Sin(theta)
 	ct := math.Cos(theta)
@@ -265,6 +269,7 @@ func (p *Polyhedron) RotX(theta float64) {
 	p.Update()
 }
 
+// RotY rotates the polyhedron around the Y axis
 func (p *Polyhedron) RotY(theta float64) {
 	st := math.Sin(theta)
 	ct := math.Cos(theta)
@@ -277,6 +282,7 @@ func (p *Polyhedron) RotY(theta float64) {
 	p.Update()
 }
 
+// Scale scales up or down the given polyhedron
 func (p *Polyhedron) Scale(factor float64) {
 	for _, v := range p.Vertices {
 		v.Point = geom.Point{
@@ -307,11 +313,13 @@ func (p *Polyhedron) String() string {
 	return "Polyhedron"
 }
 
+// ShiftX moves a polyhedron and its center along the x axis
 func (p *Polyhedron) ShiftX(x float64) {
 	p.Center.X += x
 	p.Sprite.ShiftX(x)
 }
 
+// ShiftY moves a polyhedron and its center along the y axis
 func (p *Polyhedron) ShiftY(y float64) {
 	p.Center.Y += y
 	p.Sprite.ShiftY(y)

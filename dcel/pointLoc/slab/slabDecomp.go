@@ -1,3 +1,5 @@
+// slab implements point location by splitting a dcel into vertical slabs
+
 package slab
 
 import (

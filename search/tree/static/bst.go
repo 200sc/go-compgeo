@@ -1,3 +1,5 @@
+// static implements a tree which is array based and allows no modifications.
+
 package static
 
 import "github.com/200sc/go-compgeo/search"
@@ -97,6 +99,7 @@ func (b *BST) Search(key interface{}) (bool, interface{}) {
 	return false, nil
 }
 
+// SearchUp performs a search and rounds up by 'up' steps.
 func (b *BST) SearchUp(key interface{}, up int) (search.Comparable, interface{}) {
 	bst := *b
 	i, ok := b.search(key)
@@ -118,6 +121,7 @@ func (b *BST) SearchUp(key interface{}, up int) (search.Comparable, interface{})
 	return bst[i].key, bst[i].val
 }
 
+// SearchDown performs a search and rounds down by 'down' steps.
 func (b *BST) SearchDown(key interface{}, down int) (search.Comparable, interface{}) {
 	bst := *b
 	i, ok := b.search(key)

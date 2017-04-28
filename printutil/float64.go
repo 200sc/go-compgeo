@@ -1,3 +1,5 @@
+// printutil offers some basic printing utilities.
+
 package printutil
 
 import (

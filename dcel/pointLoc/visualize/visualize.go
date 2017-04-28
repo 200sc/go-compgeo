@@ -1,3 +1,5 @@
+// visualize controls sending defined renderables over a channel
+
 package visualize
 
 import (
@@ -83,6 +85,8 @@ func DrawPoly(ps []physics.Vector) {
 	VisualCh <- v
 }
 
+// DrawFace converts a face into a polygon, then
+// draws it as a polygon.
 func DrawFace(f *dcel.Face) {
 	if VisualCh == nil {
 		return

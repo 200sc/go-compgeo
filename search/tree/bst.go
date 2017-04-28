@@ -96,7 +96,7 @@ func (bst *BST) Insert(inNode search.Node) error {
 			bst.size++
 			return nil
 		} else {
-			panic("Invalid types for BST operatrions")
+			panic("Invalid types for BST operations")
 		}
 		// Todo: if we need the type, create treeSet types which
 		// do nothing on duplicates being added.

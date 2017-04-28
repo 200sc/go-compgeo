@@ -1,3 +1,6 @@
+// kirkpatrick implements point location using a stack of triangulations
+// as a tree of containment pointers to a single triangulation of a dcel
+
 package kirkpatrick
 
 import (
