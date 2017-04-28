@@ -191,16 +191,16 @@ func TestPredSucc(t *testing.T) {
 		tree.Insert(v)
 	}
 
-	_, v := tree.SearchUp(9.5)
+	_, v := tree.SearchUp(9.5, 0)
 	assert.Equal(t, v, compFloat(1))
-	_, v = tree.SearchDown(9.5)
+	_, v = tree.SearchDown(9.5, 0)
 	assert.Equal(t, v, compFloat(2))
 
 	t2 := tree.ToStatic()
 
-	_, v = t2.SearchUp(9.5)
+	_, v = t2.SearchUp(9.5, 0)
 	assert.Equal(t, v, compFloat(1))
-	_, v = t2.SearchDown(9.5)
+	_, v = t2.SearchDown(9.5, 0)
 	assert.Equal(t, v, compFloat(2))
 
 }

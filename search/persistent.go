@@ -26,7 +26,7 @@ type DynamicPersistent interface {
 	Dynamic
 	AtInstant(float64) Dynamic
 	ThisInstant() Dynamic
-	ToStaticPersitent() StaticPersistent
+	ToStaticPersistent() StaticPersistent
 }
 
 // Persistable types are dynamic types, convertible to PersistentDynamic.

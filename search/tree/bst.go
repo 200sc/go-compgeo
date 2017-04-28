@@ -39,7 +39,7 @@ func (bst *BST) isValid() bool {
 
 // ToPersistent converts this BST into a Persistent BST.
 func (bst *BST) ToPersistent() search.DynamicPersistent {
-	pbst := new(PersistentBST)
+	pbst := new(FullPersistentBST)
 	pbst.instant = math.MaxFloat64 * -1
 	pbst.instants = []BSTInstant{{BST: bst, instant: pbst.instant}}
 	return pbst
