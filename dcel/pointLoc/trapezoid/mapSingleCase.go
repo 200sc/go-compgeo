@@ -1,6 +1,8 @@
 package trapezoid
 
 import (
+	"fmt"
+
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/geom"
 )
@@ -15,22 +17,34 @@ func mapSingleCase(tr *Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 	ur := tr.Neighbors[upright]
 	br := tr.Neighbors[botright]
 
+	u := tr.Copy()
+	u.faces = faces
+	d := tr.Copy()
+	d.faces = faces
+
 	// Case 2A.2
 	// If fe.left or fe.right lies ON tr's left and right
 	// edges, we don't make new trapezoids for them.
 	if !geom.F64eq(lp.X(), tr.left) {
 		l = tr.Copy()
+		NewTopRight, _ := l.TopEdge().PointAt(0, lp.X())
+		NewBotRight, _ := l.BotEdge().PointAt(0, lp.X())
 		l.right = lp.X()
+		l.bot[right] = NewBotRight.Y()
+		l.top[right] = NewTopRight.Y()
+		d.bot[left] = NewBotRight.Y()
+		u.top[left] = NewTopRight.Y()
 	}
 	if !geom.F64eq(rp.X(), tr.right) {
 		r = tr.Copy()
+		NewTopLeft, _ := r.TopEdge().PointAt(0, rp.X())
+		NewBotLeft, _ := r.BotEdge().PointAt(0, rp.X())
 		r.left = rp.X()
+		r.bot[left] = NewBotLeft.Y()
+		r.top[left] = NewTopLeft.Y()
+		d.bot[right] = NewBotLeft.Y()
+		u.top[right] = NewTopLeft.Y()
 	}
-
-	u := tr.Copy()
-	u.faces = faces
-	d := tr.Copy()
-	d.faces = faces
 
 	u.Neighbors[upleft] = ul
 	u.Neighbors[botleft] = ul
@@ -113,8 +127,13 @@ func mapSingleCase(tr *Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 	c.set(left, NewTrapNode(u))
 	c.set(right, NewTrapNode(d))
 
+	fmt.Println("Visualizing L")
 	l.visualize()
+	fmt.Println("L visualized. Visualizing R")
 	r.visualize()
+	fmt.Println("R visualized. Visualizing U")
 	u.visualize()
+	fmt.Println("U visualized. Visualizing D")
 	d.visualize()
+	fmt.Println("D visualized.")
 }

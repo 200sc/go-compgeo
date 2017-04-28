@@ -4,6 +4,8 @@
 package trapezoid
 
 import (
+	"fmt"
+
 	"bitbucket.org/oakmoundstudio/oak/physics"
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/dcel/pointLoc/visualize"
@@ -194,6 +196,7 @@ func (tr *Trapezoid) toPhysics() []physics.Vector {
 
 func (tr *Trapezoid) visualize() {
 	if tr == nil {
+		fmt.Println("Nothing to visualize")
 		return
 	}
 	visualize.HighlightColor = visualize.AddFaceColor

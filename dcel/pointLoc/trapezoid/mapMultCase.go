@@ -1,6 +1,8 @@
 package trapezoid
 
 import (
+	"fmt"
+
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/geom"
 )
@@ -100,7 +102,9 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 		b.Neighbors[upleft] = bl
 	}
 
+	fmt.Println("Visualizing L")
 	l.visualize()
+	fmt.Println("L visualized")
 
 	un = NewTrapNode(u)
 	bn = NewTrapNode(b)
@@ -131,9 +135,11 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 		p1 := u.TopEdge().Left()
 		p2 := tr.TopEdge().Right()
 		if geom.IsColinear(p1, u.TopEdge().Right(), p2) {
-			// This can't be right?
+			fmt.Println("Merge U")
 			u.top[right] = p2.Y()
-			u.bot[right] = tr.bot[right]
+			edge, _ := fe.SubEdge(0, u.left, tr.right)
+			u.bot[left] = edge.Left().Y()
+			u.bot[right] = edge.Right().Y()
 		} else {
 			u2 := tr.Copy()
 			//
@@ -176,7 +182,9 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 
 			// y points to a new trapezoid node holding u2
 			un = NewTrapNode(u2)
+			fmt.Println("Visualizing U")
 			u.visualize()
+			fmt.Println("U visualized")
 			u = u2
 		}
 
@@ -186,8 +194,11 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 		p2 = tr.BotEdge().Right()
 		// Behavior is similar for the lower trapezoid
 		if geom.IsColinear(p1, b.BotEdge().Right(), p2) {
+			fmt.Println("Merge B")
 			b.bot[right] = p2.Y()
-			b.top[right] = tr.top[right]
+			edge, _ := fe.SubEdge(0, b.left, tr.right)
+			b.top[left] = edge.Left().Y()
+			b.top[right] = edge.Right().Y()
 		} else {
 			b2 := tr.Copy()
 			b.Neighbors[upright] = b2
@@ -212,7 +223,9 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 			b2.top[right] = edge.Right().Y()
 
 			bn = NewTrapNode(b2)
+			fmt.Println("Visualizing B")
 			b.visualize()
+			fmt.Println("B visualized")
 			b = b2
 		}
 		u.faces = faces
@@ -230,7 +243,7 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 
 	var r, ur, br *Trapezoid
 	trn := trs[len(trs)-1]
-	if !trn.HasDefinedPoint(fe.Right()) {
+	if !trn.HasDefinedPoint(rp) {
 		r = trn.Copy()
 		r.left = rp.X()
 		// other edges don't change
@@ -282,7 +295,11 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 		u.Neighbors[upright] = br
 		b.Neighbors[upright] = br
 	}
+	fmt.Println("Visualizing final U")
 	u.visualize()
+	fmt.Println("U visualized. Visualizing final B")
 	b.visualize()
+	fmt.Println("B visualized. Visualizing final R")
 	r.visualize()
+	fmt.Println("R visualized.")
 }
