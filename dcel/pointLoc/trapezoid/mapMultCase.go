@@ -100,6 +100,8 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 		b.Neighbors[upleft] = bl
 	}
 
+	l.visualize()
+
 	un = NewTrapNode(u)
 	bn = NewTrapNode(b)
 
@@ -174,6 +176,7 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 
 			// y points to a new trapezoid node holding u2
 			un = NewTrapNode(u2)
+			u.visualize()
 			u = u2
 		}
 
@@ -209,6 +212,7 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 			b2.top[right] = edge.Right().Y()
 
 			bn = NewTrapNode(b2)
+			b.visualize()
 			b = b2
 		}
 		u.faces = faces
@@ -278,4 +282,7 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 		u.Neighbors[upright] = br
 		b.Neighbors[upright] = br
 	}
+	u.visualize()
+	b.visualize()
+	r.visualize()
 }

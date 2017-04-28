@@ -3,6 +3,7 @@ package trapezoid
 import (
 	"bitbucket.org/oakmoundstudio/oak/physics"
 	"github.com/200sc/go-compgeo/dcel"
+	"github.com/200sc/go-compgeo/dcel/pointLoc/visualize"
 	"github.com/200sc/go-compgeo/geom"
 	"github.com/200sc/go-compgeo/printutil"
 )
@@ -186,4 +187,12 @@ func (tr *Trapezoid) toPhysics() []physics.Vector {
 		vs[i] = physics.NewVector(p.X(), p.Y())
 	}
 	return vs
+}
+
+func (tr *Trapezoid) visualize() {
+	if tr == nil {
+		return
+	}
+	visualize.HighlightColor = visualize.AddFaceColor
+	visualize.DrawPoly(tr.toPhysics())
 }

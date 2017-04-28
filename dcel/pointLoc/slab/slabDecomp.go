@@ -2,7 +2,6 @@ package slab
 
 import (
 	"fmt"
-	"image/color"
 
 	compgeo "github.com/200sc/go-compgeo"
 	"github.com/200sc/go-compgeo/dcel"
@@ -35,9 +34,8 @@ func Decompose(dc *dcel.DCEL, bstType tree.Type) (pointLoc.LocatesPoints, error)
 		p := pts[i]
 		v := dc.Vertices[p]
 		// Set the BST's instant to the x value of this point
-		if visualize.VisualCh != nil {
-			visualize.DrawVerticalLine(v)
-		}
+		visualize.HighlightColor = visualize.CheckLineColor
+		visualize.DrawVerticalLine(v)
 		t.SetInstant(v.X())
 		ct := t.ThisInstant()
 
@@ -68,9 +66,7 @@ func Decompose(dc *dcel.DCEL, bstType tree.Type) (pointLoc.LocatesPoints, error)
 		fmt.Println("Right Edges", re)
 		// Remove all edges from the PersistentBST connecting to the left
 		// of the points
-		if visualize.VisualCh != nil {
-			visualize.HighlightColor = color.RGBA{255, 0, 0, 255}
-		}
+		visualize.HighlightColor = visualize.RemoveColor
 		for _, e := range le {
 			fmt.Println("Removing", e.Twin)
 			err := ct.Delete(shellNode{compEdge{e.Twin}, search.Nil{}})
@@ -79,9 +75,7 @@ func Decompose(dc *dcel.DCEL, bstType tree.Type) (pointLoc.LocatesPoints, error)
 		}
 		// Add all edges to the PersistentBST connecting to the right
 		// of the point
-		if visualize.VisualCh != nil {
-			visualize.HighlightColor = color.RGBA{0, 255, 0, 255}
-		}
+		visualize.HighlightColor = visualize.AddColor
 		for _, e := range re {
 			// We always want the half edge that points to the right,
 			// and between the two faces this edge is on we want the
@@ -96,10 +90,7 @@ func Decompose(dc *dcel.DCEL, bstType tree.Type) (pointLoc.LocatesPoints, error)
 
 		i++
 	}
-	fmt.Println("END CONSTRUCTION")
-	if visualize.VisualCh != nil {
-		visualize.HighlightColor = color.RGBA{255, 255, 255, 255}
-	}
+	visualize.HighlightColor = visualize.CheckLineColor
 	return &PointLocator{t, dc.Faces[dcel.OUTER_FACE]}, nil
 }
 
@@ -152,9 +143,8 @@ func (spl *PointLocator) PointLocate(vs ...float64) (*dcel.Face, error) {
 	for _, f5 := range faces {
 		if f5 != spl.outerFace {
 			fmt.Println("Checking if face contains", p)
-			if visualize.VisualCh != nil {
-				visualize.DrawFace(f5)
-			}
+			visualize.HighlightColor = visualize.CheckFaceColor
+			visualize.DrawFace(f5)
 			if f5.Contains(p) {
 				fmt.Println("P was contained")
 				return f5, nil

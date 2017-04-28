@@ -112,4 +112,9 @@ func mapSingleCase(tr *Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 	}
 	c.set(left, NewTrapNode(u))
 	c.set(right, NewTrapNode(d))
+
+	l.visualize()
+	r.visualize()
+	u.visualize()
+	d.visualize()
 }

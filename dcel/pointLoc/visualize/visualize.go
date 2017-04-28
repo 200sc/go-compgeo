@@ -29,6 +29,7 @@ var (
 	CheckFaceColor = color.RGBA{0, 0, 128, 128}
 	FoundColor     = color.RGBA{255, 255, 255, 255}
 	CheckLineColor = color.RGBA{128, 128, 128, 128}
+	AddFaceColor   = color.RGBA{0, 128, 0, 128}
 )
 
 // Visual is a renderable with attached instructions
@@ -40,6 +41,9 @@ type Visual struct {
 
 // DrawLine sends a line instruction to the Visual Channel
 func DrawLine(p1, p2 geom.D2) {
+	if VisualCh == nil {
+		return
+	}
 	v := new(Visual)
 	v.Renderable = render.NewThickLine(p1.X(), p1.Y(), p2.X(), p2.Y(), HighlightColor, 1)
 	v.Layer = HighlightLayer
@@ -49,6 +53,9 @@ func DrawLine(p1, p2 geom.D2) {
 // DrawVerticalLine sends a line extending through the screen
 // vertically to the visual channel at a given point
 func DrawVerticalLine(p geom.D2) {
+	if VisualCh == nil {
+		return
+	}
 	v := new(Visual)
 	y1 := p.Y() - 480
 	y2 := p.Y() + 480
@@ -60,6 +67,9 @@ func DrawVerticalLine(p geom.D2) {
 // DrawPoly sends a polygon made up of ps (assumed convex)
 // to the visual channel
 func DrawPoly(ps []physics.Vector) {
+	if VisualCh == nil {
+		return
+	}
 	v := new(Visual)
 	var err error
 	v.Renderable, err = render.NewPolygon(ps)
@@ -74,6 +84,9 @@ func DrawPoly(ps []physics.Vector) {
 }
 
 func DrawFace(f *dcel.Face) {
+	if VisualCh == nil {
+		return
+	}
 	ps := f.Vertices()
 	physVerts := make([]physics.Vector, len(ps))
 	for i, v := range ps {
