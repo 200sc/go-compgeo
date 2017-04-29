@@ -452,13 +452,29 @@ func annotatedVisualize(strs []string, trs []*Trapezoid) {
 }
 
 func (tr *Trapezoid) setBotleft(fe geom.FullEdge) {
-	edge, _ := fe.SubEdge(0, tr.left, tr.right)
+	r := tr.right
+	if r > fe.Right().X() {
+		r = fe.Right().X()
+	}
+	l := tr.left
+	if l < fe.Left().X() {
+		l = fe.Left().X()
+	}
+	edge, _ := fe.SubEdge(0, l, r)
 	tr.bot[left] = edge.Left().Y()
 	tr.bot[right] = edge.Right().Y()
 }
 
 func (tr *Trapezoid) setTopleft(fe geom.FullEdge) {
-	edge, _ := fe.SubEdge(0, tr.left, tr.right)
+	r := tr.right
+	if r > fe.Right().X() {
+		r = fe.Right().X()
+	}
+	l := tr.left
+	if l < fe.Left().X() {
+		l = fe.Left().X()
+	}
+	edge, _ := fe.SubEdge(0, l, r)
 	tr.top[left] = edge.Left().Y()
 	tr.top[right] = edge.Right().Y()
 }

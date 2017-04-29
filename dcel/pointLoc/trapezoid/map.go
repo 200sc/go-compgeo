@@ -1,8 +1,6 @@
 package trapezoid
 
 import (
-	"math/rand"
-
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/dcel/pointLoc/visualize"
 	"github.com/200sc/go-compgeo/geom"
@@ -41,10 +39,10 @@ func TrapezoidalMap(dc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, *Node
 		i++
 	}
 	// Scramble the edges
-	for i := range fullEdges {
-		j := i + rand.Intn(len(fullEdges)-i)
-		fullEdges[i], fullEdges[j] = fullEdges[j], fullEdges[i]
-	}
+	// for i := range fullEdges {
+	// 	j := i + rand.Intn(len(fullEdges)-i)
+	// 	fullEdges[i], fullEdges[j] = fullEdges[j], fullEdges[i]
+	// }
 	for k, fe := range fullEdges {
 		visualize.HighlightColor = visualize.AddColor
 		visualize.DrawLine(fe.Left(), fe.Right())

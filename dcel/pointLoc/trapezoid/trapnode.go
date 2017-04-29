@@ -1,6 +1,7 @@
 package trapezoid
 
 import (
+	"fmt"
 	"image/color"
 
 	"github.com/200sc/go-compgeo/dcel/pointLoc/visualize"
@@ -25,12 +26,18 @@ func trapQuery(fe geom.FullEdge, n *Node) []*Trapezoid {
 		visualize.DrawPoly(tr.toPhysics())
 	}
 	r := fe.Right()
+	fmt.Println("rights:", tr.right, r.X())
 	for tr != nil && r.X() > tr.right {
 		// We perform this check here is it is less expensive
 		// than the cross product in the latter case, even
 		// though the latter case would suffice to do this.
 		if tr.Neighbors[upright] == tr.Neighbors[botright] {
+			if tr.Neighbors[upright] == nil {
+				fmt.Println("Neighbors", tr.Neighbors)
+			}
 			tr = tr.Neighbors[botright]
+			fmt.Println("New tr, botright and upright equal")
+			fmt.Println(tr)
 		} else {
 			// If the edge separating the two
 			// trapezoids to the right of tr from one another
@@ -47,10 +54,8 @@ func trapQuery(fe geom.FullEdge, n *Node) []*Trapezoid {
 			}
 		}
 		if tr != nil {
-			if visualize.VisualCh != nil {
-				visualize.HighlightColor = color.RGBA{0, 0, 128, 128}
-				visualize.DrawPoly(tr.toPhysics())
-			}
+			visualize.HighlightColor = visualize.CheckFaceColor
+			visualize.DrawPoly(tr.toPhysics())
 			traps = append(traps, tr)
 		}
 	}

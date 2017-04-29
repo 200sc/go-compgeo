@@ -46,7 +46,7 @@ func mapSingleCase(tr *Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 		ur.replaceNeighbors(tr, r)
 		br.replaceNeighbors(tr, r)
 
-		r.twoRights(u, d, rp.Y())
+		r.twoLefts(u, d, rp.Y())
 	} else {
 		tr.replaceRightPointers(u, d, rp.Y())
 	}
