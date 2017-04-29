@@ -263,34 +263,68 @@ func (tr *Trapezoid) replaceLeftPointers(u, b *Trapezoid, lpy float64) {
 // is above bl that previously pointed to tr to the appropriate
 // trapezoid of u and b.
 func replaceLeftPointers(tr, ul, bl, u, b *Trapezoid, lpy float64) {
-	if ul != nil && geom.F64eq(ul.top[right], lpy) {
+	if ul != nil && geom.F64eq(ul.bot[right], lpy) {
+		fmt.Println("Case 0")
+		// U matches exactly to ul,
+		// B matches exactly to bl.
+		//
+		//  ~ ~ ~ ~ ~ ~
+		//    ul |  u
+		// -----lpy-----
+		//    bl |  b
+		//  ~ ~ ~ ~ ~ ~
+		//
+		ul.replaceNeighbors(tr, u)
+		bl.replaceNeighbors(tr, b)
+	} else if (ul != nil && geom.F64eq(ul.top[right], lpy)) ||
+		(ul == nil && bl != nil && geom.F64eq(bl.top[right], lpy)) {
+		fmt.Println("Case 1")
 		// U does not border the left edge
 		//
 		// ~ ~ ~ lpy \
-		//   ul   \   \ u
+		//  (ul)  \   \ u
 		// ~ ~ ~ ~ \ b \
-		//   bl     \   \
+		//  (bl)    \   \
 		// ~ ~ ~ ~ ~ ~ ~
 		ul.replaceNeighbors(tr, b)
 		bl.replaceNeighbors(tr, b)
-		b.Neighbors[upleft] = ul
-		b.Neighbors[botleft] = bl
+		if ul != nil {
+			b.Neighbors[upleft] = ul
+		} else {
+			b.Neighbors[upleft] = bl
+		}
+		if bl != nil {
+			b.Neighbors[botleft] = bl
+		} else {
+			b.Neighbors[botleft] = ul
+		}
 		u.Lefts(b)
-	} else if bl != nil && geom.F64eq(bl.bot[right], lpy) {
+	} else if (bl != nil && geom.F64eq(bl.bot[right], lpy)) ||
+		(bl == nil && ul != nil && geom.F64eq(ul.bot[right], lpy)) {
+		fmt.Println("Case 2")
 		// D does not border the left edge
 		//
 		// ~ ~ ~ ~ ~ ~ ~ ~
-		//   ul     /   /
+		//  (ul)    /   /
 		// ~ ~ ~ ~ / u /
-		//   bl   /   / b
-		// ~ ~ lpy  / ~ ~
+		//  (bl)  /   / b
+		// ~ ~ ~ lpy / ~ ~
 		//
 		ul.replaceNeighbors(tr, u)
 		bl.replaceNeighbors(tr, u)
-		u.Neighbors[botleft] = bl
-		u.Neighbors[upleft] = ul
+		if bl != nil {
+			u.Neighbors[botleft] = bl
+		} else {
+			u.Neighbors[botleft] = ul
+		}
+		if ul != nil {
+			u.Neighbors[upleft] = ul
+		} else {
+			u.Neighbors[upleft] = bl
+		}
 		b.Lefts(u)
 	} else if ul != nil && ul.bot[right] < lpy {
+		fmt.Println("Case 3")
 		// UL expands past FE
 		//
 		// ~ ~ ~ ~ ~ ~ ~ ~ ~
@@ -300,13 +334,16 @@ func replaceLeftPointers(tr, ul, bl, u, b *Trapezoid, lpy float64) {
 		//   bl    |
 		// ~ ~ ~ ~ ~ ~ ~ ~ ~
 		//
-		bl.replaceNeighbors(tr, b)
+		if ul != bl {
+			bl.replaceNeighbors(tr, b)
+		}
 		ul.replaceNeighbor(upright, tr, u)
 		ul.replaceNeighbor(botright, tr, b)
 		u.Lefts(ul)
 		b.Neighbors[upleft] = ul
 		b.Neighbors[botleft] = bl
 	} else if bl != nil && bl.top[right] > lpy {
+		fmt.Println("Case 4")
 		// BL expands past FE
 		//
 		// ~ ~ ~ ~ ~ ~ ~ ~ ~
@@ -316,12 +353,20 @@ func replaceLeftPointers(tr, ul, bl, u, b *Trapezoid, lpy float64) {
 		//   bl    |   b
 		// ~ ~ ~ ~ ~ ~ ~ ~ ~
 		//
-		ul.replaceNeighbors(tr, u)
+		if ul != bl {
+			ul.replaceNeighbors(tr, u)
+		}
 		bl.replaceNeighbor(upright, tr, u)
 		bl.replaceNeighbor(botright, tr, b)
 		b.Lefts(bl)
 		u.Neighbors[upleft] = ul
 		u.Neighbors[botleft] = bl
+	} else {
+		fmt.Println("No left pointer case satisfied.")
+		fmt.Println("Both neighbors nil:", ul == nil && bl == nil)
+		fmt.Println(ul, bl)
+		fmt.Println(u, b)
+		fmt.Println(lpy)
 	}
 }
 
@@ -335,22 +380,46 @@ func (tr *Trapezoid) replaceRightPointers(u, b *Trapezoid, rpy float64) {
 }
 
 func replaceRightPointers(tr, ur, br, u, b *Trapezoid, rpy float64) {
-	if ur != nil && geom.F64eq(ur.top[left], rpy) {
+	if ur != nil && geom.F64eq(ur.bot[left], rpy) {
+		fmt.Println("Case 0")
+		// U matches exactly to ur,
+		// B matches exactly to br.
+		//
+		//  ~ ~ ~ ~ ~ ~
+		//    u  |  ur
+		// -----rpy-----
+		//    b  |  br
+		//  ~ ~ ~ ~ ~ ~
+		//
+		ur.replaceNeighbors(tr, u)
+		br.replaceNeighbors(tr, b)
+	} else if (ur != nil && geom.F64eq(ur.top[left], rpy)) ||
+		(ur == nil && br != nil && geom.F64eq(br.top[left], rpy)) {
+		fmt.Println("Right case 1")
 		// U does not border the right edge
 		//
 		//  ~ ~ rpy ~ ~ ~
-		//   u /   /   ur
+		//   u /   / (ur)
 		//    / b / ~ ~ ~
-		//   /   /  br
+		//   /   /  (br)
 		//  ~ ~ ~ ~ ~ ~
 		//
 		ur.replaceNeighbors(tr, b)
 		br.replaceNeighbors(tr, b)
 		u.Rights(b)
-		b.Neighbors[upright] = ur
-		b.Neighbors[botright] = br
-	} else if br != nil && geom.F64eq(br.bot[left], rpy) {
-		// B does not border the right edge
+		if ur != nil {
+			b.Neighbors[upright] = ur
+		} else {
+			b.Neighbors[upright] = br
+		}
+		if br != nil {
+			b.Neighbors[botright] = br
+		} else {
+			b.Neighbors[botright] = ur
+		}
+	} else if (br != nil && geom.F64eq(br.bot[left], rpy)) ||
+		(br == nil && ur != nil && geom.F64eq(ur.bot[left], rpy)) {
+		fmt.Println("Right case 2")
 		//
 		//  ~ ~ rpy ~ ~ ~
 		//  \   \    ur
@@ -361,9 +430,18 @@ func replaceRightPointers(tr, ur, br, u, b *Trapezoid, rpy float64) {
 		ur.replaceNeighbors(tr, u)
 		br.replaceNeighbors(tr, u)
 		b.Rights(u)
-		u.Neighbors[upright] = ur
-		u.Neighbors[botright] = br
+		if ur != nil {
+			u.Neighbors[upright] = ur
+		} else {
+			u.Neighbors[upright] = br
+		}
+		if br != nil {
+			u.Neighbors[botright] = br
+		} else {
+			u.Neighbors[botright] = ur
+		}
 	} else if ur != nil && ur.bot[left] < rpy {
+		fmt.Println("Right case 3")
 		// UR expands past FE
 		//
 		// ~ ~ ~ ~ ~ ~ ~ ~ ~
@@ -373,13 +451,16 @@ func replaceRightPointers(tr, ur, br, u, b *Trapezoid, rpy float64) {
 		//   b     |   br
 		// ~ ~ ~ ~ ~ ~ ~ ~ ~
 		//
-		br.replaceNeighbors(tr, b)
+		if ur != br {
+			br.replaceNeighbors(tr, b)
+		}
 		ur.replaceNeighbor(upleft, tr, u)
 		ur.replaceNeighbor(botleft, tr, b)
 		u.Rights(ur)
 		b.Neighbors[upright] = ur
 		b.Neighbors[botright] = br
 	} else if br != nil && br.top[left] > rpy {
+		fmt.Println("Right case 4")
 		// BR expands past FE
 		//
 		// ~ ~ ~ ~ ~ ~ ~ ~ ~
@@ -389,12 +470,17 @@ func replaceRightPointers(tr, ur, br, u, b *Trapezoid, rpy float64) {
 		//   b     |
 		// ~ ~ ~ ~ ~ ~ ~ ~ ~
 		//
-		ur.replaceNeighbors(tr, u)
+		if ur != br {
+			ur.replaceNeighbors(tr, u)
+		}
 		br.replaceNeighbor(upleft, tr, u)
 		br.replaceNeighbor(botleft, tr, b)
 		b.Rights(br)
 		u.Neighbors[upright] = ur
 		u.Neighbors[botright] = br
+	} else {
+		fmt.Println("No right pointer case satisfied")
+		fmt.Println("Both neighbors nil:", br == nil && ur == nil)
 	}
 }
 
