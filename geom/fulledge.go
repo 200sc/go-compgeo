@@ -49,6 +49,10 @@ func (fe FullEdge) PointAt(d int, v float64) (Point, error) {
 	return p, nil
 }
 
+func (fe FullEdge) BothPoints() (D3, D3) {
+	return fe.Left(), fe.Right()
+}
+
 // SubEdge returns the portion of this edge
 // from pointAt(d,v1) to pointAt(d,v2)
 func (fe FullEdge) SubEdge(d int, v1, v2 float64) (FullEdge, error) {

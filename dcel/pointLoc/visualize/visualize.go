@@ -47,7 +47,7 @@ func DrawLine(p1, p2 geom.D2) {
 		return
 	}
 	v := new(Visual)
-	v.Renderable = render.NewThickLine(p1.X(), p1.Y(), p2.X(), p2.Y(), HighlightColor, 1)
+	v.Renderable = render.NewThickLine(p1.X(), p1.Y(), p2.X(), p2.Y(), HighlightColor, 2)
 	v.Layer = HighlightLayer
 	VisualCh <- v
 }

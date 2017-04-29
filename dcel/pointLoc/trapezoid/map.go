@@ -2,7 +2,6 @@ package trapezoid
 
 import (
 	"image/color"
-	"math/rand"
 
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/dcel/pointLoc/visualize"
@@ -28,7 +27,7 @@ func TrapezoidalMap(dc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, *Node
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	// Get rid of bad edges
+	// Get rid of bad (duplicate) edges
 	i := 0
 	for i < len(fullEdges) {
 		fe := fullEdges[i]
@@ -42,10 +41,10 @@ func TrapezoidalMap(dc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, *Node
 		i++
 	}
 	// Scramble the edges
-	for i := range fullEdges {
-		j := i + rand.Intn(len(fullEdges)-i)
-		fullEdges[i], fullEdges[j] = fullEdges[j], fullEdges[i]
-	}
+	// for i := range fullEdges {
+	// 	j := i + rand.Intn(len(fullEdges)-i)
+	// 	fullEdges[i], fullEdges[j] = fullEdges[j], fullEdges[i]
+	// }
 	if visualize.VisualCh != nil {
 		visualize.HighlightColor = color.RGBA{0, 255, 0, 255}
 	}

@@ -49,7 +49,7 @@ var (
 	dragX             float64 = -1
 	dragY             float64 = -1
 	dragging                  = -1
-	offFile                   = filepath.Join("data", "test.off")
+	offFile                   = filepath.Join("data", "test2.off")
 	mode                      = ROTATE
 	loopDemo          bool
 	mouseZ            = 0.0

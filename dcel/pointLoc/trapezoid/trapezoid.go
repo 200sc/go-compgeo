@@ -5,6 +5,7 @@ package trapezoid
 
 import (
 	"fmt"
+	"image/color"
 
 	"bitbucket.org/oakmoundstudio/oak/physics"
 	"github.com/200sc/go-compgeo/dcel"
@@ -44,6 +45,10 @@ type Trapezoid struct {
 	Neighbors   [4]*Trapezoid
 	node        *Node
 	faces       [2]*dcel.Face
+}
+
+func (tr *Trapezoid) GetNeighbors() (*Trapezoid, *Trapezoid, *Trapezoid, *Trapezoid) {
+	return tr.Neighbors[0], tr.Neighbors[1], tr.Neighbors[2], tr.Neighbors[3]
 }
 
 // DCELEdges evaluates and returns the edges of
@@ -182,7 +187,7 @@ func newTrapezoid(sp geom.Span) *Trapezoid {
 	t.bot[right] = min.Y()
 	t.left = min.X()
 	t.right = max.X()
-	t.Neighbors = [4]*Trapezoid{}
+	t.Neighbors = [4]*Trapezoid{nil, nil, nil, nil}
 	return t
 }
 
@@ -201,4 +206,259 @@ func (tr *Trapezoid) visualize() {
 	}
 	visualize.HighlightColor = visualize.AddFaceColor
 	visualize.DrawPoly(tr.toPhysics())
+}
+
+func (tr *Trapezoid) visualizeNeighbors() {
+	if tr == nil {
+		return
+	}
+	visualize.HighlightColor = color.RGBA{128, 0, 128, 128}
+	for _, n := range tr.Neighbors {
+		if n == nil {
+			continue
+		}
+		visualize.DrawPoly(n.toPhysics())
+	}
+}
+
+// Replace neighbors runs replace neighbor for all directions
+// off of a trapezoid
+func (tr *Trapezoid) replaceNeighbors(rep, new *Trapezoid) {
+	if tr == nil {
+		return
+	}
+	for i := range tr.Neighbors {
+		tr.replaceNeighbor(i, rep, new)
+	}
+}
+
+// Replace neighbor checks that the input is not nil,
+// and if it is not, if it's neighbor in the given direction is the
+// expected trapezoid to replace, replaces it with the given new trapezoid.
+func (tr *Trapezoid) replaceNeighbor(dir int, rep, new *Trapezoid) {
+	if tr == nil {
+		return
+	}
+	if tr.Neighbors[dir] == rep {
+		tr.Neighbors[dir] = new
+	}
+}
+
+// Assign the neighbors of the trapezoid tr's upleft and upright
+// neighbors (if they exist) dependant on tr being replaced by
+// the two trapezoids u and b split at y value lpy.
+//
+//  ~ ~ ~ ~ ~ ~
+//    ul |  u
+//  ~ ~ ~ -lpy-----
+//    bl |  b
+//  ~ ~ ~ ~ ~ ~
+func (tr *Trapezoid) replaceLeftPointers(u, b *Trapezoid, lpy float64) {
+	replaceLeftPointers(tr, tr.Neighbors[upleft], tr.Neighbors[botleft], u, b, lpy)
+}
+
+// Given the trapezoid tr, being replaced by u and b where
+// u is above b and lpy is the point at which u and be connect
+// on tr's left edge, assign all pointers from ul and bl where ul
+// is above bl that previously pointed to tr to the appropriate
+// trapezoid of u and b.
+func replaceLeftPointers(tr, ul, bl, u, b *Trapezoid, lpy float64) {
+	if ul != nil && geom.F64eq(ul.top[right], lpy) {
+		// U does not border the left edge
+		//
+		// ~ ~ ~ lpy \
+		//   ul   \   \ u
+		// ~ ~ ~ ~ \ b \
+		//   bl     \   \
+		// ~ ~ ~ ~ ~ ~ ~
+		ul.replaceNeighbors(tr, b)
+		bl.replaceNeighbors(tr, b)
+		b.Neighbors[upleft] = ul
+		b.Neighbors[botleft] = bl
+		u.Lefts(b)
+	} else if bl != nil && geom.F64eq(bl.bot[right], lpy) {
+		// D does not border the left edge
+		//
+		// ~ ~ ~ ~ ~ ~ ~ ~
+		//   ul     /   /
+		// ~ ~ ~ ~ / u /
+		//   bl   /   / b
+		// ~ ~ lpy  / ~ ~
+		//
+		ul.replaceNeighbors(tr, u)
+		bl.replaceNeighbors(tr, u)
+		u.Neighbors[botleft] = bl
+		u.Neighbors[upleft] = ul
+		b.Lefts(u)
+	} else if ul != nil && ul.bot[right] < lpy {
+		// UL expands past FE
+		//
+		// ~ ~ ~ ~ ~ ~ ~ ~ ~
+		//   ul    |   u
+		//        lpy ~ ~ ~
+		// ~ ~ ~ ~ |   b
+		//   bl    |
+		// ~ ~ ~ ~ ~ ~ ~ ~ ~
+		//
+		bl.replaceNeighbors(tr, b)
+		ul.replaceNeighbor(upright, tr, u)
+		ul.replaceNeighbor(botright, tr, b)
+		u.Lefts(ul)
+		b.Neighbors[upleft] = ul
+		b.Neighbors[botleft] = bl
+	} else if bl != nil && bl.top[right] > lpy {
+		// BL expands past FE
+		//
+		// ~ ~ ~ ~ ~ ~ ~ ~ ~
+		//   ul    |   u
+		// ~ ~ ~ ~ |
+		//         lpy ~ ~ ~
+		//   bl    |   b
+		// ~ ~ ~ ~ ~ ~ ~ ~ ~
+		//
+		ul.replaceNeighbors(tr, u)
+		bl.replaceNeighbor(upright, tr, u)
+		bl.replaceNeighbor(botright, tr, b)
+		b.Lefts(bl)
+		u.Neighbors[upleft] = ul
+		u.Neighbors[botleft] = bl
+	}
+}
+
+//  ~ ~ ~ ~ ~ ~
+//    u |  ur
+//  --rpy ~ ~ ~
+//    b |  br
+//  ~ ~ ~ ~ ~ ~
+func (tr *Trapezoid) replaceRightPointers(u, b *Trapezoid, rpy float64) {
+	replaceRightPointers(tr, tr.Neighbors[upright], tr.Neighbors[botright], u, b, rpy)
+}
+
+func replaceRightPointers(tr, ur, br, u, b *Trapezoid, rpy float64) {
+	if ur != nil && geom.F64eq(ur.top[left], rpy) {
+		// U does not border the right edge
+		//
+		//  ~ ~ rpy ~ ~ ~
+		//   u /   /   ur
+		//    / b / ~ ~ ~
+		//   /   /  br
+		//  ~ ~ ~ ~ ~ ~
+		//
+		ur.replaceNeighbors(tr, b)
+		br.replaceNeighbors(tr, b)
+		u.Rights(b)
+		b.Neighbors[upright] = ur
+		b.Neighbors[botright] = br
+	} else if br != nil && geom.F64eq(br.bot[left], rpy) {
+		// B does not border the right edge
+		//
+		//  ~ ~ rpy ~ ~ ~
+		//  \   \    ur
+		//   \ u \ ~ ~ ~
+		//  b \   \ br
+		//  ~ ~ rpy ~ ~ ~
+		//
+		ur.replaceNeighbors(tr, u)
+		br.replaceNeighbors(tr, u)
+		b.Rights(u)
+		u.Neighbors[upright] = ur
+		u.Neighbors[botright] = br
+	} else if ur != nil && ur.bot[left] < rpy {
+		// UR expands past FE
+		//
+		// ~ ~ ~ ~ ~ ~ ~ ~ ~
+		//   u     |   ur
+		// ~ ~ ~ ~rpy
+		//         | ~ ~ ~ ~
+		//   b     |   br
+		// ~ ~ ~ ~ ~ ~ ~ ~ ~
+		//
+		br.replaceNeighbors(tr, b)
+		ur.replaceNeighbor(upleft, tr, u)
+		ur.replaceNeighbor(botleft, tr, b)
+		u.Rights(ur)
+		b.Neighbors[upright] = ur
+		b.Neighbors[botright] = br
+	} else if br != nil && br.top[left] > rpy {
+		// BR expands past FE
+		//
+		// ~ ~ ~ ~ ~ ~ ~ ~ ~
+		//   u     |   ur
+		//         | ~ ~ ~ ~
+		// ~ ~ ~ ~rpy   br
+		//   b     |
+		// ~ ~ ~ ~ ~ ~ ~ ~ ~
+		//
+		ur.replaceNeighbors(tr, u)
+		br.replaceNeighbor(upleft, tr, u)
+		br.replaceNeighbor(botleft, tr, b)
+		b.Rights(br)
+		u.Neighbors[upright] = ur
+		u.Neighbors[botright] = br
+	}
+}
+
+func (tr *Trapezoid) twoRights(u, b *Trapezoid, lpy float64) {
+	tr.Neighbors[upright] = u
+	tr.Neighbors[botright] = b
+	if geom.F64eq(tr.top[right], lpy) {
+		tr.Neighbors[upright] = b
+	} else if geom.F64eq(tr.bot[right], lpy) {
+		tr.Neighbors[botright] = u
+	}
+	u.Lefts(tr)
+	b.Lefts(tr)
+}
+
+func (tr *Trapezoid) twoLefts(u, b *Trapezoid, rpy float64) {
+	tr.Neighbors[upleft] = u
+	tr.Neighbors[botleft] = b
+	if geom.F64eq(tr.top[left], rpy) {
+		tr.Neighbors[upleft] = b
+	} else if geom.F64eq(tr.bot[left], rpy) {
+		tr.Neighbors[botleft] = u
+	}
+	u.Rights(tr)
+	b.Rights(tr)
+}
+
+func splitExactly(u, d *Trapezoid, fe geom.FullEdge) {
+	u.exactly(top, fe)
+	d.exactly(bot, fe)
+}
+
+func (tr *Trapezoid) exactly(d int, fe geom.FullEdge) {
+	lp := fe.Left()
+	rp := fe.Right()
+	tr.left = lp.X()
+	tr.right = rp.X()
+	if d == bot {
+		tr.top[left] = lp.Y()
+		tr.top[right] = rp.Y()
+	} else if d == top {
+		tr.bot[left] = lp.Y()
+		tr.bot[right] = rp.Y()
+	}
+}
+
+func annotatedVisualize(strs []string, trs []*Trapezoid) {
+	for i, s := range strs {
+		fmt.Println("Visualizing " + s)
+		trs[i].visualize()
+		trs[i].visualizeNeighbors()
+		fmt.Print(s + " visualized.")
+	}
+	fmt.Println("")
+}
+
+func (tr *Trapezoid) setBotleft(fe geom.FullEdge) {
+	edge, _ := fe.SubEdge(0, tr.left, tr.right)
+	tr.bot[left] = edge.Left().Y()
+	tr.bot[right] = edge.Right().Y()
+}
+
+func (tr *Trapezoid) setTopleft(fe geom.FullEdge) {
+	edge, _ := fe.SubEdge(0, tr.left, tr.right)
+	tr.top[left] = edge.Left().Y()
+	tr.top[right] = edge.Right().Y()
 }
