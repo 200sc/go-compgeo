@@ -97,104 +97,105 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 		// and the previous upper trapezoid, u, are
 		// colinear, that is a mergable case.
 
-		p1 := u.TopEdge().Left()
-		p2 := tr.TopEdge().Right()
-		if geom.IsColinear(p1, u.TopEdge().Right(), p2) {
-			fmt.Println("Merge U")
-			u.top[right] = p2.Y()
-			u.right = tr.right // temporary, will be replaced by later loops
-			u.setBotleft(fe)
+		// p1 := u.TopEdge().Left()
+		// p2 := tr.TopEdge().Right()
+		// if geom.IsColinear(p1, u.TopEdge().Right(), p2) {
+		// 	fmt.Println("Merge U", u)
+		// 	u.top[right] = p2.Y()
+		// 	u.right = tr.right // temporary, will be replaced by later loops
+		// 	u.setBotleft(fe)
+		// 	fmt.Println("Merged:", u)
+		// } else {
+		fmt.Println("Non merge U")
+		u2 := tr.Copy()
+		//
+		u.Neighbors[botright] = u2
+		u2.Neighbors[botleft] = u
+		// There are three reasons we might not be
+		// able to merge.
+		//
+		// A: this trapezoid's upper edge
+		// shares a vertex with the previous trapezoid, but
+		// is at a different angle.
+		u2tl := u2.TopEdge().Left()
+		utr := u.TopEdge().Right()
+		if u2tl.X() == utr.X() && u2tl.Y() == utr.Y() {
+			fmt.Println("U2tl and utr equal")
+			// In this case, u2's top left and bot left are both u.
+			// u's bot right and bot left are similarly both u2.
+			u.Neighbors[upright] = u2
+			u2.Neighbors[upleft] = u
+			// The top edges of u and u2 do not need to be updated.
+			// The top edge of u2 is still accurate from the copy.
+			// the search structure is updated later.
+			//
+			// tr's left neighbors('s neighbors) do not need to be updated,
+			// because both left neighbors were consumed by u.
+		} else if u2tl.Y() > utr.Y() {
+			fmt.Println("U2tl above utr")
+			// B: this trapezoid's left endpoint is above
+			// the left endpoint of the previous trapezoid.
+			u.Neighbors[upright] = u2
+			u2.Neighbors[upleft].replaceNeighbors(tr, u2)
 		} else {
-			fmt.Println("Non merge U")
-			u2 := tr.Copy()
-			//
-			u.Neighbors[botright] = u2
-			u2.Neighbors[botleft] = u
-			// There are three reasons we might not be
-			// able to merge.
-			//
-			// A: this trapezoid's upper edge
-			// shares a vertex with the previous trapezoid, but
-			// is at a different angle.
-			u2tl := u2.TopEdge().Left()
-			utr := u.TopEdge().Right()
-			if u2tl.X() == utr.X() && u2tl.Y() == utr.Y() {
-				fmt.Println("U2tl and utr equal")
-				// In this case, u2's top left and bot left are both u.
-				// u's bot right and bot left are similarly both u2.
-				u.Neighbors[upright] = u2
-				u2.Neighbors[upleft] = u
-				// The top edges of u and u2 do not need to be updated.
-				// The top edge of u2 is still accurate from the copy.
-				// the search structure is updated later.
-				//
-				// tr's left neighbors('s neighbors) do not need to be updated,
-				// because both left neighbors were consumed by u.
-			} else if u2tl.Y() > utr.Y() {
-				fmt.Println("U2tl above utr")
-				// B: this trapezoid's left endpoint is above
-				// the left endpoint of the previous trapezoid.
-				u.Neighbors[upright] = u2
-				u2.Neighbors[upleft].replaceNeighbors(tr, u2)
-			} else {
-				fmt.Println("U2tl below utr")
-				// C: this trapezoid's left endpoint is below
-				// the left endpoint of the previous trapezoid.
-				u2.Neighbors[upleft] = u
-				// U's upright neighbor better point to u instead
-				// of the former trapezoid by now.
-				u.Neighbors[upright].replaceNeighbors(trs[i-1], u)
-			}
-			u.right = u2.left
-			// the bottom edge is now this shard of fe.
-			// if this trapezoid is merged with another,
-			// this may change.
-			u2.setBotleft(fe)
-
-			// y points to a new trapezoid node holding u2
-			un = NewTrapNode(u2)
-			annotatedVisualize([]string{"U"}, []*Trapezoid{u})
-			u = u2
+			fmt.Println("U2tl below utr")
+			// C: this trapezoid's left endpoint is below
+			// the left endpoint of the previous trapezoid.
+			u2.Neighbors[upleft] = u
+			// U's upright neighbor better point to u instead
+			// of the former trapezoid by now.
+			u.Neighbors[upright].replaceNeighbors(trs[i-1], u)
 		}
+		u.right = u2.left
+		// the bottom edge is now this shard of fe.
+		// if this trapezoid is merged with another,
+		// this may change.
+		u2.setBotleft(fe)
 
-		p1 = b.BotEdge().Left()
-		p2 = tr.BotEdge().Right()
+		// y points to a new trapezoid node holding u2
+		un = NewTrapNode(u2)
+		annotatedVisualize([]string{"U"}, []*Trapezoid{u})
+		u = u2
+		// }
+
+		// p1 = b.BotEdge().Left()
+		// p2 = tr.BotEdge().Right()
 		// Behavior is similar for the lower trapezoid
-		if geom.IsColinear(p1, b.BotEdge().Right(), p2) {
-			fmt.Println("Merge B", b)
-			b.bot[right] = p2.Y()
-			b.right = tr.right
-			b.setTopleft(fe)
-			fmt.Println("Merged:", b)
+		// if geom.IsColinear(p1, b.BotEdge().Right(), p2) {
+		// 	fmt.Println("Merge B", b)
+		// 	b.bot[right] = p2.Y()
+		// 	b.right = tr.right
+		// 	b.setTopleft(fe)
+		// 	fmt.Println("Merged:", b)
+		// } else {
+		fmt.Println("Did not merge B")
+		b2 := tr.Copy()
+		b.Neighbors[upright] = b2
+		b2.Neighbors[upleft] = b
+
+		b2bl := b2.BotEdge().Left()
+		bbr := b.BotEdge().Right()
+		if b2bl.X() == bbr.X() && b2bl.Y() == bbr.Y() {
+			fmt.Println("Equal b2bl and bbr")
+			b.Neighbors[botright] = b2
+			b2.Neighbors[botleft] = b
+		} else if b2bl.Y() < bbr.Y() {
+			fmt.Println("b2bl below bbr")
+			b.Neighbors[botright] = b2
+			b2.Neighbors[botleft].replaceNeighbors(tr, b2)
 		} else {
-			fmt.Println("Did not merge B")
-			b2 := tr.Copy()
-			b.Neighbors[upright] = b2
-			b2.Neighbors[upleft] = b
-
-			b2bl := b2.BotEdge().Left()
-			bbr := b.BotEdge().Right()
-			if b2bl.X() == bbr.X() && b2bl.Y() == bbr.Y() {
-				fmt.Println("Equal b2bl and bbr")
-				b.Neighbors[botright] = b2
-				b2.Neighbors[botleft] = b
-			} else if b2bl.Y() < bbr.Y() {
-				fmt.Println("b2bl below bbr")
-				b.Neighbors[botright] = b2
-				b2.Neighbors[botleft].replaceNeighbors(tr, b2)
-			} else {
-				fmt.Println("b2bl above bbr")
-				b2.Neighbors[botleft] = b
-				b.Neighbors[botright].replaceNeighbors(trs[i-1], b)
-			}
-			b.right = b2.left
-
-			b2.setTopleft(fe)
-
-			bn = NewTrapNode(b2)
-			annotatedVisualize([]string{"B"}, []*Trapezoid{b})
-			b = b2
+			fmt.Println("b2bl above bbr")
+			b2.Neighbors[botleft] = b
+			b.Neighbors[botright].replaceNeighbors(trs[i-1], b)
 		}
+		b.right = b2.left
+
+		b2.setTopleft(fe)
+
+		bn = NewTrapNode(b2)
+		annotatedVisualize([]string{"B"}, []*Trapezoid{b})
+		b = b2
+		// }
 		u.faces = faces
 		b.faces = faces
 		tr.node.discard(y)
