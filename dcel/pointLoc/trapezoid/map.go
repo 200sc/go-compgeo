@@ -1,7 +1,7 @@
 package trapezoid
 
 import (
-	"image/color"
+	"math/rand"
 
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/dcel/pointLoc/visualize"
@@ -41,18 +41,13 @@ func TrapezoidalMap(dc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, *Node
 		i++
 	}
 	// Scramble the edges
-	// for i := range fullEdges {
-	// 	j := i + rand.Intn(len(fullEdges)-i)
-	// 	fullEdges[i], fullEdges[j] = fullEdges[j], fullEdges[i]
-	// }
-	if visualize.VisualCh != nil {
-		visualize.HighlightColor = color.RGBA{0, 255, 0, 255}
+	for i := range fullEdges {
+		j := i + rand.Intn(len(fullEdges)-i)
+		fullEdges[i], fullEdges[j] = fullEdges[j], fullEdges[i]
 	}
 	for k, fe := range fullEdges {
-		if visualize.VisualCh != nil {
-			visualize.HighlightColor = color.RGBA{0, 255, 0, 255}
-			visualize.DrawLine(fe.Left(), fe.Right())
-		}
+		visualize.HighlightColor = visualize.AddColor
+		visualize.DrawLine(fe.Left(), fe.Right())
 		// 1: Find the trapezoids intersected by fe
 		trs := tree.Query(fe)
 		// 2: Remove those and replace them with what they become
@@ -63,10 +58,8 @@ func TrapezoidalMap(dc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, *Node
 			continue
 		}
 		if len(trs) == 1 {
-			if visualize.VisualCh != nil {
-				visualize.HighlightColor = color.RGBA{0, 0, 128, 128}
-				visualize.DrawPoly(trs[0].toPhysics())
-			}
+			visualize.HighlightColor = visualize.CheckFaceColor
+			visualize.DrawPoly(trs[0].toPhysics())
 			mapSingleCase(trs[0], fe, faces[k])
 		} else {
 			mapMultipleCase(trs, fe, faces[k])

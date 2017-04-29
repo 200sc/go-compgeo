@@ -445,7 +445,7 @@ func annotatedVisualize(strs []string, trs []*Trapezoid) {
 	for i, s := range strs {
 		fmt.Println("Visualizing " + s)
 		trs[i].visualize()
-		trs[i].visualizeNeighbors()
+		//trs[i].visualizeNeighbors()
 		fmt.Print(s + " visualized.")
 	}
 	fmt.Println("")

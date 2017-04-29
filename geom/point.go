@@ -150,5 +150,8 @@ func Greater2D(p1, p2 D2) D2 {
 		return p2
 	}
 	return p1
+}
 
+func Distance2D(p1, p2 D2) float64 {
+	return math.Sqrt(math.Pow(p1.X()-p2.X(), 2) + math.Pow(p1.Y()-p2.Y(), 2))
 }

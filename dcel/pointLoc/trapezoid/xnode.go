@@ -21,7 +21,10 @@ func xQuery(fe geom.FullEdge, n *Node) []*Trapezoid {
 		visualize.HighlightColor = color.RGBA{128, 128, 128, 128}
 		visualize.DrawVerticalLine(p)
 	}
-	if fe.Left().X() < p.X() {
+	if geom.F64eq(fe.Left().X(), p.X()) {
+		// If equal, go right.
+		return n.right.Query(fe)
+	} else if fe.Left().X() < p.X() {
 		return n.left.Query(fe)
 	}
 	return n.right.Query(fe)

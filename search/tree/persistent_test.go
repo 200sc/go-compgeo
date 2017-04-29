@@ -1,4 +1,4 @@
-package fullCopy
+package tree
 
 import (
 	"testing"
@@ -58,6 +58,46 @@ func TestPBSTDefinedInput1(t *testing.T) {
 			for _, v := range ls2 {
 				found, _ := t2.Search(v.key)
 				assert.False(t, found)
+			}
+		}
+	}
+}
+
+func BenchmarkPBSTDefinedInput1(b *testing.B) {
+	for q := 0; q < b.N; q++ {
+		tr := New(RedBlack).ToPersistent()
+		for i, ls := range instantInputs1 {
+			tr.SetInstant(float64(i))
+			for _, v := range ls {
+				tr.Insert(v)
+			}
+		}
+		for i := range instantInputs1 {
+			t2 := tr.AtInstant(float64(i))
+			for j, ls2 := range instantInputs1 {
+				if j > i {
+					break
+				}
+				for _, v := range ls2 {
+					t2.Search(v.key)
+				}
+			}
+		}
+		for i, ls := range instantInputs1 {
+			tr.SetInstant(float64(len(instantInputs1) + i))
+			for _, v := range ls {
+				tr.Delete(v)
+			}
+		}
+		for i := range instantInputs1 {
+			t2 := tr.AtInstant(float64(len(instantInputs1) + i))
+			for j, ls2 := range instantInputs1 {
+				if j > i {
+					break
+				}
+				for _, v := range ls2 {
+					t2.Search(v.key)
+				}
 			}
 		}
 	}
