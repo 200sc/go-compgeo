@@ -1,6 +1,11 @@
 package dcel
 
-import "github.com/200sc/go-compgeo/geom"
+import (
+	"fmt"
+	"math/rand"
+
+	"github.com/200sc/go-compgeo/geom"
+)
 
 // Result:
 //
@@ -115,6 +120,87 @@ func FourPoint(p1, p2, p3, p4 geom.D3) *DCEL {
 
 	// Correcting for faces[0] = the infinite exterior
 	dc.Faces[0], dc.Faces[1] = dc.Faces[1], dc.Faces[0]
+
+	return dc
+}
+
+func Random2DDCEL(size float64, splits int) *DCEL {
+	// Generate a bounding box as a DCEL with one face
+	dc := FourPoint(
+		geom.NewPoint(0, 0, 0),
+		geom.NewPoint(0, size, 0),
+		geom.NewPoint(size, size, 0),
+		geom.NewPoint(size, 0, 0))
+
+	for i := 0; i < splits; i++ {
+		// choose a random face of the dcel
+		fi := rand.Intn(len(dc.Faces)-1) + 1
+		f := dc.Faces[fi]
+		fmt.Println("Face", fi, f)
+		// choose two random edges of that face
+		edges := f.Outer.AllEdges()
+		r1 := rand.Intn(len(edges))
+		r2 := rand.Intn(len(edges))
+		if r2 == r1 {
+			r2 = (r2 + 1) % len(edges)
+		}
+		e1 := edges[r1]
+		e2 := edges[r2]
+		// On each edge choose a random point
+		v1 := PointToVertex(e1.PointAlong(0, rand.Float64()))
+		v2 := PointToVertex(e2.PointAlong(0, rand.Float64()))
+		// Add new vertices to dc at p1 and p2,
+		dc.Vertices = append(dc.Vertices, v1, v2)
+		// Split e1 and e2 and their twins at v1 and v2
+		//
+		//  e1       e3
+		// ------/------/
+		//       p
+		// \------\------
+		//  t1       t3
+		//
+		t1 := e1.Twin
+		e3 := e1.Copy()
+		t3 := t1.Copy()
+
+		e3.SetPrev(e1)
+		t1.SetPrev(t3)
+		e3.SetTwin(t3)
+		t1.Origin = v1
+		e3.Origin = v1
+		v1.OutEdge = e3
+		//
+		t2 := e2.Twin
+		e4 := e2.Copy()
+		t4 := t2.Copy()
+
+		e4.SetPrev(e2)
+		t2.SetPrev(t4)
+		e4.SetTwin(t4)
+		t2.Origin = v2
+		e4.Origin = v2
+		v2.OutEdge = e4
+
+		dc.HalfEdges = append(dc.HalfEdges, e3, t3, e4, t4)
+
+		// Connect v1 and v2
+
+		dc.ConnectVerts(v1, v2, f)
+
+		// Walk any edge in the split and set the walked edges' face
+		// to a new face (not handled by connectVerts)
+
+		f2 := NewFace()
+
+		dc.Faces = append(dc.Faces, f2)
+
+		e4.Face = f2
+		fmt.Println("Walking", e4)
+		for e5 := e4.Next; e5 != e4; e5 = e5.Next {
+			e5.Face = f2
+		}
+	}
+	fmt.Println("Random dcel end")
 
 	return dc
 }

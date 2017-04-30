@@ -7,7 +7,6 @@ import (
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/dcel/pointLoc/rtree"
 	"github.com/200sc/go-compgeo/dcel/pointLoc/slab"
-	"github.com/200sc/go-compgeo/dcel/pointLoc/voronoi"
 	"github.com/200sc/go-compgeo/geom"
 	"github.com/stretchr/testify/assert"
 )
@@ -23,20 +22,8 @@ func randomPt() geom.D3 {
 		rand.Float64()*inputRange, 0)
 }
 
-func randomDCEL() *dcel.DCEL {
-	// generate n random points
-	pts := make([]geom.D2, inputSize)
-	for i := 0; i < inputSize; i++ {
-		pts[i] = randomPt()
-	}
-	// from those points generate a set of non-overlapping faces
-	// ^ ^ ^ the hard bit
-	// we'll use a voronoi diagram, see fortune.go
-	return voronoi.Fortune(pts)
-}
-
 func TestRandomDCEL(t *testing.T) {
-	dc := randomDCEL()
+	dc := dcel.Random2DDCEL(inputRange, inputSize)
 
 	// We assume an rtree will be correct, and test against it.
 

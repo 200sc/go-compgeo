@@ -352,3 +352,32 @@ func (e *Edge) FindSharedPoint(e2 *Edge, d int) (float64, error) {
 	}
 	return r2/2 + eLow.Val(d), nil
 }
+
+// PointAlong returns the point some percent along
+// e, increasing on dimension d. If percent <= 0, returns e.Low(d).
+// if percent >= 1, returns e.High(d).
+func (e *Edge) PointAlong(d int, pcnt float64) geom.D3 {
+	p1 := e.Low(d).(geom.D3)
+	p2 := e.High(d).(geom.D3)
+	if pcnt <= 0 {
+		return p1
+	}
+	if pcnt >= 1 {
+		return p2
+	}
+	return geom.NewPoint(
+		p1.X()+(p2.X()-p1.X())*pcnt,
+		p1.Y()+(p2.Y()-p1.Y())*pcnt,
+		p1.Z()+(p2.Z()-p1.Z())*pcnt)
+}
+
+// Copy returns a copy of edge e
+func (e *Edge) Copy() *Edge {
+	e2 := new(Edge)
+	e2.Origin = e.Origin
+	e2.Face = e.Face
+	e2.Prev = e.Prev
+	e2.Next = e.Next
+	e2.Twin = e.Twin
+	return e2
+}

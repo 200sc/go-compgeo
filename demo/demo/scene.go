@@ -70,6 +70,7 @@ var (
 	btnColor          = color.RGBA{50, 50, 140, 255}
 	createdColor      = color.RGBA{50, 140, 50, 255}
 	visSlider         *Slider
+	randomize         bool
 )
 
 // InitScene is called whenever the scene 'demo' starts.
@@ -87,7 +88,10 @@ func InitScene(prevScene string, data interface{}) {
 	loopDemo = true
 	//phd := render.NewCuboid(100, 100, 100, 100, 100, 100)
 	var dc *dcel.DCEL
-	if offFile == "none" {
+	if randomize {
+		dc = dcel.Random2DDCEL(100, 20)
+		randomize = false
+	} else if offFile == "none" {
 		dc = dcel.New()
 	} else {
 		dc, err = off.Load(offFile)
@@ -212,6 +216,12 @@ func AddCommands() {
 				offFile = strs[1]
 				loopDemo = false
 			}
+		}
+	})
+	oak.AddCommand("random", func(strs []string) {
+		if mode != LOCATING {
+			loopDemo = false
+			randomize = true
 		}
 	})
 	oak.AddCommand("reset", func(strs []string) {
