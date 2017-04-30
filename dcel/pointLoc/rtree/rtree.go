@@ -3,19 +3,20 @@ package rtree
 import (
 	"fmt"
 
+	compgeo "github.com/200sc/go-compgeo"
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/geom"
 	"github.com/sythe2o0/rtreego"
 )
 
-func DCELtoRtree(dc *dcel.DCEL) *rtreego.Rtree {
+func DCELtoRtree(dc *dcel.DCEL) *Rtree {
 	tree := rtreego.NewTree(20, 40)
 
-	for _, f := range dc.Faces {
-		tree.Insert(&SpatialFace{f})
+	for i := 1; i < len(dc.Faces); i++ {
+		tree.Insert(&SpatialFace{dc.Faces[i]})
 	}
 
-	return tree
+	return &Rtree{tree}
 }
 
 type SpatialFace struct {
@@ -25,13 +26,38 @@ type SpatialFace struct {
 func (sf *SpatialFace) Bounds() *rtreego.Rect {
 	span := sf.Face.Bounds()
 	min := span.Left()
-	max := span.Right()
+	diff := span.Diff()
 	p := rtreego.Point{min.X(), min.Y(), min.Z()}
-	rect, err := rtreego.NewRect(p, [3]float64{max.X(), max.Y(), max.Z()})
+	dist := [3]float64{diff.X(), diff.Y(), diff.Z()}
+	for i, v := range dist {
+		if v <= 0 {
+			dist[i] = 0.1
+		}
+	}
+	rect, err := rtreego.NewRect(p, dist)
 	if err != nil {
 		fmt.Println("bounds error:", err)
 	}
 	return &rect
+}
+
+type Rtree struct {
+	*rtreego.Rtree
+}
+
+func (rt *Rtree) PointLocate(vs ...float64) (*dcel.Face, error) {
+	if len(vs) < 2 {
+		return nil, compgeo.InsufficientDimensionsError{}
+	}
+	pt := geom.NewPoint(vs[0], vs[1], 0)
+	if len(vs) > 2 {
+		pt = pt.Set(2, vs[2]).(geom.Point)
+	}
+	fs := SearchIntersect(rt.Rtree, pt)
+	if len(fs) > 0 {
+		return fs[0], nil
+	}
+	return nil, nil
 }
 
 // SearchIntersect filters the output of rtree.SearchIntersect
