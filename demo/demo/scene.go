@@ -5,7 +5,6 @@ package demo
 import (
 	"fmt"
 	"image/color"
-	"math"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -29,11 +28,6 @@ const (
 	scaleSpeed    = .02
 	rotSpeed      = .01
 	vCollisionDim = 8
-	defScale      = 20
-	defRotZ       = math.Pi
-	defRotY       = math.Pi
-	defShiftX     = 200
-	defShiftY     = 200
 )
 
 // Point Location Mode Const
@@ -69,6 +63,9 @@ var (
 	mouseModeBtn      *Button
 	locating          bool
 
+	defShiftX = 200.0
+	defShiftY = 200.0
+
 	btnColor     = color.RGBA{50, 50, 140, 255}
 	createdColor = color.RGBA{50, 140, 50, 255}
 
@@ -96,6 +93,7 @@ func InitScene(prevScene string, data interface{}) {
 	var dc *dcel.DCEL
 	if randomize {
 		dc = dcel.Random2DDCEL(100, randomSplits)
+		randomize = false
 	} else if offFile == "none" {
 		dc = dcel.New()
 	} else {
@@ -109,13 +107,13 @@ func InitScene(prevScene string, data interface{}) {
 	pointLocationMode = SLAB_DECOMPOSITION
 	phd = new(InteractivePolyhedron)
 	phd.Polyhedron = NewPolyhedronFromDCEL(dc, defShiftX, defShiftY)
-	if !randomize {
-		phd.Polyhedron.Scale(defScale)
-		phd.Polyhedron.RotZ(defRotZ)
-		phd.Polyhedron.RotY(defRotY)
-	} else {
-		randomize = false
+	// Scale till 300 wide
+	width := phd.Max(0)
+	if width <= 300 {
+		phd.Polyhedron.Scale(300 / width)
 	}
+	phd.ShiftX(50 - phd.X)
+	phd.ShiftY(50 - phd.Y)
 	phd.Init()
 	render.Draw(phd, 0)
 
