@@ -1,8 +1,6 @@
 package trapezoid
 
 import (
-	"fmt"
-
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/geom"
 )
@@ -40,7 +38,6 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 	// with no neighbors defined
 
 	if !geom.F64eq(lp.X(), trs[0].left) {
-		fmt.Println("L exists")
 		// The three trapezoids are split into
 		// one to the left of an x node
 		// and two below the previous y node
@@ -64,10 +61,7 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 
 		l.twoRights(u, b, lp.Y())
 
-		annotatedVisualize([]string{"L"}, []*Trapezoid{l})
-
 	} else {
-		fmt.Println("No L")
 		// Otherwise we just split trs[0] into two trapezoids.
 		trs[0].node.discard(y)
 		trs[0].replaceLeftPointers(u, b, lp.Y())
@@ -103,7 +97,6 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 		// 	u.setBotleft(fe)
 		// 	fmt.Println("Merged:", u)
 		// } else {
-		fmt.Println("Non merge U")
 		u2 := tr.Copy()
 		//
 		u.Neighbors[botright] = u2
@@ -117,7 +110,6 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 		u2tl := u2.TopEdge().Left()
 		utr := u.TopEdge().Right()
 		if u2tl.X() == utr.X() && u2tl.Y() == utr.Y() {
-			fmt.Println("U2tl and utr equal")
 			// In this case, u2's top left and bot left are both u.
 			// u's bot right and bot left are similarly both u2.
 			u.Neighbors[upright] = u2
@@ -129,13 +121,11 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 			// tr's left neighbors('s neighbors) do not need to be updated,
 			// because both left neighbors were consumed by u.
 		} else if u2tl.Y() > utr.Y() {
-			fmt.Println("U2tl above utr")
 			// B: this trapezoid's left endpoint is above
 			// the left endpoint of the previous trapezoid.
 			u.Neighbors[upright] = u2
 			u2.Neighbors[upleft].replaceNeighbors(tr, u2)
 		} else {
-			fmt.Println("U2tl below utr")
 			// C: this trapezoid's left endpoint is below
 			// the left endpoint of the previous trapezoid.
 			u2.Neighbors[upleft] = u
@@ -151,7 +141,6 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 
 		// y points to a new trapezoid node holding u2
 		un = NewTrapNode(u2)
-		annotatedVisualize([]string{"U"}, []*Trapezoid{u})
 		u = u2
 		// }
 
@@ -165,7 +154,6 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 		// 	b.setTopleft(fe)
 		// 	fmt.Println("Merged:", b)
 		// } else {
-		fmt.Println("Did not merge B")
 		b2 := tr.Copy()
 		b.Neighbors[upright] = b2
 		b2.Neighbors[upleft] = b
@@ -173,15 +161,12 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 		b2bl := b2.BotEdge().Left()
 		bbr := b.BotEdge().Right()
 		if b2bl.X() == bbr.X() && b2bl.Y() == bbr.Y() {
-			fmt.Println("Equal b2bl and bbr")
 			b.Neighbors[botright] = b2
 			b2.Neighbors[botleft] = b
 		} else if b2bl.Y() < bbr.Y() {
-			fmt.Println("b2bl below bbr")
 			b.Neighbors[botright] = b2
 			b2.Neighbors[botleft].replaceNeighbors(tr, b2)
 		} else {
-			fmt.Println("b2bl above bbr")
 			b2.Neighbors[botleft] = b
 			b.Neighbors[botright].replaceNeighbors(trs[i-1], b)
 		}
@@ -190,7 +175,6 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 		b2.setTopleft(fe)
 
 		bn = NewTrapNode(b2)
-		annotatedVisualize([]string{"B"}, []*Trapezoid{b})
 		b = b2
 		// }
 		u.faces = faces
@@ -211,7 +195,6 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 	trn := trs[len(trs)-1]
 
 	if !geom.F64eq(rp.X(), trn.right) {
-		fmt.Println("RP Not On Right Edge, TRN")
 		r = trn.Copy()
 
 		NewTopLeft, _ := r.TopEdge().PointAt(0, rp.X())
@@ -234,10 +217,6 @@ func mapMultipleCase(trs []*Trapezoid, fe geom.FullEdge, faces [2]*dcel.Face) {
 		x.set(right, NewTrapNode(r))
 
 	} else {
-		fmt.Println("RP On Right edge, TRN")
 		trn.replaceRightPointers(u, b, rp.Y())
 	}
-
-	fmt.Println("B", b)
-	annotatedVisualize([]string{"U", "B", "R"}, []*Trapezoid{u, b, r})
 }
