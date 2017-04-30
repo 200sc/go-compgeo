@@ -184,6 +184,7 @@ func Random2DDCEL(size float64, splits int) *DCEL {
 		e3.SetTwin(t3)
 		t3.Prev.SetNext(t3)
 		e3.Next.SetPrev(e3)
+		t3.Origin.OutEdge = t3
 		t1.Origin = v1
 		e3.Origin = v1
 		v1.OutEdge = e3
@@ -197,6 +198,7 @@ func Random2DDCEL(size float64, splits int) *DCEL {
 		e4.SetTwin(t4)
 		t4.Prev.SetNext(t4)
 		e4.Next.SetPrev(e4)
+		t4.Origin.OutEdge = t4
 		t2.Origin = v2
 		e4.Origin = v2
 		v2.OutEdge = e4
