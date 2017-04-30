@@ -68,9 +68,11 @@ var (
 	modeBtn           *Button
 	mouseModeBtn      *Button
 	locating          bool
-	btnColor          = color.RGBA{50, 50, 140, 255}
-	createdColor      = color.RGBA{50, 140, 50, 255}
-	visSlider         *Slider
+
+	btnColor     = color.RGBA{50, 50, 140, 255}
+	createdColor = color.RGBA{50, 140, 50, 255}
+
+	visSlider *Slider
 
 	randomize           = true
 	randomSplits        = 1
@@ -90,7 +92,7 @@ func InitScene(prevScene string, data interface{}) {
 	}
 	ticker = NewDynamicTicker()
 	loopDemo = true
-	//phd := render.NewCuboid(100, 100, 100, 100, 100, 100)
+	locator = nil
 	var dc *dcel.DCEL
 	if randomize {
 		dc = dcel.Random2DDCEL(100, randomSplits)
