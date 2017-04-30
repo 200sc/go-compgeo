@@ -4,7 +4,6 @@
 package dcel
 
 import (
-	"fmt"
 	"math"
 	"sort"
 	"strconv"
@@ -187,13 +186,11 @@ func (dc *DCEL) CorrectDirectionality(f *Face) {
 	clock, err := f.Outer.IsClockwise()
 	if err == nil && clock {
 		f.Outer.Flip()
-	} else {
-		fmt.Println(err, clock)
 	}
+	//fmt.Println(err, clock)
 	clock, err = f.Inner.IsClockwise()
 	if err == nil && !clock {
 		f.Inner.Flip()
-
 	}
 }
 

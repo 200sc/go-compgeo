@@ -1,7 +1,6 @@
 package dcel
 
 import (
-	"fmt"
 	"math/rand"
 
 	"github.com/200sc/go-compgeo/geom"
@@ -135,19 +134,19 @@ func Random2DDCEL(size float64, splits int) *DCEL {
 		geom.NewPoint(size, size, 0),
 		geom.NewPoint(size, 0, 0))
 
-	fmt.Println(dc)
+	// fmt.Println(dc)
 
 	for i := 0; i < splits; i++ {
 		// choose a random face of the dcel
 		fi := rand.Intn(len(dc.Faces)-1) + 1
 		f := dc.Faces[fi]
-		fmt.Println("Face", fi, f)
+		// fmt.Println("Face", fi, f)
 		// choose two random edges of that face
 		edges := f.Outer.EdgeChain()
-		fmt.Println("Edges in order of face:")
+		// fmt.Println("Edges in order of face:")
 		e := edges[0]
 		for {
-			fmt.Println(e)
+			//fmt.Println(e)
 			e = e.Next
 			if e == edges[0] {
 				break
@@ -160,8 +159,8 @@ func Random2DDCEL(size float64, splits int) *DCEL {
 		}
 		e1 := edges[r1]
 		e2 := edges[r2]
-		fmt.Println("Edges chosen")
-		fmt.Println("e1,e2", e1, e2)
+		// fmt.Println("Edges chosen")
+		// fmt.Println("e1,e2", e1, e2)
 		// On each edge choose a random point
 		v1 := PointToVertex(e1.PointAlong(0, rand.Float64()))
 		v2 := PointToVertex(e2.PointAlong(0, rand.Float64()))
@@ -203,11 +202,11 @@ func Random2DDCEL(size float64, splits int) *DCEL {
 		e4.Origin = v2
 		v2.OutEdge = e4
 
-		fmt.Println("New Edges:")
-		fmt.Println("e1, t1", e1, t1)
-		fmt.Println("e2, t2", e2, t2)
-		fmt.Println("e3, t3", e3, t3)
-		fmt.Println("e4, t4", e4, t4)
+		// fmt.Println("New Edges:")
+		// fmt.Println("e1, t1", e1, t1)
+		// fmt.Println("e2, t2", e2, t2)
+		// fmt.Println("e3, t3", e3, t3)
+		// fmt.Println("e4, t4", e4, t4)
 
 		dc.HalfEdges = append(dc.HalfEdges, e3, t3, e4, t4)
 
@@ -229,7 +228,7 @@ func Random2DDCEL(size float64, splits int) *DCEL {
 		// \------\------
 		//  t1       t3
 
-		fmt.Println("Connecting", v1, v2)
+		//fmt.Println("Connecting", v1, v2)
 
 		e5 := NewEdge()
 		e5.Origin = v1
@@ -252,7 +251,7 @@ func Random2DDCEL(size float64, splits int) *DCEL {
 		dc.Faces = append(dc.Faces, f2)
 
 		e6.Face = f2
-		fmt.Println("Walking", e6)
+		//fmt.Println("Walking", e6)
 		for e7 := e6.Next; e7 != e6; e7 = e7.Next {
 			//fmt.Println("Current Edge", e7)
 			e7.Face = f2
@@ -260,8 +259,8 @@ func Random2DDCEL(size float64, splits int) *DCEL {
 		f2.Outer = e6
 		f.Outer = e5
 	}
-	fmt.Println("Random dcel end")
-	fmt.Println(dc)
+	//fmt.Println("Random dcel end")
+	//fmt.Println(dc)
 
 	return dc
 }
