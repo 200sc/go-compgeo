@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	inputSize   = 3
+	inputSize   = 30
 	inputRange  = 10000.0
 	testCt      = 10000
 	slabErrors  = 0

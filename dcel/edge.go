@@ -355,11 +355,33 @@ func (e *Edge) FindSharedPoint(e2 *Edge, d int) (float64, error) {
 		eLow.Val(d) > e2High.Val(d) {
 		return 0, compgeo.BadEdgeError{}
 	}
+	if eHigh.Val(d) > e2High.Val(d) &&
+		eLow.Val(d) < e2Low.Val(d) {
+		// E completely contains e2 in this dimension
+		mid, err := e2.Mid2D()
+		if err != nil {
+			return 0, err
+		}
+		return mid.Val(d), nil
+	}
+	if eHigh.Val(d) < e2High.Val(d) &&
+		eLow.Val(d) > e2Low.Val(d) {
+		// E2 completely contains e in this dimension
+		mid, err := e.Mid2D()
+		if err != nil {
+			return 0, err
+		}
+		return mid.Val(d), nil
+	}
 	r1 := eHigh.Val(d) - e2Low.Val(d)
 	r2 := e2High.Val(d) - eLow.Val(d)
+	// fmt.Println("Found shared point!")
+	// fmt.Println(e, e2)
 	if r1 < r2 {
+		//fmt.Println(r1/2 + e2Low.Val(d))
 		return r1/2 + e2Low.Val(d), nil
 	}
+	//fmt.Println(r2/2 + eLow.Val(d))
 	return r2/2 + eLow.Val(d), nil
 }
 

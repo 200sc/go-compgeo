@@ -41,10 +41,8 @@ type compEdge struct {
 func (ce compEdge) Compare(i interface{}) search.CompareResult {
 	switch c := i.(type) {
 	case compEdge:
-		if visualize.VisualCh != nil {
-			visualize.DrawLine(ce.Edge.Origin, ce.Edge.Twin.Origin)
-			visualize.DrawLine(c.Edge.Origin, c.Edge.Twin.Origin)
-		}
+		visualize.DrawLine(ce.Edge.Origin, ce.Edge.Twin.Origin)
+		visualize.DrawLine(c.Edge.Origin, c.Edge.Twin.Origin)
 		if ce.Edge == c.Edge {
 			return search.Equal
 		}
@@ -57,11 +55,21 @@ func (ce compEdge) Compare(i interface{}) search.CompareResult {
 		if err != nil {
 			fmt.Println("Edges share no point on x axis")
 		}
-		p1, _ := ce.PointAt(0, compX)
-		p2, _ := c.PointAt(0, compX)
+		p1, err := ce.PointAt(0, compX)
+		if err != nil {
+			fmt.Println(ce, " Did not have a value at ", compX)
+		}
+		p2, err := c.PointAt(0, compX)
+		if err != nil {
+			fmt.Println(c, " Did not have a value at ", compX)
+		}
 		if p1[1] < p2[1] {
 			return search.Less
 		}
+		if p1[1] > p2[1] {
+			return search.Greater
+		}
+		fmt.Println("Something went wrong")
 		return search.Greater
 	}
 	return ce.Edge.Compare(i)
