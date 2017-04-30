@@ -8,6 +8,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"golang.org/x/sync/syncmap"
@@ -70,7 +71,10 @@ var (
 	btnColor          = color.RGBA{50, 50, 140, 255}
 	createdColor      = color.RGBA{50, 140, 50, 255}
 	visSlider         *Slider
-	randomize         = true
+
+	randomize           = true
+	randomSplits        = 1
+	defaultRandomSplits = 5
 )
 
 // InitScene is called whenever the scene 'demo' starts.
@@ -89,7 +93,7 @@ func InitScene(prevScene string, data interface{}) {
 	//phd := render.NewCuboid(100, 100, 100, 100, 100, 100)
 	var dc *dcel.DCEL
 	if randomize {
-		dc = dcel.Random2DDCEL(100, 1)
+		dc = dcel.Random2DDCEL(100, randomSplits)
 	} else if offFile == "none" {
 		dc = dcel.New()
 	} else {
@@ -225,6 +229,15 @@ func AddCommands() {
 		if mode != LOCATING {
 			loopDemo = false
 			randomize = true
+			if len(strs) > 1 {
+				randomSplits, err = strconv.Atoi(strs[1])
+				if err != nil {
+					randomSplits = defaultRandomSplits
+					fmt.Println(err)
+				}
+			} else {
+				randomSplits = defaultRandomSplits
+			}
 		}
 	})
 	oak.AddCommand("reset", func(strs []string) {
