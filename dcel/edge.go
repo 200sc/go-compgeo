@@ -328,6 +328,16 @@ func (e *Edge) AllEdges() []*Edge {
 	return edges
 }
 
+// EdgeChain returns the edges of e as a chain
+// until e.Next = e again.
+func (e *Edge) EdgeChain() []*Edge {
+	out := []*Edge{e}
+	for e2 := e.Next; e2 != e; e2 = e2.Next {
+		out = append(out, e2)
+	}
+	return out
+}
+
 // FindSharedPoint returns some value, if one exists,
 // in dimension d, that has a defined point on both
 // e and e2.

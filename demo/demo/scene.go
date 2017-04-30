@@ -70,7 +70,7 @@ var (
 	btnColor          = color.RGBA{50, 50, 140, 255}
 	createdColor      = color.RGBA{50, 140, 50, 255}
 	visSlider         *Slider
-	randomize         bool
+	randomize         = true
 )
 
 // InitScene is called whenever the scene 'demo' starts.
@@ -89,8 +89,7 @@ func InitScene(prevScene string, data interface{}) {
 	//phd := render.NewCuboid(100, 100, 100, 100, 100, 100)
 	var dc *dcel.DCEL
 	if randomize {
-		dc = dcel.Random2DDCEL(100, 20)
-		randomize = false
+		dc = dcel.Random2DDCEL(100, 15)
 	} else if offFile == "none" {
 		dc = dcel.New()
 	} else {
@@ -104,11 +103,15 @@ func InitScene(prevScene string, data interface{}) {
 	pointLocationMode = SLAB_DECOMPOSITION
 	phd = new(InteractivePolyhedron)
 	phd.Polyhedron = NewPolyhedronFromDCEL(dc, defShiftX, defShiftY)
-	phd.Polyhedron.Scale(defScale)
-	phd.Polyhedron.RotZ(defRotZ)
-	phd.Polyhedron.RotY(defRotY)
+	if !randomize {
+		phd.Polyhedron.Scale(defScale)
+		phd.Polyhedron.RotZ(defRotZ)
+		phd.Polyhedron.RotY(defRotY)
+	} else {
+		randomize = false
+	}
 	phd.Init()
-	render.Draw(phd, 2)
+	render.Draw(phd, 0)
 
 	fg := render.FontGenerator{File: "luxisr.ttf", Color: render.FontColor("white"), Size: 12}
 	font = fg.Generate()

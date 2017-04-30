@@ -121,6 +121,9 @@ func FourPoint(p1, p2, p3, p4 geom.D3) *DCEL {
 	// Correcting for faces[0] = the infinite exterior
 	dc.Faces[0], dc.Faces[1] = dc.Faces[1], dc.Faces[0]
 
+	dc.CorrectDirectionality(dc.Faces[0])
+	dc.CorrectDirectionality(dc.Faces[1])
+
 	return dc
 }
 
@@ -132,13 +135,24 @@ func Random2DDCEL(size float64, splits int) *DCEL {
 		geom.NewPoint(size, size, 0),
 		geom.NewPoint(size, 0, 0))
 
+	fmt.Println(dc)
+
 	for i := 0; i < splits; i++ {
 		// choose a random face of the dcel
 		fi := rand.Intn(len(dc.Faces)-1) + 1
 		f := dc.Faces[fi]
 		fmt.Println("Face", fi, f)
 		// choose two random edges of that face
-		edges := f.Outer.AllEdges()
+		edges := f.Outer.EdgeChain()
+		fmt.Println("Edges in order of face:")
+		e := edges[0]
+		for {
+			fmt.Println(e)
+			e = e.Next
+			if e == edges[0] {
+				break
+			}
+		}
 		r1 := rand.Intn(len(edges))
 		r2 := rand.Intn(len(edges))
 		if r2 == r1 {
@@ -146,6 +160,8 @@ func Random2DDCEL(size float64, splits int) *DCEL {
 		}
 		e1 := edges[r1]
 		e2 := edges[r2]
+		fmt.Println("Edges chosen")
+		fmt.Println("e1,e2", e1, e2)
 		// On each edge choose a random point
 		v1 := PointToVertex(e1.PointAlong(0, rand.Float64()))
 		v2 := PointToVertex(e2.PointAlong(0, rand.Float64()))
@@ -155,7 +171,7 @@ func Random2DDCEL(size float64, splits int) *DCEL {
 		//
 		//  e1       e3
 		// ------/------/
-		//       p
+		//       v1
 		// \------\------
 		//  t1       t3
 		//
@@ -166,6 +182,8 @@ func Random2DDCEL(size float64, splits int) *DCEL {
 		e3.SetPrev(e1)
 		t1.SetPrev(t3)
 		e3.SetTwin(t3)
+		t3.Prev.SetNext(t3)
+		e3.Next.SetPrev(e3)
 		t1.Origin = v1
 		e3.Origin = v1
 		v1.OutEdge = e3
@@ -177,30 +195,71 @@ func Random2DDCEL(size float64, splits int) *DCEL {
 		e4.SetPrev(e2)
 		t2.SetPrev(t4)
 		e4.SetTwin(t4)
+		t4.Prev.SetNext(t4)
+		e4.Next.SetPrev(e4)
 		t2.Origin = v2
 		e4.Origin = v2
 		v2.OutEdge = e4
 
+		fmt.Println("New Edges:")
+		fmt.Println("e1, t1", e1, t1)
+		fmt.Println("e2, t2", e2, t2)
+		fmt.Println("e3, t3", e3, t3)
+		fmt.Println("e4, t4", e4, t4)
+
 		dc.HalfEdges = append(dc.HalfEdges, e3, t3, e4, t4)
 
 		// Connect v1 and v2
+		//
+		//
+		//  t4       t2
+		// ------/------/
+		//      v2
+		// \------\------
+		//  e4   ||   e2
+		//      /||
+		//       ||e6
+		//     e5||
+		//       ||/
+		//  e1   ||   e3
+		// ------/------/
+		//      v1
+		// \------\------
+		//  t1       t3
 
-		dc.ConnectVerts(v1, v2, f)
+		fmt.Println("Connecting", v1, v2)
 
-		// Walk any edge in the split and set the walked edges' face
-		// to a new face (not handled by connectVerts)
+		e5 := NewEdge()
+		e5.Origin = v1
+
+		e6 := NewEdge()
+		e6.Origin = v2
+
+		e5.SetTwin(e6)
+
+		e1.SetNext(e5)
+		e5.SetNext(e4)
+		e2.SetNext(e6)
+		e6.SetNext(e3)
+
+		e5.Face = f
+
+		dc.HalfEdges = append(dc.HalfEdges, e5, e6)
 
 		f2 := NewFace()
-
 		dc.Faces = append(dc.Faces, f2)
 
-		e4.Face = f2
-		fmt.Println("Walking", e4)
-		for e5 := e4.Next; e5 != e4; e5 = e5.Next {
-			e5.Face = f2
+		e6.Face = f2
+		fmt.Println("Walking", e6)
+		for e7 := e6.Next; e7 != e6; e7 = e7.Next {
+			//fmt.Println("Current Edge", e7)
+			e7.Face = f2
 		}
+		f2.Outer = e6
+		f.Outer = e5
 	}
 	fmt.Println("Random dcel end")
+	fmt.Println(dc)
 
 	return dc
 }

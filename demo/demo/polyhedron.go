@@ -33,7 +33,7 @@ var (
 	edgeColor   = color.RGBA{0, 0, 255, 255}
 	faceColor   = color.RGBA{0, 150, 150, 255}
 	ptColor     = color.RGBA{255, 255, 255, 255}
-	zCorrection = .1
+	zCorrection = 1.0
 )
 
 // NewPolyhedronFromDCEL creates a polyhedron from a dcel

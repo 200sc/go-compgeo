@@ -303,6 +303,8 @@ func (dc *DCEL) VerticesSorted(ds ...int) []int {
 // The job of creating new faces is delayed because if a series of
 // ConnectVerts is called on the same face, calling code won't be
 // able to easily tell which face the sequential diagonals land in.
+//
+// This function doesn't cover enough cases to work.
 func (dc *DCEL) ConnectVerts(a, b *Vertex, f *Face) {
 	// If a and b's outEdges and twins do not
 	// share a face, this connection would
@@ -342,26 +344,38 @@ func (dc *DCEL) ConnectVerts(a, b *Vertex, f *Face) {
 	// The way this algorithm solves this is by taking the
 	// face being split in as a hint.
 
+	//   e1   e1.prev
+	//  ----A-----
+	//      |
+	//  new2|new1
+	//      |
+	//  ----B-----
+	// e2.prev  e2
+	//
+	// Problem: what if e1.prev is not on the right?
+	// what about
+	//
+	// e1.prev  e1
+	//  ----A-----
+	//      |
+	//  new2|new1
+	//      |
+	//  ----B-----
+	// e2.prev  e2
+
 	new1 := NewEdge()
-	new1.Origin = b
+	new1.Origin = a
 
 	new2 := NewEdge()
-	new2.Origin = a
+	new2.Origin = b
 
-	new1.Twin = new2
-	new2.Twin = new1
+	new1.SetTwin(new2)
 
-	e1.Prev.Next = new1
-	e1.Prev = new2
+	e1.Prev.SetNext(new1)
+	e1.SetPrev(new2)
 
-	e2.Prev.Next = new2
-	e2.Prev = new1
-
-	new2.Prev = e2.Prev
-	new2.Next = e1
-
-	new1.Prev = e1.Prev
-	new1.Next = e2
+	e2.Prev.SetNext(new2)
+	e2.SetPrev(new1)
 
 	new1.Face = e1.Face
 	new2.Face = e1.Face
