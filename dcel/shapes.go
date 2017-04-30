@@ -126,6 +126,10 @@ func FourPoint(p1, p2, p3, p4 geom.D3) *DCEL {
 	return dc
 }
 
+func goodrandf64() float64 {
+	return (rand.Float64() * (8 / 10)) + .1
+}
+
 func Random2DDCEL(size float64, splits int) *DCEL {
 	// Generate a bounding box as a DCEL with one face
 	dc := FourPoint(
@@ -162,8 +166,10 @@ func Random2DDCEL(size float64, splits int) *DCEL {
 		// fmt.Println("Edges chosen")
 		// fmt.Println("e1,e2", e1, e2)
 		// On each edge choose a random point
-		v1 := PointToVertex(e1.PointAlong(0, rand.Float64()))
-		v2 := PointToVertex(e2.PointAlong(0, rand.Float64()))
+		// We add some correction on this randomness
+		// so that we avoid having extremely small faces
+		v1 := PointToVertex(e1.PointAlong(0, goodrandf64()))
+		v2 := PointToVertex(e2.PointAlong(0, goodrandf64()))
 		// Add new vertices to dc at p1 and p2,
 		dc.Vertices = append(dc.Vertices, v1, v2)
 		// Split e1 and e2 and their twins at v1 and v2
