@@ -120,6 +120,7 @@ func (tr *Trapezoid) Copy() *Trapezoid {
 	tr2.left = tr.left
 	tr2.right = tr.right
 	tr2.Neighbors = tr.Neighbors
+	tr2.faces = tr.faces
 	return tr2
 }
 

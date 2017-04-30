@@ -44,6 +44,7 @@ func TrapezoidalMap(dc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, *Node
 	for i := range fullEdges {
 		j := i + rand.Intn(len(fullEdges)-i)
 		fullEdges[i], fullEdges[j] = fullEdges[j], fullEdges[i]
+		faces[i], faces[j] = faces[j], faces[i]
 	}
 	for k, fe := range fullEdges {
 		visualize.HighlightColor = visualize.AddColor

@@ -1,6 +1,8 @@
 package trapezoid
 
 import (
+	"fmt"
+
 	compgeo "github.com/200sc/go-compgeo"
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/geom"
@@ -91,16 +93,19 @@ func (tn *Node) PointLocate(vs ...float64) (*dcel.Face, error) {
 	}
 	// A point query on the structure is equivalent to an
 	// edge query where both edges are the same.
-	trs := tn.Query(geom.FullEdge{geom.Point{vs[0], vs[1], 0}, geom.Point{vs[0], vs[1], 0}})
+	pt := geom.Point{vs[0], vs[1], 0}
+	trs := tn.Query(geom.FullEdge{pt, pt})
 	if len(trs) == 0 {
+		fmt.Println("No trapezoids found")
 		return nil, nil
 	}
 	faces := trs[0].faces
 	outerFace := tn.payload.(*dcel.Face)
-	if faces[0] != outerFace && faces[0].Contains(geom.Point{vs[0], vs[1]}) {
+	fmt.Println("Potential faces found", faces)
+	if faces[0] != outerFace && faces[0].Contains(pt) {
 		return faces[0], nil
 	}
-	if faces[1] != outerFace && faces[1].Contains(geom.Point{vs[0], vs[1]}) {
+	if faces[1] != outerFace && faces[1].Contains(pt) {
 		return faces[1], nil
 	}
 	return nil, nil

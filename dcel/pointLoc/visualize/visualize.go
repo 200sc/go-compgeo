@@ -88,13 +88,16 @@ func DrawPoly(ps []physics.Vector) {
 // DrawFace converts a face into a polygon, then
 // draws it as a polygon.
 func DrawFace(f *dcel.Face) {
-	if VisualCh == nil {
+	if VisualCh == nil || f == nil {
 		return
 	}
 	ps := f.Vertices()
 	physVerts := make([]physics.Vector, len(ps))
 	for i, v := range ps {
 		physVerts[i] = physics.NewVector(v.X(), v.Y())
+	}
+	if len(physVerts) < 3 {
+		return
 	}
 	DrawPoly(physVerts)
 }
