@@ -28,6 +28,15 @@ func NewSpan(ds ...Dimensional) Span {
 	return sp.Expand(ds...)
 }
 
+// Diff returns the distance between sp.Min and sp.Max.
+func (sp Span) Diff() D3 {
+	return NewPoint(
+		sp.FullEdge[1][0]-sp.FullEdge[0][0],
+		sp.FullEdge[1][1]-sp.FullEdge[0][1],
+		sp.FullEdge[1][2]-sp.FullEdge[0][2],
+	)
+}
+
 // Low returns SPAN_MIN
 func (sp Span) Low(i int) Dimensional {
 	return sp.At(SPAN_MIN)
