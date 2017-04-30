@@ -89,7 +89,7 @@ func InitScene(prevScene string, data interface{}) {
 	//phd := render.NewCuboid(100, 100, 100, 100, 100, 100)
 	var dc *dcel.DCEL
 	if randomize {
-		dc = dcel.Random2DDCEL(100, 15)
+		dc = dcel.Random2DDCEL(100, 1)
 	} else if offFile == "none" {
 		dc = dcel.New()
 	} else {
@@ -243,6 +243,16 @@ func AddCommands() {
 	})
 	oak.AddCommand("print", func(strs []string) {
 		fmt.Println(phd.DCEL.String())
+	})
+	oak.AddCommand("save", func(strs []string) {
+		if len(strs) < 2 {
+			fmt.Println("usage: c save <filepath>")
+			return
+		}
+		err := off.Save(&phd.DCEL).WriteFile(strs[1])
+		if err != nil {
+			fmt.Println("Error in write: ", err)
+		}
 	})
 }
 
