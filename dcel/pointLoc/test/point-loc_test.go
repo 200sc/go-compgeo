@@ -87,8 +87,8 @@ func printErrors() {
 	fmt.Println("Total errors")
 	fmt.Println("Slab:", slabErrors)
 	fmt.Println("Trapezoid:", trapErrors)
-	fmt.Println("Plumb Line:", plumbErrors, "(Should be zero)")
 	fmt.Println("Rtree:", rtreeErrors)
+	fmt.Println("Plumb Line:", plumbErrors, "(Baseline)")
 	fmt.Println()
 }
 
@@ -212,5 +212,32 @@ func BenchmarkRandomSetupPlumbLine(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		dc := dcel.Random2DDCEL(inputRange, inputSize)
 		bruteForce.PlumbLine(dc)
+	}
+}
+
+func BenchmarkAll(b *testing.B) {
+	//fmt.Println("Setting seed")
+	for i := 0; i < 1000; i += 2 {
+		inputSize = i
+		seed = time.Now().UnixNano()
+		fmt.Println("InputSize:", i)
+		b.Run("SlabSetup", BenchmarkRandomSetupSlab)
+		b.Run("Slab", BenchmarkRandomDCELSlab)
+		b.Run("TrapSetup", BenchmarkRandomSetupTrapezoid)
+		b.Run("Trapezoid", BenchmarkRandomDCELTrapezoid)
+		b.Run("RtreeSetup", BenchmarkRandomSetupRtree)
+		b.Run("Rtree", BenchmarkRandomDCELRtree)
+		b.Run("PlumbLineSetup", BenchmarkRandomSetupPlumbLine)
+		b.Run("PlumbLine", BenchmarkRandomDCELPlumbLine)
+	}
+}
+
+func BenchmarkAdditional(b *testing.B) {
+	for i := 0; i < 1000; i += 2 {
+		inputSize = i
+		seed = time.Now().UnixNano()
+		fmt.Println("InputSize:", i)
+		b.Run("TrapSetup", BenchmarkRandomSetupTrapezoid)
+		b.Run("Rtree", BenchmarkRandomDCELRtree)
 	}
 }

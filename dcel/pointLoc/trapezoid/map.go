@@ -66,6 +66,6 @@ func TrapezoidalMap(dc *dcel.DCEL) (*dcel.DCEL, map[*dcel.Face]*dcel.Face, *Node
 			mapMultipleCase(trs, fe, faces[k])
 		}
 	}
-	dc, m := tree.DCEL()
-	return dc, m, tree, nil
+	//dc, m := tree.DCEL()
+	return nil, nil, tree, nil
 }

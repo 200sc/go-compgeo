@@ -10,7 +10,8 @@ import (
 )
 
 func DCELtoRtree(dc *dcel.DCEL) *Rtree {
-	tree := rtreego.NewTree(20, 40)
+	//tree := rtreego.NewTree(20, 40)
+	tree := rtreego.NewTree(3, 9)
 
 	for i := 1; i < len(dc.Faces); i++ {
 		tree.Insert(&SpatialFace{dc.Faces[i]})
