@@ -1,4 +1,4 @@
-// geom holds geometric primitives and interfaces.
+// package geom holds geometric primitives and interfaces.
 
 package geom
 

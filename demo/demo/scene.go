@@ -1,4 +1,4 @@
-// Demo is a Point Location visualization demo.
+// packge demo is a Point Location visualization demo.
 
 package demo
 
@@ -109,9 +109,7 @@ func InitScene(prevScene string, data interface{}) {
 	phd.Polyhedron = NewPolyhedronFromDCEL(dc, defShiftX, defShiftY)
 	// Scale till 300 wide
 	width := phd.Max(0)
-	if width <= 300 {
-		phd.Polyhedron.Scale(300 / width)
-	}
+	phd.Polyhedron.Scale(300 / width)
 	phd.ShiftX(50 - phd.X)
 	phd.ShiftY(50 - phd.Y)
 	phd.Init()

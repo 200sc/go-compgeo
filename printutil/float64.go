@@ -1,4 +1,4 @@
-// printutil offers some basic printing utilities.
+// package printutil offers some basic printing utilities.
 
 package printutil
 

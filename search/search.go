@@ -1,4 +1,4 @@
-// search contains definitions for searchable data structure types.
+// pakcage search contains definitions for searchable data structure types.
 
 package search
 

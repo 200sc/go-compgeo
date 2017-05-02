@@ -1,4 +1,4 @@
-// static implements a tree which is array based and allows no modifications.
+// package static implements a tree which is array based and allows no modifications.
 
 package static
 

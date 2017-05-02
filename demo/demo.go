@@ -1,4 +1,4 @@
-// demo houses the main file for the point location demo.
+// package demo houses the main file for the point location demo.
 
 package main
 

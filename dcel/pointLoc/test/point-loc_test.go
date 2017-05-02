@@ -3,10 +3,12 @@ package test
 import (
 	"fmt"
 	"math/rand"
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/200sc/go-compgeo/dcel"
+	"github.com/200sc/go-compgeo/dcel/off"
 	"github.com/200sc/go-compgeo/dcel/pointLoc"
 	"github.com/200sc/go-compgeo/dcel/pointLoc/bench/bruteForce"
 	"github.com/200sc/go-compgeo/dcel/pointLoc/bench/slab"
@@ -18,7 +20,7 @@ import (
 )
 
 var (
-	inputSize   = 30
+	inputSize   = 5
 	inputRange  = 10000.0
 	testCt      = 10000
 	slabErrors  = 0
@@ -40,6 +42,8 @@ func testRandomPts(t *testing.T, pl pointLoc.LocatesPoints, limit int, errs *int
 		bruteForceContains := structIntersected.Contains(pt)
 		assert.Nil(t, err)
 		if !assert.True(t, bruteForceContains) {
+			t.Log("Error point:", pt)
+			t.Log("Error face:", structIntersected)
 			(*errs)++
 		}
 	}
@@ -53,6 +57,49 @@ func TestRandomDCELSlab(t *testing.T) {
 
 	testRandomPts(t, structure, testCt, &slabErrors)
 	printErrors()
+}
+
+func TestRandomDCELSlabErrors(t *testing.T) {
+	errCt := 0
+	subTestCt := 50
+	for i := 0; i < testCt; i++ {
+		inputSize = 2
+		dc := dcel.Random2DDCEL(inputRange, inputSize)
+		structure, err := slab.Decompose(dc, tree.RedBlack)
+		if err != nil {
+			errCt++
+			continue
+		}
+		queryErrors := 0
+		testRandomPts(t, structure, subTestCt, &queryErrors)
+		if queryErrors != 0 {
+			off.Save(dc).WriteFile("testFail" + strconv.Itoa(i) + ".off")
+			errCt++
+			continue
+		}
+	}
+	t.Log("Errors in Slab:", errCt, testCt)
+}
+
+func TestRandomDCELTrapErrors(t *testing.T) {
+	errCt := 0
+	subTestCt := 50
+	for i := 0; i < testCt; i++ {
+		inputSize = 3
+		dc := dcel.Random2DDCEL(inputRange, inputSize)
+		_, _, structure, err := trapezoid.TrapezoidalMap(dc)
+		if err != nil {
+			errCt++
+			continue
+		}
+		queryErrors := 0
+		testRandomPts(t, structure, subTestCt, &queryErrors)
+		if queryErrors != 0 {
+			errCt++
+			continue
+		}
+	}
+	t.Log("Errors in Trap:", errCt, testCt)
 }
 
 func TestRandomDCELTrapezoid(t *testing.T) {

@@ -1,4 +1,4 @@
-// tree defines data structures for search tree types
+// package tree defines data structures for search tree types
 
 package tree
 
