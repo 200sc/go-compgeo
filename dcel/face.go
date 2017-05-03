@@ -21,7 +21,7 @@ func NewFace() *Face {
 // Vertices wraps around a face and
 // finds all vertices that border it.
 func (f *Face) Vertices() []*Vertex {
-	// Outer is not populated by anything as of this writing.
+	// Inner is not populated by anything as of this writing.
 
 	pts := []*Vertex{}
 	e := f.Outer

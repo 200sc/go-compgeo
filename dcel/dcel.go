@@ -180,8 +180,8 @@ func (dc *DCEL) FullEdges() ([]geom.FullEdge, [][2]*Face, error) {
 // whether its chain is the inner or outer
 // portion of a face.
 func (dc *DCEL) CorrectDirectionality(f *Face) {
-	// Inners need to be going CC
-	// Outers need to be going Clockwise
+	// Inners need to be going Clockwise
+	// Outers need to be going CC
 
 	clock, err := f.Outer.IsClockwise()
 	if err == nil && clock {
@@ -191,6 +191,21 @@ func (dc *DCEL) CorrectDirectionality(f *Face) {
 	clock, err = f.Inner.IsClockwise()
 	if err == nil && !clock {
 		f.Inner.Flip()
+	}
+}
+
+// This is probably how we actually want to do flipping, always.
+func (dc *DCEL) CorrectDirectionalityAll() {
+
+	for _, f := range dc.Faces {
+		clock, err := f.Outer.IsClockwise()
+		if err == nil && clock {
+			f.Outer = f.Outer.Twin
+		}
+		clock, err = f.Inner.IsClockwise()
+		if err == nil && !clock {
+			f.Inner = f.Inner.Twin
+		}
 	}
 }
 

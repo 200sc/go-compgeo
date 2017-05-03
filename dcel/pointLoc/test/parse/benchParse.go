@@ -10,11 +10,11 @@ import (
 )
 
 func main() {
-	f, err := os.Open("benchOut2.txt")
+	f, err := os.Open("benchOut3.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
-	outF, err := os.Create("benchOut2.csv")
+	outF, err := os.Create("benchOut3.csv")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -27,11 +27,11 @@ func main() {
 			break
 		}
 		actualLine := []byte{}
-			for _, b := range line {
-				if b != 0 {
-					actualLine = append(actualLine, b)
-				}
+		for _, b := range line {
+			if b != 0 {
+				actualLine = append(actualLine, byte(b))
 			}
+		}
 		strs := strings.Fields(line)
 		if strs[0] == "PASS" {
 			break
@@ -39,7 +39,7 @@ func main() {
 		fmt.Println(strs[0])
 		csvStrings := make([]string, 9)
 		csvStrings[0] = strs[1]
-		for i := 0; i < 2; i++ {
+		for i := 0; i < 1; i++ {
 			line, err := bufIn.ReadBytes('\n')
 			if err != nil {
 				log.Fatal(err)

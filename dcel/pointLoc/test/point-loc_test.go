@@ -20,9 +20,9 @@ import (
 )
 
 var (
-	inputSize   = 5
+	inputSize   = 25
 	inputRange  = 10000.0
-	testCt      = 10000
+	testCt      = 500
 	slabErrors  = 0
 	trapErrors  = 0
 	rtreeErrors = 0
@@ -44,6 +44,7 @@ func testRandomPts(t *testing.T, pl pointLoc.LocatesPoints, limit int, errs *int
 		if !assert.True(t, bruteForceContains) {
 			t.Log("Error point:", pt)
 			t.Log("Error face:", structIntersected)
+
 			(*errs)++
 		}
 	}
@@ -59,7 +60,7 @@ func TestRandomDCELSlab(t *testing.T) {
 	printErrors()
 }
 
-func TestRandomDCELSlabErrors(t *testing.T) {
+func TestDCELSlabErrors(t *testing.T) {
 	errCt := 0
 	subTestCt := 50
 	for i := 0; i < testCt; i++ {
@@ -74,6 +75,9 @@ func TestRandomDCELSlabErrors(t *testing.T) {
 		testRandomPts(t, structure, subTestCt, &queryErrors)
 		if queryErrors != 0 {
 			off.Save(dc).WriteFile("testFail" + strconv.Itoa(i) + ".off")
+			t.Log("Error index:", i)
+			s := structure.(*slab.PointLocator)
+			t.Log(s)
 			errCt++
 			continue
 		}
@@ -285,6 +289,5 @@ func BenchmarkAdditional(b *testing.B) {
 		seed = time.Now().UnixNano()
 		fmt.Println("InputSize:", i)
 		b.Run("TrapSetup", BenchmarkRandomSetupTrapezoid)
-		b.Run("Rtree", BenchmarkRandomDCELRtree)
 	}
 }

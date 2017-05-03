@@ -318,6 +318,9 @@ func (e *Edge) Eq(e2 geom.Spanning) bool {
 // which actually calls this instead of the other way
 // around because that involves less code duplciation.
 func (e *Edge) AllEdges() []*Edge {
+	if e == nil {
+		return []*Edge{}
+	}
 	edges := make([]*Edge, 1)
 	edges[0] = e
 	edge := e.Twin.Next
@@ -348,6 +351,12 @@ func (e *Edge) FindSharedPoint(e2 *Edge, d int) (float64, error) {
 	e2Low := e2.Low(d)
 	eHigh := e.High(d)
 	e2High := e2.High(d)
+	// The two edges span the same distance case
+	if geom.F64eq(eLow.Val(d), e2Low.Val(d)) &&
+		geom.F64eq(eHigh.Val(d), e2High.Val(d)) {
+		return ((eHigh.Val(d) - eLow.Val(d)) / 2) + eLow.Val(d), nil
+	}
+
 	// No point exists case:
 	// if e.High is lower than e2.Low
 	// or if e.Low is higher than e2.High

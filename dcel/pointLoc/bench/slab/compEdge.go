@@ -1,6 +1,8 @@
 package slab
 
 import (
+	"fmt"
+
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/geom"
 	"github.com/200sc/go-compgeo/search"
@@ -14,6 +16,18 @@ func (fs faces) Equals(e search.Equalable) bool {
 	switch fs2 := e.(type) {
 	case faces:
 		return fs2.f1 == fs.f1 && fs2.f2 == fs.f2
+	}
+	return false
+}
+
+type face struct {
+	*dcel.Face
+}
+
+func (f face) Equals(e search.Equalable) bool {
+	switch f2 := e.(type) {
+	case face:
+		return f.Face == f2.Face
 	}
 	return false
 }
@@ -46,7 +60,10 @@ func (ce compEdge) Compare(i interface{}) search.CompareResult {
 			geom.F64eq(ce.Twin.X(), c.Twin.X()) && geom.F64eq(ce.Twin.Y(), c.Twin.Y()) {
 			return search.Equal
 		}
-		compX, _ := ce.FindSharedPoint(c.Edge, 0)
+		compX, err := ce.FindSharedPoint(c.Edge, 0)
+		if err != nil {
+			fmt.Println("Edges share no point on x axis", ce, c)
+		}
 		p1, _ := ce.PointAt(0, compX)
 		p2, _ := c.PointAt(0, compX)
 		if p1[1] < p2[1] {

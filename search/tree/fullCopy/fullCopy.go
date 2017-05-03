@@ -5,6 +5,7 @@ import (
 
 	"fmt"
 
+	"github.com/200sc/go-compgeo/geom"
 	"github.com/200sc/go-compgeo/printutil"
 	"github.com/200sc/go-compgeo/search"
 )
@@ -54,7 +55,7 @@ func (pbst *FullPersistentBST) AtInstant(ins float64) search.Dynamic {
 		}
 		mid = (bot + top) / 2
 		v := pbst.instants[mid].instant
-		if v == ins {
+		if geom.F64eq(v, ins) {
 			return pbst.instants[mid]
 		} else if v < ins {
 			bot = mid + 1

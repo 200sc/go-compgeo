@@ -1,7 +1,6 @@
-// Package off describes methods for interacting with OFF files and structures
+// package off describes methods for interacting with OFF files and structures
 // formatted as OFF files. The file loading code is modeled after Ryan Holmes'
 // C++ code, http://www.holmes3d.net/graphics/offfiles/
-
 package off
 
 import "github.com/200sc/go-compgeo/geom"

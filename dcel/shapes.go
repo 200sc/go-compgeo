@@ -120,14 +120,13 @@ func FourPoint(p1, p2, p3, p4 geom.D3) *DCEL {
 	// Correcting for faces[0] = the infinite exterior
 	dc.Faces[0], dc.Faces[1] = dc.Faces[1], dc.Faces[0]
 
-	dc.CorrectDirectionality(dc.Faces[0])
-	dc.CorrectDirectionality(dc.Faces[1])
+	dc.CorrectDirectionalityAll()
 
 	return dc
 }
 
 func goodrandf64() float64 {
-	return (rand.Float64() * (8 / 10)) + .1
+	return (rand.Float64() * (8.0 / 10.0)) + .1
 }
 
 func Random2DDCEL(size float64, splits int) *DCEL {
@@ -267,6 +266,7 @@ func Random2DDCEL(size float64, splits int) *DCEL {
 	}
 	//fmt.Println("Random dcel end")
 	//fmt.Println(dc)
+	dc.CorrectDirectionalityAll()
 
 	return dc
 }

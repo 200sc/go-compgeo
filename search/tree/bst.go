@@ -241,7 +241,6 @@ func (bst *BST) updateRoot(n *node) {
 	}
 	if n != nil {
 		bst.root = n
-		return
 	}
 	if bst.root == nil {
 		return

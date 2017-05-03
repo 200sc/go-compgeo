@@ -3,10 +3,11 @@
 package slab
 
 import (
+	"fmt"
+
 	compgeo "github.com/200sc/go-compgeo"
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/dcel/pointLoc"
-	"github.com/200sc/go-compgeo/dcel/pointLoc/visualize"
 	"github.com/200sc/go-compgeo/geom"
 	"github.com/200sc/go-compgeo/search"
 	"github.com/200sc/go-compgeo/search/tree"
@@ -28,6 +29,37 @@ func Decompose(dc *dcel.DCEL, bstType tree.Type) (pointLoc.LocatesPoints, error)
 	}
 	t := tree.New(bstType).ToPersistent()
 	pts := dc.VerticesSorted(0)
+
+	// For each edge, we need to know which face lies beneath it in its two
+	// faces.
+	faceEdgeMap := make(map[*dcel.Edge]*dcel.Face)
+	for _, f := range dc.Faces {
+		// walk each face
+		e := f.Outer
+		if e != nil {
+			if e.Origin.X() < e.Twin.Origin.X() {
+				faceEdgeMap[e] = f
+			}
+			for e = e.Next; e != f.Outer; e = e.Next {
+				// This edge points right, in an outer face.
+				// Then this face lies beneath e.
+				if e.Origin.X() < e.Twin.Origin.X() {
+					faceEdgeMap[e] = f
+				}
+			}
+		}
+		e = f.Inner
+		if e != nil {
+			if e.Origin.X() > e.Twin.Origin.X() {
+				faceEdgeMap[e] = f
+			}
+			for e = e.Next; e != f.Inner; e = e.Next {
+				if e.Origin.X() > e.Twin.Origin.X() {
+					faceEdgeMap[e] = f
+				}
+			}
+		}
+	}
 
 	i := 0
 	for i < len(pts) {
@@ -63,7 +95,10 @@ func Decompose(dc *dcel.DCEL, bstType tree.Type) (pointLoc.LocatesPoints, error)
 		// Remove all edges from the PersistentBST connecting to the left
 		// of the points
 		for _, e := range le {
-			ct.Delete(shellNode{compEdge{e.Twin}, search.Nil{}})
+			err := ct.Delete(shellNode{compEdge{e.Twin}, search.Nil{}})
+			if err != nil {
+				fmt.Println(err, e.Twin)
+			}
 		}
 		// Add all edges to the PersistentBST connecting to the right
 		// of the point
@@ -74,7 +109,7 @@ func Decompose(dc *dcel.DCEL, bstType tree.Type) (pointLoc.LocatesPoints, error)
 			// locate to the edge above the query point. Returning an
 			// edge for a query represents that the query is below
 			// the edge,
-			ct.Insert(shellNode{compEdge{e}, faces{e.Face, e.Twin.Face}})
+			ct.Insert(shellNode{compEdge{e}, face{faceEdgeMap[e]}})
 		}
 
 		i++
@@ -89,6 +124,10 @@ type PointLocator struct {
 	outerFace *dcel.Face
 }
 
+func (spl *PointLocator) String() string {
+	return fmt.Sprintf("%v", spl.dp)
+}
+
 // PointLocate returns which face within this SlabPointLocator
 // the query point lands, within two dimensions.
 func (spl *PointLocator) PointLocate(vs ...float64) (*dcel.Face, error) {
@@ -98,34 +137,36 @@ func (spl *PointLocator) PointLocate(vs ...float64) (*dcel.Face, error) {
 	tree := spl.dp.AtInstant(vs[0])
 	p := geom.Point{vs[0], vs[1], 0}
 
-	e, f := tree.SearchDown(p, 0)
-	if e == nil {
-		return nil, nil
-	}
-	e2, f2 := tree.SearchUp(p, 0)
-	if geom.VerticalCompare(p, e.(compEdge)) == search.Greater {
-		return nil, nil
-	}
+	// e, f := tree.SearchDown(p, 0)
+	// if e == nil {
+	// 	return nil, nil
+	// }
+	_, f2 := tree.SearchUp(p, 0)
+	// if geom.VerticalCompare(p, e.(compEdge)) == search.Greater {
+	// 	return nil, nil
+	// }
 
-	if geom.VerticalCompare(p, e2.(compEdge)) == search.Less {
-		return nil, nil
-	}
+	// if geom.VerticalCompare(p, e2.(compEdge)) == search.Less {
+	// 	return nil, nil
+	// }
 
 	// We then do PIP on each face, and return
 	// whichever is true, if any.
-	f3 := f.(faces)
-	f4 := f2.(faces)
-	faces := []*dcel.Face{f3.f1, f3.f2, f4.f1, f4.f2}
+	// f3 := f.(faces)
+	// f4 := f2.(faces)
+	// faces := []*dcel.Face{f3.f1, f3.f2, f4.f1, f4.f2}
 
-	for _, f5 := range faces {
-		if f5 != spl.outerFace {
-			visualize.HighlightColor = visualize.CheckFaceColor
-			visualize.DrawFace(f5)
-			if f5.Contains(p) {
-				return f5, nil
-			}
-		}
-	}
+	// for _, f5 := range faces {
+	// 	if f5 != spl.outerFace {
+	// 		visualize.HighlightColor = visualize.CheckFaceColor
+	// 		visualize.DrawFace(f5)
+	// 		if f5.Contains(p) {
+	// 			return f5, nil
+	// 		}
+	// 	}
+	// }
 
-	return nil, nil
+	// return nil, nil
+
+	return f2.(face).Face, nil
 }
