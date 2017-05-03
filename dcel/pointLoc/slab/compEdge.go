@@ -9,14 +9,14 @@ import (
 	"github.com/200sc/go-compgeo/search"
 )
 
-type faces struct {
-	f1, f2 *dcel.Face
+type face struct {
+	*dcel.Face
 }
 
-func (fs faces) Equals(e search.Equalable) bool {
-	switch fs2 := e.(type) {
-	case faces:
-		return fs2.f1 == fs.f1 && fs2.f2 == fs.f2
+func (f face) Equals(e search.Equalable) bool {
+	switch f2 := e.(type) {
+	case face:
+		return f.Face == f2.Face
 	}
 	return false
 }

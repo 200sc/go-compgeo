@@ -137,36 +137,7 @@ func (spl *PointLocator) PointLocate(vs ...float64) (*dcel.Face, error) {
 	tree := spl.dp.AtInstant(vs[0])
 	p := geom.Point{vs[0], vs[1], 0}
 
-	// e, f := tree.SearchDown(p, 0)
-	// if e == nil {
-	// 	return nil, nil
-	// }
 	_, f2 := tree.SearchUp(p, 0)
-	// if geom.VerticalCompare(p, e.(compEdge)) == search.Greater {
-	// 	return nil, nil
-	// }
-
-	// if geom.VerticalCompare(p, e2.(compEdge)) == search.Less {
-	// 	return nil, nil
-	// }
-
-	// We then do PIP on each face, and return
-	// whichever is true, if any.
-	// f3 := f.(faces)
-	// f4 := f2.(faces)
-	// faces := []*dcel.Face{f3.f1, f3.f2, f4.f1, f4.f2}
-
-	// for _, f5 := range faces {
-	// 	if f5 != spl.outerFace {
-	// 		visualize.HighlightColor = visualize.CheckFaceColor
-	// 		visualize.DrawFace(f5)
-	// 		if f5.Contains(p) {
-	// 			return f5, nil
-	// 		}
-	// 	}
-	// }
-
-	// return nil, nil
 
 	return f2.(face).Face, nil
 }
