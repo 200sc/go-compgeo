@@ -7,7 +7,7 @@ import "math"
 const (
 	// Epsilon could probably be smaller than this without
 	// causing problems, but we're being overly cautious.
-	ε = 1.0e-3
+	ε = 1.0e-7
 	// Inf is shorthand for math.MaxFloat64
 	Inf = math.MaxFloat64
 	// NegInf is shorthand for math.MaxFloat64 * -1
