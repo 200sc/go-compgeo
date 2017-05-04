@@ -22,7 +22,7 @@ import (
 var (
 	inputSize   = 25
 	inputRange  = 10000.0
-	testCt      = 500
+	testCt      = 10000
 	slabErrors  = 0
 	trapErrors  = 0
 	rtreeErrors = 0
@@ -62,7 +62,7 @@ func TestRandomDCELSlab(t *testing.T) {
 
 func TestDCELSlabErrors(t *testing.T) {
 	errCt := 0
-	subTestCt := 50
+	subTestCt := 100
 	for i := 0; i < testCt; i++ {
 		inputSize = 2
 		dc := dcel.Random2DDCEL(inputRange, inputSize)
@@ -289,5 +289,15 @@ func BenchmarkAdditional(b *testing.B) {
 		seed = time.Now().UnixNano()
 		fmt.Println("InputSize:", i)
 		b.Run("TrapSetup", BenchmarkRandomSetupTrapezoid)
+	}
+}
+
+func BenchmarkSlab(b *testing.B) {
+	for i := 0; i < 1000; i += 16 {
+		inputSize = i
+		seed = time.Now().UnixNano()
+		fmt.Println("InputSize:", i)
+		b.Run("SlabSetup", BenchmarkRandomSetupSlab)
+		b.Run("Slab", BenchmarkRandomDCELSlab)
 	}
 }

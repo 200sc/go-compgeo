@@ -31,37 +31,6 @@ func Decompose(dc *dcel.DCEL, bstType tree.Type) (pointLoc.LocatesPoints, error)
 	t := tree.New(bstType).ToPersistent()
 	pts := dc.VerticesSorted(0)
 
-	// For each edge, we need to know which face lies beneath it in its two
-	// faces.
-	faceEdgeMap := make(map[*dcel.Edge]*dcel.Face)
-	for _, f := range dc.Faces {
-		// walk each face
-		e := f.Outer
-		if e != nil {
-			if e.Origin.X() < e.Twin.Origin.X() {
-				faceEdgeMap[e] = f
-			}
-			for e = e.Next; e != f.Outer; e = e.Next {
-				// This edge points right, in an outer face.
-				// Then this face lies beneath e.
-				if e.Origin.X() < e.Twin.Origin.X() {
-					faceEdgeMap[e] = f
-				}
-			}
-		}
-		e = f.Inner
-		if e != nil {
-			if e.Origin.X() > e.Twin.Origin.X() {
-				faceEdgeMap[e] = f
-			}
-			for e = e.Next; e != f.Inner; e = e.Next {
-				if e.Origin.X() > e.Twin.Origin.X() {
-					faceEdgeMap[e] = f
-				}
-			}
-		}
-	}
-
 	i := 0
 	for i < len(pts) {
 		p := pts[i]
@@ -117,7 +86,7 @@ func Decompose(dc *dcel.DCEL, bstType tree.Type) (pointLoc.LocatesPoints, error)
 			// edge for a query represents that the query is below
 			// the edge,
 			fmt.Println("Adding", e)
-			ct.Insert(shellNode{compEdge{e}, face{faceEdgeMap[e]}})
+			ct.Insert(shellNode{compEdge{e}, faces{e.Face, e.Twin.Face}})
 			fmt.Println(ct)
 		}
 
@@ -148,10 +117,42 @@ func (spl *PointLocator) PointLocate(vs ...float64) (*dcel.Face, error) {
 	tree := spl.dp.AtInstant(vs[0])
 	fmt.Println("Tree found:")
 	fmt.Println(tree)
-
 	p := geom.Point{vs[0], vs[1], 0}
 
-	_, f2 := tree.SearchUp(p, 0)
+	e, f := tree.SearchDown(p, 0)
+	if e == nil {
+		fmt.Println("Location on empty tree")
+		return nil, nil
+	}
+	e2, f2 := tree.SearchUp(p, 0)
+	fmt.Println("Edges found", e, e2)
+	if geom.VerticalCompare(p, e.(compEdge)) == search.Greater {
+		fmt.Println(p, "is above edge", e)
+		return nil, nil
+	}
 
-	return f2.(face).Face, nil
+	if geom.VerticalCompare(p, e2.(compEdge)) == search.Less {
+		fmt.Println(p, "is below edge", e2)
+		return nil, nil
+	}
+
+	// We then do PIP on each face, and return
+	// whichever is true, if any.
+	f3 := f.(faces)
+	f4 := f2.(faces)
+	faces := []*dcel.Face{f3.f1, f3.f2, f4.f1, f4.f2}
+
+	for _, f5 := range faces {
+		if f5 != spl.outerFace {
+			fmt.Println("Checking if face contains", p)
+			visualize.HighlightColor = visualize.CheckFaceColor
+			visualize.DrawFace(f5)
+			if f5.Contains(p) {
+				fmt.Println("P was contained")
+				return f5, nil
+			}
+		}
+	}
+
+	return nil, nil
 }

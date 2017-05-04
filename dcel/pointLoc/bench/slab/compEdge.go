@@ -1,8 +1,6 @@
 package slab
 
 import (
-	"fmt"
-
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/geom"
 	"github.com/200sc/go-compgeo/search"
@@ -48,10 +46,7 @@ func (ce compEdge) Compare(i interface{}) search.CompareResult {
 			geom.F64eq(ce.Twin.X(), c.Twin.X()) && geom.F64eq(ce.Twin.Y(), c.Twin.Y()) {
 			return search.Equal
 		}
-		compX, err := ce.FindSharedPoint(c.Edge, 0)
-		if err != nil {
-			fmt.Println("Edges share no point on x axis", ce, c)
-		}
+		compX, _ := ce.FindSharedPoint(c.Edge, 0)
 		p1, _ := ce.PointAt(0, compX)
 		p2, _ := c.PointAt(0, compX)
 		if p1[1] < p2[1] {

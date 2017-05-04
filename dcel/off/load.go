@@ -291,7 +291,5 @@ func decode(dc *dcel.DCEL, edges []*dcel.Edge,
 		ei++
 	}
 
-	dc.CorrectDirectionalityAll()
-
 	return dc, nil
 }

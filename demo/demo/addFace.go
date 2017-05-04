@@ -103,7 +103,6 @@ func addFace(cID int, ev interface{}) int {
 					if consumedEdge.Face != phd.Faces[dcel.OUTER_FACE] {
 						consumedEdge = consumedEdge.Twin
 						check = consumedEdge.Prev
-						fmt.Println("Sawp")
 					}
 					consumedEdge.Face = addedFace
 
@@ -115,7 +114,6 @@ func addFace(cID int, ev interface{}) int {
 						// doesn't, because we're defining the points clockwise,
 						// we'll loop forever down the line.
 						consumedEdge.SetPrev(prevEdge)
-						fmt.Println("T case")
 					}
 
 					prevEdge = consumedEdge

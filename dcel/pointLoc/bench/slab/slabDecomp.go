@@ -41,7 +41,7 @@ func Decompose(dc *dcel.DCEL, bstType tree.Type) (pointLoc.LocatesPoints, error)
 				faceEdgeMap[e] = f
 			}
 			for e = e.Next; e != f.Outer; e = e.Next {
-				// This edge points right, in an outer face.
+				// This edge points right,
 				// Then this face lies beneath e.
 				if e.Origin.X() < e.Twin.Origin.X() {
 					faceEdgeMap[e] = f
@@ -50,11 +50,13 @@ func Decompose(dc *dcel.DCEL, bstType tree.Type) (pointLoc.LocatesPoints, error)
 		}
 		e = f.Inner
 		if e != nil {
-			if e.Origin.X() > e.Twin.Origin.X() {
+			if e.Origin.X() < e.Twin.Origin.X() {
 				faceEdgeMap[e] = f
 			}
 			for e = e.Next; e != f.Inner; e = e.Next {
-				if e.Origin.X() > e.Twin.Origin.X() {
+				// This edge points right,
+				// Then this face lies beneath e.
+				if e.Origin.X() < e.Twin.Origin.X() {
 					faceEdgeMap[e] = f
 				}
 			}
@@ -95,10 +97,7 @@ func Decompose(dc *dcel.DCEL, bstType tree.Type) (pointLoc.LocatesPoints, error)
 		// Remove all edges from the PersistentBST connecting to the left
 		// of the points
 		for _, e := range le {
-			err := ct.Delete(shellNode{compEdge{e.Twin}, search.Nil{}})
-			if err != nil {
-				fmt.Println(err, e.Twin)
-			}
+			ct.Delete(shellNode{compEdge{e.Twin}, search.Nil{}})
 		}
 		// Add all edges to the PersistentBST connecting to the right
 		// of the point
