@@ -50,7 +50,7 @@ var (
 	mouseZ            = 0.0
 	faceVertices      = &syncmap.Map{}
 	err               error
-	mouseStr          *render.IFText
+	mouseStr          *render.Text
 	font              *render.Font
 	phd               *InteractivePolyhedron
 	undoPhd           []InteractivePolyhedron
@@ -118,7 +118,7 @@ func InitScene(prevScene string, data interface{}) {
 	fg := render.FontGenerator{File: "luxisr.ttf", Color: render.FontColor("white"), Size: 12}
 	font = fg.Generate()
 
-	mouseStr = font.NewInterfaceText(
+	mouseStr = font.NewText(
 		geom.Point{0, 0, 0}, 3, 465)
 	render.Draw(mouseStr, 3)
 

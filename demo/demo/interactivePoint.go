@@ -47,7 +47,7 @@ func vertexShow(cID int, nothing interface{}) int {
 	ip := event.GetEntity(cID).(*InteractivePoint)
 	if !ip.showing {
 		ip.showing = true
-		txt := font.NewInterfaceText(ip.Point, ip.s.GetX(), ip.s.GetY())
+		txt := font.NewText(ip.Point, ip.s.GetX(), ip.s.GetY())
 		render.Draw(txt, 3)
 		go func() {
 			for {

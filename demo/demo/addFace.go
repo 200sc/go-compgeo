@@ -29,7 +29,7 @@ var (
 
 func addFace(cID int, ev interface{}) int {
 	phd := event.GetEntity(cID).(*InteractivePolyhedron)
-	me := ev.(mouse.MouseEvent)
+	me := ev.(mouse.Event)
 	if me.X < 0 || me.Y < 0 || me.X > 515 {
 		return 0
 	}

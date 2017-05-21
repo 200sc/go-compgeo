@@ -14,7 +14,7 @@ import (
 // overlayed text, collision space, and binds to mouse events.
 type Button struct {
 	entities.Solid
-	Text       *render.IFText
+	Text       *render.Text
 	TxtX, TxtY float64
 	Font       *render.Font
 	CID        event.CID
@@ -78,6 +78,6 @@ func (b *Button) SetText(txt fmt.Stringer) {
 	if b.Text != nil {
 		b.Text.UnDraw()
 	}
-	b.Text = b.Font.NewInterfaceText(txt, b.X+b.TxtX, b.Y-b.TxtY+b.H)
+	b.Text = b.Font.NewText(txt, b.X+b.TxtX, b.Y-b.TxtY+b.H)
 	render.Draw(b.Text, b.Layer+1)
 }

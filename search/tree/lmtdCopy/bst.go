@@ -1,4 +1,4 @@
-// package lmtdCopy
+package lmtdCopy
 
 // import (
 // 	"errors"

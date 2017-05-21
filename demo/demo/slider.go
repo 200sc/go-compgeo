@@ -112,7 +112,7 @@ func sliderDrag(sl int, nothing interface{}) int {
 	if me.Event == "MouseRelease" || me.X < 515 {
 		event.Trigger("Visualize", slider.interval)
 		sliding = false
-		return event.UNBIND_EVENT
+		return event.UnbindEvent
 	}
 	x := float64(me.X) - (slider.X + 5)
 	if x <= slider.min {
