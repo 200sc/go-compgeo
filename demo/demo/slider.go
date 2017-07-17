@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/oakmound/oak/collision"
+	"github.com/oakmound/oak/entities"
 	"github.com/oakmound/oak/event"
 	"github.com/oakmound/oak/mouse"
 	"github.com/oakmound/oak/render"
@@ -40,8 +40,8 @@ type Slider struct {
 // legitimate CID), is stored at the array index of the
 // returned CID.
 func (sl *Slider) Init() event.CID {
-	cID := event.NextID(sl)
-	return cID
+	sl.CID = event.NextID(sl)
+	return sl.CID
 }
 
 // NewSlider returns a slider with initialized values
@@ -49,15 +49,12 @@ func (sl *Slider) Init() event.CID {
 func NewSlider(layer int, f *render.Font) *Slider {
 	sl := new(Slider)
 	sl.Button = new(Button)
+	sl.Solid = entities.NewSolid(0, 0, 1, 1, render.EmptyRenderable(), sl.Init())
 	sl.min = 2
 	sl.Layer = layer
 	sl.max = 101
 	sl.val = 2
 	sl.interval = time.Duration(0)
-	sl.CID = sl.Init()
-	sl.W = 1
-	sl.H = 1
-	sl.Space = collision.NewSpace(0, 0, 1, 1, sl.CID)
 
 	sl.Font = f
 	sl.CID.Bind(sliderDragStart, "MousePressOn")

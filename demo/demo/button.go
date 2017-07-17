@@ -17,7 +17,6 @@ type Button struct {
 	Text       *render.Text
 	TxtX, TxtY float64
 	Font       *render.Font
-	CID        event.CID
 	Layer      int
 }
 
@@ -25,12 +24,7 @@ type Button struct {
 // bound to a given bindable function on being clicked.
 func NewButton(bndb event.Bindable, f *render.Font) *Button {
 	b := new(Button)
-	CID := b.Init()
-	b.CID = CID
-	b.W = 1
-	b.H = 1
-	b.Space = collision.NewSpace(0, 0, 1, 1, CID)
-
+	b.Solid = entities.NewSolid(0, 0, 1, 1, render.EmptyRenderable(), 0)
 	b.CID.Bind(bndb, "MouseReleaseOn")
 	b.Font = f
 

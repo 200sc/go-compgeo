@@ -21,7 +21,7 @@ import (
 // with our drawing scheme.
 // Polyhedrons are not drawn in a very sophisticated manner.
 type Polyhedron struct {
-	render.Sprite
+	*render.Sprite
 	dcel.DCEL
 	FaceColors []color.Color
 	EdgeColors []color.Color
@@ -40,6 +40,8 @@ var (
 // and an initial screen position
 func NewPolyhedronFromDCEL(dc *dcel.DCEL, x, y float64) *Polyhedron {
 	p := new(Polyhedron)
+	p.Sprite = render.NewEmptySprite(x, y, 1, 1)
+	p.Center = physics.NewVector(0, 0)
 	p.SetPos(x, y)
 	p.DCEL = *dc
 	p.Update()
