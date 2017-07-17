@@ -7,15 +7,15 @@ import (
 
 	"golang.org/x/sync/syncmap"
 
-	"bitbucket.org/oakmoundstudio/oak/event"
-	"bitbucket.org/oakmoundstudio/oak/mouse"
-	"bitbucket.org/oakmoundstudio/oak/render"
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/dcel/pointLoc/bruteForce"
 	"github.com/200sc/go-compgeo/dcel/pointLoc/kirkpatrick"
 	"github.com/200sc/go-compgeo/dcel/pointLoc/slab"
 	"github.com/200sc/go-compgeo/dcel/pointLoc/trapezoid"
 	"github.com/200sc/go-compgeo/search/tree"
+	"github.com/oakmound/oak/event"
+	"github.com/oakmound/oak/mouse"
+	"github.com/oakmound/oak/render"
 )
 
 var (
@@ -33,8 +33,8 @@ func addFace(cID int, ev interface{}) int {
 	if me.X < 0 || me.Y < 0 || me.X > 515 {
 		return 0
 	}
-	mx := float64(me.X) - phd.X
-	my := float64(me.Y) - phd.Y
+	mx := float64(me.X) - phd.X()
+	my := float64(me.Y) - phd.Y()
 	if me.Button == "LeftMouse" {
 		// Detect clicks
 		// On first click, declare the first point and edge and face
@@ -248,8 +248,8 @@ func addFace(cID int, ev interface{}) int {
 					}
 					poly := PolygonFromFace(f)
 					poly.Fill(color.RGBA{125, 0, 0, 125})
-					poly.ShiftX(phd.X)
-					poly.ShiftY(phd.Y)
+					poly.ShiftX(phd.X())
+					poly.ShiftY(phd.Y())
 					render.Draw(poly, 10)
 					render.UndrawAfter(poly, 1500*time.Millisecond)
 				}

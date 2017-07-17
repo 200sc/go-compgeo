@@ -2,9 +2,9 @@ package demo
 
 import (
 	"bitbucket.org/oakmoundstudio/oak"
-	"bitbucket.org/oakmoundstudio/oak/event"
-	"bitbucket.org/oakmoundstudio/oak/mouse"
 	"github.com/200sc/go-compgeo/geom"
+	"github.com/oakmound/oak/event"
+	"github.com/oakmound/oak/mouse"
 )
 
 func phdEnter(cID int, nothing interface{}) int {
@@ -43,7 +43,7 @@ func phdEnter(cID int, nothing interface{}) int {
 	nme := mouse.LastMouseEvent
 	mX := float64(nme.X)
 	mY := float64(nme.Y)
-	mouseStr.SetText(geom.Point{mX - phd.X, mY - phd.Y, mouseZ})
+	mouseStr.SetText(geom.Point{mX - phd.X(), mY - phd.Y(), mouseZ})
 	if mX < 0 || mY < 0 || mX > 515 {
 		dragX = -1
 		dragY = -1
@@ -76,12 +76,12 @@ func phdEnter(cID int, nothing interface{}) int {
 		update := false
 		if dragX != -1 {
 			phd.Vertices[dragging].Point =
-				phd.Vertices[dragging].Set(0, float64(dragX)-phd.X).(geom.Point)
+				phd.Vertices[dragging].Set(0, float64(dragX)-phd.X()).(geom.Point)
 			update = true
 		}
 		if dragY != -1 {
 			phd.Vertices[dragging].Point =
-				phd.Vertices[dragging].Set(1, float64(dragY)-phd.Y).(geom.Point)
+				phd.Vertices[dragging].Set(1, float64(dragY)-phd.Y()).(geom.Point)
 			update = true
 		}
 		if oak.IsDown("D") {

@@ -3,11 +3,11 @@ package demo
 import (
 	"fmt"
 
-	"bitbucket.org/oakmoundstudio/oak/collision"
-	"bitbucket.org/oakmoundstudio/oak/entities"
-	"bitbucket.org/oakmoundstudio/oak/event"
-	"bitbucket.org/oakmoundstudio/oak/mouse"
-	"bitbucket.org/oakmoundstudio/oak/render"
+	"github.com/oakmound/oak/collision"
+	"github.com/oakmound/oak/entities"
+	"github.com/oakmound/oak/event"
+	"github.com/oakmound/oak/mouse"
+	"github.com/oakmound/oak/render"
 )
 
 // A Button is a UI element that has transient background,
@@ -56,7 +56,7 @@ func (b *Button) SetPos(x float64, y float64) {
 	}
 
 	if b.Space != nil {
-		mouse.UpdateSpace(b.X, b.Y, b.W, b.H, b.Space)
+		mouse.UpdateSpace(b.X(), b.Y(), b.W, b.H, b.Space)
 	}
 }
 
@@ -78,6 +78,6 @@ func (b *Button) SetText(txt fmt.Stringer) {
 	if b.Text != nil {
 		b.Text.UnDraw()
 	}
-	b.Text = b.Font.NewText(txt, b.X+b.TxtX, b.Y-b.TxtY+b.H)
+	b.Text = b.Font.NewText(txt, b.X()+b.TxtX, b.Y()-b.TxtY+b.H)
 	render.Draw(b.Text, b.Layer+1)
 }

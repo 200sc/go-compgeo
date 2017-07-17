@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"time"
 
-	"bitbucket.org/oakmoundstudio/oak/collision"
-	"bitbucket.org/oakmoundstudio/oak/event"
-	"bitbucket.org/oakmoundstudio/oak/mouse"
-	"bitbucket.org/oakmoundstudio/oak/render"
+	"github.com/oakmound/oak/collision"
+	"github.com/oakmound/oak/event"
+	"github.com/oakmound/oak/mouse"
+	"github.com/oakmound/oak/render"
 )
 
 // Slider is a little UI element with a movable slider
@@ -88,7 +88,7 @@ func (sl *Slider) SetPos(x float64, y float64) {
 	}
 
 	if sl.Space != nil {
-		mouse.UpdateSpace(sl.X, sl.Y, sl.W, sl.H, sl.Space)
+		mouse.UpdateSpace(sl.X(), sl.Y(), sl.W, sl.H, sl.Space)
 	}
 }
 
@@ -114,7 +114,7 @@ func sliderDrag(sl int, nothing interface{}) int {
 		sliding = false
 		return event.UnbindEvent
 	}
-	x := float64(me.X) - (slider.X + 5)
+	x := float64(me.X) - (slider.X() + 5)
 	if x <= slider.min {
 		if slider.val == slider.min {
 			return 0
@@ -128,7 +128,7 @@ func sliderDrag(sl int, nothing interface{}) int {
 	} else {
 		slider.val = x
 	}
-	slider.knub.SetPos(slider.X+slider.val+5, slider.knub.GetY())
+	slider.knub.SetPos(slider.X()+slider.val+5, slider.knub.GetY())
 	slider.SetText(slider.valText())
 	return 0
 }

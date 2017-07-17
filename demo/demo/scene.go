@@ -13,13 +13,13 @@ import (
 	"golang.org/x/sync/syncmap"
 
 	"bitbucket.org/oakmoundstudio/oak"
-	"bitbucket.org/oakmoundstudio/oak/event"
-	"bitbucket.org/oakmoundstudio/oak/render"
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/dcel/off"
 	"github.com/200sc/go-compgeo/dcel/pointLoc"
 	"github.com/200sc/go-compgeo/dcel/pointLoc/visualize"
 	"github.com/200sc/go-compgeo/geom"
+	"github.com/oakmound/oak/event"
+	"github.com/oakmound/oak/render"
 )
 
 const (
@@ -110,8 +110,8 @@ func InitScene(prevScene string, data interface{}) {
 	// Scale till 300 wide
 	width := phd.Max(0)
 	phd.Polyhedron.Scale(300 / width)
-	phd.ShiftX(50 - phd.X)
-	phd.ShiftY(50 - phd.Y)
+	phd.ShiftX(50 - phd.X())
+	phd.ShiftY(50 - phd.Y())
 	phd.Init()
 	render.Draw(phd, 0)
 
@@ -300,8 +300,8 @@ func visuals(no int, rt interface{}) int {
 					if visual == nil {
 						return
 					}
-					visual.ShiftX(phd.X)
-					visual.ShiftY(phd.Y)
+					visual.ShiftX(phd.X())
+					visual.ShiftY(phd.Y())
 
 					render.Draw(visual.Renderable, visual.Layer)
 					render.UndrawAfter(visual, 2000*time.Millisecond)

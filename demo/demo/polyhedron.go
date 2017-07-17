@@ -6,10 +6,10 @@ import (
 	"math"
 	"sort"
 
-	"bitbucket.org/oakmoundstudio/oak/physics"
-	"bitbucket.org/oakmoundstudio/oak/render"
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/geom"
+	"github.com/oakmound/oak/physics"
+	"github.com/oakmound/oak/render"
 )
 
 // Polyhedron is a type which extends render.Renderable,
@@ -43,7 +43,7 @@ func NewPolyhedronFromDCEL(dc *dcel.DCEL, x, y float64) *Polyhedron {
 	p.SetPos(x, y)
 	p.DCEL = *dc
 	p.Update()
-	p.Center = physics.NewVector(p.X+(1+p.MaxX())/2, p.Y+(1+p.MaxY())/2)
+	p.Center = physics.NewVector(p.X()+(1+p.MaxX())/2, p.Y()+(1+p.MaxY())/2)
 	return p
 }
 
@@ -69,11 +69,11 @@ func (p *Polyhedron) Update() {
 	// one place on screen. This is not exactly the expected
 	// behavior from someone rotating a shape, but it is
 	// close.
-	if p.Center.X != 0 || p.Center.Y != 0 {
-		cx := p.X + maxX/2
-		cy := p.Y + maxY/2
-		p.X -= (cx - p.Center.X)
-		p.Y -= (cy - p.Center.Y)
+	if p.Center.X() != 0 || p.Center.Y() != 0 {
+		cx := p.X() + maxX/2
+		cy := p.Y() + maxY/2
+		p.SetX(p.X() - (cx - p.Center.X()))
+		p.SetY(p.Y() - (cy - p.Center.Y()))
 	}
 
 	// Eventually:
@@ -315,12 +315,12 @@ func (p *Polyhedron) String() string {
 
 // ShiftX moves a polyhedron and its center along the x axis
 func (p *Polyhedron) ShiftX(x float64) {
-	p.Center.X += x
+	p.Center.ShiftX(x)
 	p.Sprite.ShiftX(x)
 }
 
 // ShiftY moves a polyhedron and its center along the y axis
 func (p *Polyhedron) ShiftY(y float64) {
-	p.Center.Y += y
+	p.Center.ShiftY(y)
 	p.Sprite.ShiftY(y)
 }

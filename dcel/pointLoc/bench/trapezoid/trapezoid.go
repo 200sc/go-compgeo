@@ -4,7 +4,7 @@
 package trapezoid
 
 import (
-	"bitbucket.org/oakmoundstudio/oak/physics"
+	"github.com/oakmound/oak/physics"
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/geom"
 	"github.com/200sc/go-compgeo/printutil"

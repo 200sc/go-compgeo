@@ -1,9 +1,9 @@
 package demo
 
 import (
-	"bitbucket.org/oakmoundstudio/oak/event"
-	"bitbucket.org/oakmoundstudio/oak/mouse"
-	"bitbucket.org/oakmoundstudio/oak/render"
+	"github.com/oakmound/oak/event"
+	"github.com/oakmound/oak/mouse"
+	"github.com/oakmound/oak/render"
 )
 
 // An InteractivePolyhedron is a wrapper around
@@ -51,8 +51,8 @@ func (ip *InteractivePolyhedron) UpdateSpaces() {
 			ip.vs[i] = NewInteractivePoint(v, i)
 		}
 		ip.vs[i].Vertex = v
-		mouse.UpdateSpace(ip.X+(v.X()-vCollisionDim/2),
-			ip.Y+(v.Y()-vCollisionDim/2),
+		mouse.UpdateSpace(ip.X()+(v.X()-vCollisionDim/2),
+			ip.Y()+(v.Y()-vCollisionDim/2),
 			vCollisionDim, vCollisionDim, ip.vs[i].s)
 	}
 }
