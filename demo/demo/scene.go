@@ -12,12 +12,12 @@ import (
 
 	"golang.org/x/sync/syncmap"
 
-	"bitbucket.org/oakmoundstudio/oak"
 	"github.com/200sc/go-compgeo/dcel"
 	"github.com/200sc/go-compgeo/dcel/off"
 	"github.com/200sc/go-compgeo/dcel/pointLoc"
 	"github.com/200sc/go-compgeo/dcel/pointLoc/visualize"
 	"github.com/200sc/go-compgeo/geom"
+	"github.com/oakmound/oak"
 	"github.com/oakmound/oak/event"
 	"github.com/oakmound/oak/render"
 )

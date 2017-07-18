@@ -7,7 +7,7 @@ import (
 
 	"github.com/200sc/go-compgeo/demo/demo"
 
-	"bitbucket.org/oakmoundstudio/oak"
+	"github.com/oakmound/oak"
 )
 
 func main() {

@@ -1,7 +1,7 @@
 package demo
 
 import (
-	"bitbucket.org/oakmoundstudio/oak"
+	"github.com/oakmound/oak"
 	"github.com/200sc/go-compgeo/geom"
 	"github.com/oakmound/oak/event"
 	"github.com/oakmound/oak/mouse"
@@ -62,7 +62,7 @@ func phdEnter(cID int, nothing interface{}) int {
 				} else {
 					phd.RotY(rotSpeed * dx)
 					phd.UpdateSpaces()
-				}
+				} 
 			}
 			if dy != 0 {
 				phd.RotX(rotSpeed * dy)
